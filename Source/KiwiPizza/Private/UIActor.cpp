@@ -61,7 +61,7 @@ void AUIActor::HandleRestartGameClicked()
 	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
 	check(PacmanGameMode);
 
-	PacmanGameMode->OnGameRestartedDelegate.Broadcast();
+	PacmanGameMode->SetGameState(PacmanGameState::Playing);
 
 	// TODO: Hide the widget.
 	GameOverWinUIRef->RemoveFromParent();

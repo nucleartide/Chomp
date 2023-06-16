@@ -1,4 +1,5 @@
 #include "PacmanPawn.h"
+#include "PacmanGameMode.h"
 
 APacmanPawn::APacmanPawn()
 {
@@ -159,6 +160,17 @@ void APacmanPawn::WrapAroundWorld()
 
 void APacmanPawn::NotifyActorBeginOverlap(AActor* Other)
 {
+	auto GameMode = GetWorld()->GetAuthGameMode();
+	check(GameMode);
+
+	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
+	check(PacmanGameMode);
+
+	if (PacmanGameMode->GameState != PacmanGameState::Playing)
+	{
+		return;
+	}
+
 	if (Other->Tags.Contains(FName("SmallDot")))
 	{
 		Other->Destroy();

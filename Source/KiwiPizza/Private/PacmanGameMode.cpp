@@ -5,20 +5,14 @@
 #include "PacmanPlayerController.h"
 #include "Debug.h"
 
-/*
-// TODO: On depletion of all dots, invoke the OnDotsDepleted event
-// TODO: this will alert the PacmanGameMode (which subscribes to the Levelgenerationactor)
-// TODO: the pacman game mode will then emit a "game over win" event
-void APacmanGameMode::Tick(float DeltaTime)
+void APacmanGameMode::SetGameState(PacmanGameState NewState)
 {
-    if (FoundActors.Num() == 0)
+    if (NewState == PacmanGameState::Playing)
     {
-        // TODO: Update state on the GameModeBase.
-        if (GameState != GameOverWin)
-        {
-            GameState = GameOverWin;
-            OnPacmanGameStateChangedDelegate.Broadcast(GameOverWin);
-        }
+        OnGameRestartedDelegate.Broadcast();
     }
+
+    // NOTE: THIS MUST COME AFTER THE RESTART, otherwise player will consume dots before level restarts.
+    GameState = NewState;
+    OnGameStateChangedDelegate.Broadcast(NewState);
 }
-*/
