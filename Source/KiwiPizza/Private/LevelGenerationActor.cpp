@@ -69,18 +69,18 @@ void ALevelGenerationActor::BeginPlay()
 				FVector Location(LocationY, LocationX, 0.0f);
 
 				// Spawn the actor at the desired location.
-				auto SpawnedActor = World->SpawnActor<AStaticMeshActor>(Location, FRotator::ZeroRotator, SpawnParams);
+				auto SpawnedActor = World->SpawnActor<AStaticMeshActor>(WallTile, Location, FRotator::ZeroRotator, SpawnParams);
 				check(SpawnedActor);
 
 				// Set the tags of the actor.
-				auto Tags = WallTile.GetDefaultObject()->Tags;
-				for (auto Tag : Tags)
-					SpawnedActor->Tags.Add(Tag);
+				// auto Tags = WallTile.GetDefaultObject()->Tags;
+				// for (auto Tag : Tags)
+					// SpawnedActor->Tags.Add(Tag);
 
 				// Set the static mesh of the actor
-				auto StaticMesh = WallTile.GetDefaultObject()->GetStaticMeshComponent()->GetStaticMesh();
-				SpawnedActor->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
-				SpawnedActor->GetStaticMeshComponent()->SetStaticMesh(StaticMesh);
+				// auto StaticMesh = WallTile.GetDefaultObject()->GetStaticMeshComponent()->GetStaticMesh();
+				// SpawnedActor->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
+				// SpawnedActor->GetStaticMeshComponent()->SetStaticMesh(StaticMesh);
 			}
 			else if (Character == ' ')
 			{
