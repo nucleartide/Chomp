@@ -17,6 +17,8 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
+	class UGameOverWinUI *GameOverWinUIRef;
+
 public:	
 	virtual void Tick(float DeltaTime) override;
 
@@ -28,4 +30,7 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
 	TSubclassOf<UUserWidget> GameOverWinUI;
+
+	UFUNCTION()
+	void HandleRestartGameClicked();
 };
