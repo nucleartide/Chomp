@@ -44,3 +44,4 @@ more:
 - [ ] Every PR should have a bug-free build
 - [ ] Ensure architecture/modules are decoupled
 - [ ] Otherwise clean up comments/formatting/naming/etc
+- do a first draft of the code
