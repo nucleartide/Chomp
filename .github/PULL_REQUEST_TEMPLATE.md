@@ -38,3 +38,9 @@
 * [ ] **Editable**. Has any configuration been moved into ScriptableObjects, so that modified values persist even after exiting Play mode?
 * [ ] **Debuggable**. Do you have debug views for the prefabs/systems that you are creating?
 * [ ] **Learnable**. Consider how the player will learn what you implement in this pull request. Are the affordances appropriately communicated with signifiers?
+
+more:
+
+- [ ] Every PR should have a bug-free build
+- [ ] Ensure architecture/modules are decoupled
+- [ ] Otherwise clean up comments/formatting/naming/etc
