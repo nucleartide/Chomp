@@ -7,7 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 #include "Debug.h"
-#include "PacmanDotActor.h"
+#include "ConsumableDotActor.h"
 #include "PacmanGameMode.h"
 
 // Called when the game starts or when spawned
@@ -119,11 +119,11 @@ void ALevelGenerationActor::RegenerateDots()
 				Actor->SetActorLocation(Location);
 
 				// Cast.
-				auto PacmanDotActor = Cast<APacmanDotActor>(Actor);
-				check(PacmanDotActor);
+				auto ConsumableDotActor = Cast<AConsumableDotActor>(Actor);
+				check(ConsumableDotActor);
 
-				// Attach handler to when PacmanDotActor is destroyed.
-				PacmanDotActor->OnDotConsumedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::HandleDotConsumption);
+				// Attach handler to when ConsumableDotActor is destroyed.
+				ConsumableDotActor->OnDotConsumedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::HandleDotConsumption);
 
 				// Bump counter.
 				NumDotsGenerated++;

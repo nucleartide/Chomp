@@ -1,14 +1,14 @@
-#include "GameOverWinUI.h"
+#include "GameOverWinWidget.h"
 #include "Debug.h"
 #include "Components/Button.h"
 
-void UGameOverWinUI::NativeConstruct()
+void UGameOverWinWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-    RestartGameButton->OnReleased.AddUniqueDynamic(this, &UGameOverWinUI::HandleRestartGame);
+    RestartGameButton->OnReleased.AddUniqueDynamic(this, &UGameOverWinWidget::HandleRestartGame);
 }
 
-void UGameOverWinUI::HandleRestartGame()
+void UGameOverWinWidget::HandleRestartGame()
 {
     DEBUG_LOG(TEXT("Handling restart game..."));
 

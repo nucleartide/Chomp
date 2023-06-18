@@ -1,13 +1,13 @@
-#include "PlayerManager.h"
+#include "PacmanPawnManager.h"
 #include "PacmanGameMode.h"
 #include "PacmanPawn.h"
 
-APlayerManager::APlayerManager()
+APacmanPawnManager::APacmanPawnManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void APlayerManager::BeginPlay()
+void APacmanPawnManager::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -17,15 +17,15 @@ void APlayerManager::BeginPlay()
 	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
 	check(PacmanGameMode);
 
-	PacmanGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &APlayerManager::HandleGameRestarted);
+	PacmanGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &APacmanPawnManager::HandleGameRestarted);
 }
 
-void APlayerManager::Tick(float DeltaTime)
+void APacmanPawnManager::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
 
-void APlayerManager::HandleGameRestarted()
+void APacmanPawnManager::HandleGameRestarted()
 {
 	PacmanPawn->SetActorLocation(GetActorLocation());
 }

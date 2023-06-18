@@ -2,7 +2,7 @@
 #include "Debug.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
-#include "GameOverWinUI.h"
+#include "GameOverWinWidget.h"
 #include "PacmanGameMode.h"
 
 AUIActor::AUIActor()
@@ -28,16 +28,16 @@ void AUIActor::HandleDotsCleared()
     auto World = GetWorld();
 	check(World);
 
-	auto GameOverWinWidget = CreateWidget(World, GameOverWinUI);
-	check(GameOverWinWidget);
+	auto WidgetInstance = CreateWidget(World, GameOverWinWidgetClass);
+	check(WidgetInstance);
 
 	{
-		GameOverWinUIRef = Cast<UGameOverWinUI>(GameOverWinWidget);
-		check(GameOverWinUIRef);
-		GameOverWinUIRef->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIActor::HandleRestartGameClicked);
+		GameOverWinWidgetInstance = Cast<UGameOverWinWidget>(WidgetInstance);
+		check(GameOverWinWidgetInstance);
+		GameOverWinWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIActor::HandleRestartGameClicked);
 	}
 
-	GameOverWinWidget->AddToViewport();
+	WidgetInstance->AddToViewport();
 
 	auto ViewportClient = World->GetGameViewport();
 	check(ViewportClient);
@@ -64,9 +64,9 @@ void AUIActor::HandleRestartGameClicked()
 	PacmanGameMode->SetGameState(PacmanGameState::Playing);
 
 	// TODO: Hide the widget.
-	GameOverWinUIRef->RemoveFromParent();
-	GameOverWinUIRef->Destruct();
-	GameOverWinUIRef = nullptr;
+	GameOverWinWidgetInstance->RemoveFromParent();
+	GameOverWinWidgetInstance->Destruct();
+	GameOverWinWidgetInstance = nullptr;
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
