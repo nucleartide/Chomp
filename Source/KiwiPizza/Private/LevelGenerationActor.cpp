@@ -32,17 +32,6 @@ void ALevelGenerationActor::BeginPlay()
 	PacmanGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::RegenerateDots);
 }
 
-/*
-// TODO: Save this for later.
-void ALevelGenerationActor::ResetPlayerPosition()
-{
-	auto PlayerController = UGameplayStatics::GetPlayerController(GetWorld(), 0);
-	auto Pawn = PlayerController->GetPawn();
-	auto StartingLocation = PlayerStartingLocation->GetActorLocation();
-	Pawn->SetActorLocation(StartingLocation);
-}
-*/
-
 void ALevelGenerationActor::RegenerateDots()
 {
 	//
@@ -85,16 +74,6 @@ void ALevelGenerationActor::RegenerateDots()
 				// Spawn the actor at the desired location.
 				auto SpawnedActor = World->SpawnActor<AStaticMeshActor>(WallTile, Location, FRotator::ZeroRotator, SpawnParams);
 				check(SpawnedActor);
-
-				// Set the tags of the actor.
-				// auto Tags = WallTile.GetDefaultObject()->Tags;
-				// for (auto Tag : Tags)
-				// SpawnedActor->Tags.Add(Tag);
-
-				// Set the static mesh of the actor
-				// auto StaticMesh = WallTile.GetDefaultObject()->GetStaticMeshComponent()->GetStaticMesh();
-				// SpawnedActor->GetStaticMeshComponent()->SetMobility(EComponentMobility::Movable);
-				// SpawnedActor->GetStaticMeshComponent()->SetStaticMesh(StaticMesh);
 			}
 			else if (Character == ' ')
 			{
@@ -114,6 +93,7 @@ void ALevelGenerationActor::RegenerateDots()
 				FVector BogusLocation(10000.0f, 10000.0f, 10000.0f);
 				auto Actor = World->SpawnActor<AStaticMeshActor>(PacmanDot, BogusLocation, FRotator::ZeroRotator, Params); // Spawn in a spot away from the player to avoid spawn failures.
 				check(Actor);
+
 				// Once successful, set the actor location once again.
 				Actor->SetMobility(EComponentMobility::Movable);
 				Actor->SetActorLocation(Location);

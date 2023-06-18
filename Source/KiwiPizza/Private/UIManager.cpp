@@ -45,8 +45,6 @@ void AUIManager::HandleDotsCleared()
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
     Controller->SetInputMode(FInputModeGameAndUI());
-
-	// TODO: Figure out how to do this: https://www.youtube.com/watch?v=bWoew0fa_xA
 }
 
 void AUIManager::HandleRestartGameClicked()
@@ -58,12 +56,14 @@ void AUIManager::HandleRestartGameClicked()
 	auto GameMode = GetWorld()->GetAuthGameMode();
 	check(GameMode);
 
+	// TODO: Does casting to an interface avoid hard references? What is a hard reference anyway, and why is avoiding hard refs important?
+	// Something to investigate for later.
 	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
 	check(PacmanGameMode);
 
 	PacmanGameMode->SetGameState(PacmanGameState::Playing);
 
-	// TODO: Hide the widget.
+	// Hide the widget.
 	GameOverWinWidgetInstance->RemoveFromParent();
 	GameOverWinWidgetInstance->Destruct();
 	GameOverWinWidgetInstance = nullptr;

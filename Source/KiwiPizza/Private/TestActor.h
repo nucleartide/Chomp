@@ -22,5 +22,4 @@ public:
 private:
 	UPROPERTY(EditDefaultsOnly, Category = "Level Loader Customization")
 	TSubclassOf<ULevelLoader> Level;
-
 };

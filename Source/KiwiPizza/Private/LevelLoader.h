@@ -23,6 +23,4 @@ private:
 
 public:
 	TArray<FString> StringList;
-	// static int GetLevelWidth(TSubclassOf<ULevelLoader> LevelLoader);
-	// static int GetLevelHeight(TSubclassOf<ULevelLoader> LevelLoader);
 };
