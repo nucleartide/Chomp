@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Engine/StaticMeshActor.h"
-#include "PacmanDotActor.generated.h"
+#include "ConsumableDotActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotConsumedSignature);
 
 UCLASS()
-class APacmanDotActor : public AStaticMeshActor
+class AConsumableDotActor : public AStaticMeshActor
 {
 	GENERATED_BODY()
 

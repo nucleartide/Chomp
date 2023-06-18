@@ -4,15 +4,15 @@
 #include "GameFramework/Actor.h"
 #include "LevelGenerationActor.h"
 #include "Blueprint/UserWidget.h"
-#include "UIActor.generated.h"
+#include "UIManager.generated.h"
 
 UCLASS()
-class AUIActor : public AActor
+class AUIManager : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	AUIActor();
+	AUIManager();
 
 protected:
 	virtual void BeginPlay() override;
@@ -27,5 +27,12 @@ public:
 	void HandleDotsCleared();
 
 	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
-	TSubclassOf<UUserWidget> GameOverWinUI;
+	TSubclassOf<UUserWidget> GameOverWinWidgetClass;
+
+private:
+	class UGameOverWinWidget* GameOverWinWidgetInstance;
+
+public:
+	UFUNCTION()
+	void HandleRestartGameClicked();
 };

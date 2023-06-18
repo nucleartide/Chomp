@@ -7,15 +7,15 @@
 #include "PacmanGameMode.generated.h"
 
 UENUM(BlueprintType)
-enum PacmanGameState
+enum class PacmanGameState : uint8
 {
 	Playing,
 	GameOverWin,
 	GameOverLose,
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, PacmanGameState, GameState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameRestartedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, PacmanGameState, GameState);
 
 UCLASS()
 class KIWIPIZZA_API APacmanGameMode : public AGameModeBase
@@ -23,11 +23,14 @@ class KIWIPIZZA_API APacmanGameMode : public AGameModeBase
 	GENERATED_BODY()
 
 public:
-	PacmanGameState GameState = Playing;
+	PacmanGameState GameState = PacmanGameState::Playing;
+
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnGameRestartedSignature OnGameRestartedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGameStateChangedSignature OnGameStateChangedDelegate;
 
-	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGameRestartedSignature OnGameRestartedDelegate;
+	UFUNCTION()
+	void SetGameState(PacmanGameState NewState);
 };
