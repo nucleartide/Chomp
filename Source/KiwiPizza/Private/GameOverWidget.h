@@ -2,12 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
-#include "GameOverWinWidget.generated.h"
+#include "GameOverWidget.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnRestartGameClickedSignature);
 
 UCLASS(BlueprintType, Blueprintable)
-class UGameOverWinWidget : public UUserWidget
+class UGameOverWidget : public UUserWidget
 {
 	GENERATED_BODY()
 

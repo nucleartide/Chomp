@@ -27,10 +27,10 @@ public:
 	void HandleDotsCleared();
 
 	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
-	TSubclassOf<UUserWidget> GameOverWinWidgetClass;
+	TSubclassOf<UUserWidget> GameOverWidgetClass;
 
 private:
-	class UGameOverWinWidget* GameOverWinWidgetInstance;
+	class UGameOverWidget* GameOverWidgetInstance;
 
 public:
 	UFUNCTION()
