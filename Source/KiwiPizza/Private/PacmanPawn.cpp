@@ -1,5 +1,7 @@
 #include "PacmanPawn.h"
 #include "PacmanGameMode.h"
+#include "Debug.h"
+#include "GhostPawn.h"
 
 APacmanPawn::APacmanPawn()
 {
@@ -160,6 +162,11 @@ void APacmanPawn::WrapAroundWorld()
 
 void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 {
+
+	//
+	// Early return if we aren't in a "Playing" state.
+	//
+
 	auto GameMode = GetWorld()->GetAuthGameMode();
 	check(GameMode);
 
@@ -167,13 +174,17 @@ void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 	check(PacmanGameMode);
 
 	if (PacmanGameMode->GameState != PacmanGameState::Playing)
-	{
 		return;
-	}
 
-	if (Other->Tags.Contains(FName("SmallDot")))
+	// If we overlapped with a dot, then consume the other dot.
+	if (Other->Tags.Contains(FName("SmallDot"))) // TODO: One could check tags or cast against a type. Checking tags is error prone, but casting has dependency issues. Wonder which is the better tradeoff?
 	{
 		Other->Destroy();
+	}
+	// Otherwise, if we overlapped with a ghost, then log for now.
+	else if (Cast<AGhostPawn>(Other))
+	{
+		DEBUG_LOG(TEXT("Overlapped with ghost pawn. Pawn name: %s"), *Other->GetHumanReadableName());
 	}
 }
 
