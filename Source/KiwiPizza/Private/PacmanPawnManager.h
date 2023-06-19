@@ -22,6 +22,9 @@ protected:
 	UFUNCTION()
 	void HandleGameRestarted();
 
+	UFUNCTION()
+	void HandlePacmanDied();
+
 	UPROPERTY(EditAnywhere)
 	class APacmanPawn *PacmanPawn;
 

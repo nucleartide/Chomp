@@ -21,6 +21,20 @@ void APacmanPawn::Tick(float DeltaTime)
 
 void APacmanPawn::MoveVector(FVector2D Value)
 {
+
+	//
+	// Movement is disabled if the game mode is in a game over state.
+	//
+
+	auto GameMode = GetWorld()->GetAuthGameMode();
+	check(GameMode);
+
+	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
+	check(PacmanGameMode);
+
+	if (PacmanGameMode->GameState != PacmanGameState::Playing)
+		return;
+
 	// Declare some variables.
 	FVector DeltaLocation(Value.Y, Value.X, 0.0f);
 	auto ActorScale = GetActorScale3D();
