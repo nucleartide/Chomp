@@ -158,7 +158,7 @@ void APacmanPawn::WrapAroundWorld()
 	SetActorLocation(Location);
 }
 
-void APacmanPawn::NotifyActorBeginOverlap(AActor* Other)
+void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 {
 	auto GameMode = GetWorld()->GetAuthGameMode();
 	check(GameMode);
@@ -177,7 +177,7 @@ void APacmanPawn::NotifyActorBeginOverlap(AActor* Other)
 	}
 }
 
-void APacmanPawn::NotifyActorEndOverlap(AActor* Other)
+void APacmanPawn::NotifyActorEndOverlap(AActor *Other)
 {
 	// No-op.
 }
