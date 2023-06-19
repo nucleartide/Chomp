@@ -185,6 +185,7 @@ void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 	else if (Cast<AGhostPawn>(Other))
 	{
 		DEBUG_LOG(TEXT("Overlapped with ghost pawn. Pawn name: %s"), *Other->GetHumanReadableName());
+		OnPacmanDiedDelegate.Broadcast();
 	}
 }
 

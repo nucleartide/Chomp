@@ -7,6 +7,8 @@
 #include "LevelLoader.h"
 #include "PacmanPawn.generated.h"
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPacmanDiedSignature);
+
 UCLASS()
 class APacmanPawn : public APawn
 {
@@ -17,8 +19,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-    virtual void NotifyActorBeginOverlap(AActor* Other) override;
-    virtual void NotifyActorEndOverlap(AActor* Other) override;
+	virtual void NotifyActorBeginOverlap(AActor *Other) override;
+	virtual void NotifyActorEndOverlap(AActor *Other) override;
 
 public:
 	/**
@@ -47,4 +49,7 @@ public:
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Loaded Level")
 	TSubclassOf<ULevelLoader> Level;
+
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnPacmanDiedSignature OnPacmanDiedDelegate;
 };

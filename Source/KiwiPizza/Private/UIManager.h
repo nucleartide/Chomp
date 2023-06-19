@@ -23,11 +23,20 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Level Generator Reference")
 	ALevelGenerationActor* LevelGenerator;
 
+	UPROPERTY(EditAnywhere, Category = "Level Generator Reference")
+	class APacmanPawn* PacmanPawn;
+
 	UFUNCTION(BlueprintCallable)
 	void HandleDotsCleared();
 
+	UFUNCTION(BlueprintCallable)
+	void HandlePlayerDeath();
+
 	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
-	TSubclassOf<UUserWidget> GameOverWidgetClass;
+	TSubclassOf<UUserWidget> GameOverWinWidgetClass;
+
+	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
+	TSubclassOf<UUserWidget> GameOverLoseWidgetClass;
 
 private:
 	class UGameOverWidget* GameOverWidgetInstance;
