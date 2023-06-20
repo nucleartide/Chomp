@@ -191,7 +191,7 @@ void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 		return;
 
 	// If we overlapped with a dot, then consume the other dot.
-	if (Other->Tags.Contains(FName("SmallDot"))) // TODO: One could check tags or cast against a type. Checking tags is error prone, but casting has dependency issues. Wonder which is the better tradeoff?
+	if (Other->Tags.Contains(FName("SmallDot"))) // TODO: One could check tags or cast against a type. Checking tags is prone to typos, but casting has dependency issues. Wonder which is the better tradeoff?
 	{
 		Other->Destroy();
 	}
