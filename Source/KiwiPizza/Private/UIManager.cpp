@@ -27,7 +27,7 @@ void AUIManager::HandleDotsCleared()
 {
 	DEBUG_LOG(TEXT("Dots cleared, showing game over win UI..."))
 
-    auto World = GetWorld();
+	auto World = GetWorld();
 	check(World);
 
 	auto WidgetInstance = CreateWidget(World, GameOverWinWidgetClass);
@@ -46,14 +46,14 @@ void AUIManager::HandleDotsCleared()
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
-    Controller->SetInputMode(FInputModeGameAndUI());
+	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
 void AUIManager::HandlePlayerDeath()
 {
 	DEBUG_LOG(TEXT("Player died, showing game over *lose* UI..."))
 
-    auto World = GetWorld();
+	auto World = GetWorld();
 	check(World);
 
 	auto WidgetInstance = CreateWidget(World, GameOverLoseWidgetClass);
@@ -72,7 +72,7 @@ void AUIManager::HandlePlayerDeath()
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
-    Controller->SetInputMode(FInputModeGameAndUI());
+	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
 void AUIManager::HandleRestartGameClicked()
@@ -98,5 +98,5 @@ void AUIManager::HandleRestartGameClicked()
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
-    Controller->SetInputMode(FInputModeGameOnly());
+	Controller->SetInputMode(FInputModeGameOnly());
 }
