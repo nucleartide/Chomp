@@ -57,7 +57,7 @@ void ALevelGenerationActor::RegenerateDots()
 		for (int32 y = 0; y < Len; y++)
 		{
 			auto Character = Element[y];
-			if (Character == 'W')
+			if (Character == 'W' || Character == '|')
 			{
 				auto World = GetWorld();
 				check(World);
@@ -71,8 +71,15 @@ void ALevelGenerationActor::RegenerateDots()
 				auto LocationY = y * 100.0f - Element.Len() * 0.5f * 100.0f + 50.0f;
 				FVector Location(LocationY, LocationX, 0.0f);
 
+				// Select tile.
+				TSubclassOf<AStaticMeshActor> SelectedTile;
+				if (Character == 'W')
+					SelectedTile = WallTile;
+				else if (Character == '|')
+					SelectedTile = GateTile;
+
 				// Spawn the actor at the desired location.
-				auto SpawnedActor = World->SpawnActor<AStaticMeshActor>(WallTile, Location, FRotator::ZeroRotator, SpawnParams);
+				auto SpawnedActor = World->SpawnActor<AStaticMeshActor>(SelectedTile, Location, FRotator::ZeroRotator, SpawnParams);
 				check(SpawnedActor);
 			}
 			else if (Character == ' ')

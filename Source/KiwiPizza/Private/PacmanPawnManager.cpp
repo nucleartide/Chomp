@@ -18,6 +18,9 @@ void APacmanPawnManager::BeginPlay()
 	check(PacmanGameMode);
 
 	PacmanGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &APacmanPawnManager::HandleGameRestarted);
+	PacmanPawn->OnPacmanDiedDelegate.AddUniqueDynamic(this, &APacmanPawnManager::HandlePacmanDied);
+
+	PacmanPawn->SetActorLocation(GetActorLocation());
 }
 
 void APacmanPawnManager::Tick(float DeltaTime)
@@ -28,4 +31,15 @@ void APacmanPawnManager::Tick(float DeltaTime)
 void APacmanPawnManager::HandleGameRestarted()
 {
 	PacmanPawn->SetActorLocation(GetActorLocation());
+}
+
+void APacmanPawnManager::HandlePacmanDied()
+{
+	auto GameMode = GetWorld()->GetAuthGameMode();
+	check(GameMode);
+
+	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
+	check(PacmanGameMode);
+
+	PacmanGameMode->SetGameState(PacmanGameState::GameOverLose);
 }

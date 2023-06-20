@@ -29,6 +29,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Pacman Dot Customization")
 	TSubclassOf<AStaticMeshActor> PacmanDot;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Gate Tile Customization")
+	TSubclassOf<AStaticMeshActor> GateTile;
+
 	UPROPERTY(EditDefaultsOnly, Category = "Level Loader Customization")
 	TSubclassOf<ULevelLoader> LevelLoader;
 
