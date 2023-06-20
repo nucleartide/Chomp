@@ -19,6 +19,8 @@ void APacmanPawnManager::BeginPlay()
 
 	PacmanGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &APacmanPawnManager::HandleGameRestarted);
 	PacmanPawn->OnPacmanDiedDelegate.AddUniqueDynamic(this, &APacmanPawnManager::HandlePacmanDied);
+
+	PacmanPawn->SetActorLocation(GetActorLocation());
 }
 
 void APacmanPawnManager::Tick(float DeltaTime)
