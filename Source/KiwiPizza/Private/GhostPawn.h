@@ -3,10 +3,11 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Math/Color.h"
+#include "MovablePawn.h"
 #include "GhostPawn.generated.h"
 
 UCLASS()
-class AGhostPawn : public APawn
+class AGhostPawn : public AMovablePawn
 {
 	GENERATED_BODY()
 
