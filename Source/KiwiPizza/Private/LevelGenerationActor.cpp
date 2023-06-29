@@ -38,14 +38,8 @@ void ALevelGenerationActor::RegenerateDots()
 	// Load level.
 	//
 
-	auto DefaultObject = LevelLoader.GetDefaultObject();
-	check(DefaultObject);
-
-	auto Level = Cast<ULevelLoader>(DefaultObject);
-	check(Level);
-
+	auto Level = ULevelLoader::GetInstance(LevelLoader);
 	Level->LoadLevel();
-
 	DEBUG_LOG(TEXT("Level width: %d"), Level->GetLevelWidth());
 	DEBUG_LOG(TEXT("Level height: %d"), Level->GetLevelHeight());
 

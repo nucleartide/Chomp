@@ -14,6 +14,9 @@ public:
 	int GetLevelHeight();
 	void LoadLevel();
 
+	// This method returns a reference to the Blueprint asset's single instance.
+	static ULevelLoader *GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass);
+
 private:
 	int NumberOfLinesInLevel = -1;
 	int LengthOfLineInLevel = -1;

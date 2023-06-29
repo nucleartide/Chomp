@@ -3,6 +3,17 @@
 
 #include "LevelLoader.h"
 
+ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass)
+{
+	auto DefaultObject = BlueprintClass.GetDefaultObject();
+	check(DefaultObject);
+
+	auto Level = Cast<ULevelLoader>(DefaultObject);
+	check(Level);
+
+    return Level;
+}
+
 int ULevelLoader::GetLevelWidth()
 {
     return NumberOfLinesInLevel;
