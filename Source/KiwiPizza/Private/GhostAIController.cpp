@@ -15,5 +15,5 @@ void AGhostAIController::Tick(float DeltaTime)
 
     // Call MoveVector(), and move by 100 cm/s to the left.
     FVector2D DeltaLocation(-100.0f, 0.0f);
-    GhostPawn->MoveVector(DeltaLocation * DeltaTime);
+    GhostPawn->MoveVector(MovementSpeed * DeltaLocation * DeltaTime);
 }

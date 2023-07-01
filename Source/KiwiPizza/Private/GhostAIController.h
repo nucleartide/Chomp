@@ -9,6 +9,11 @@ class AGhostAIController : public AAIController
 {
 	GENERATED_BODY()
 
-public:
+private:
 	virtual void Tick(float DeltaTime) override;
+
+	UPROPERTY(EditAnywhere, Category = "AI Controller Customization")
+	float MovementSpeed = 3.0f;
+
+	void MoveFrom();
 };
