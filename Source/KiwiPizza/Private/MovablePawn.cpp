@@ -62,7 +62,7 @@ void AMovablePawn::WrapAroundWorld()
 void AMovablePawn::MoveVector(FVector2D Value)
 {
 	// Declare some variables.
-	FVector DeltaLocation(Value.Y, Value.X, 0.0f);
+	FVector DeltaLocation(Value.X, Value.Y, 0.0f);
 	auto ActorScale = GetActorScale3D();
 	float SphereDiameter = 100.0f * ActorScale.X;
 	float SphereRadius = SphereDiameter * 0.5f * 0.5f; // Halve the radius a second time for a smaller collision sphere.

@@ -13,7 +13,7 @@ private:
 	virtual void Tick(float DeltaTime) override;
 
 	UPROPERTY(EditAnywhere, Category = "AI Controller Customization")
-	float MovementSpeed = 3.0f;
+	float MovementSpeed = 1.0f;
 
 	void MoveFrom(FVector2D Source, FVector2D Destination);
 	void Move(float DeltaTime);
@@ -26,5 +26,7 @@ private:
 	float TotalTime = 0.0f;
 
 	UPROPERTY(EditAnywhere, Category = "Movement Speed Customization")
-	float TimeToTraverseOneUnit = 0.3f;
+	float TimeToTraverseOneUnit = 1.0f;
+
+	virtual void BeginPlay() override;
 };
