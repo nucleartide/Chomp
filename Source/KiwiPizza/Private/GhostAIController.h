@@ -12,8 +12,11 @@ class AGhostAIController : public AAIController
 private:
 	virtual void Tick(float DeltaTime) override;
 
-	UPROPERTY(EditAnywhere, Category = "AI Controller Customization")
+	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
 	float MovementSpeed = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
+	bool IsTestOriginAndDestinationEnabled = false;
 
 	void MoveFrom(FVector2D Source, FVector2D Destination);
 	void Move(float DeltaTime);
@@ -24,9 +27,6 @@ private:
 	bool IsAtDestination = false;
 	float ElapsedTime = 0.0f;
 	float TotalTime = 0.0f;
-
-	UPROPERTY(EditAnywhere, Category = "Movement Speed Customization")
-	float TimeToTraverseOneUnit = 1.0f;
 
 	virtual void BeginPlay() override;
 };

@@ -22,7 +22,7 @@ void APacmanPlayerController::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     // Compute delta movement.
-    FVector2D MovementVector(HorizontalAxisDelta, VerticalAxisDelta); // Note that HorizontalAxisDelta / VerticalAxisDelta are either 0 or 1.
+    FVector2D MovementVector(VerticalAxisDelta, HorizontalAxisDelta); // Note that HorizontalAxisDelta / VerticalAxisDelta are either 0 or 1.
     auto Delta = this->MovementSpeed * MovementVector.GetSafeNormal() * DeltaTime;
 
     // Get pawn.
@@ -34,7 +34,7 @@ void APacmanPlayerController::Tick(float DeltaTime)
     check(PacmanPawn);
 
     // Move the pawn using our computed delta.
-    PacmanPawn->MoveVector(Delta);
+    PacmanPawn->MoveVector(Delta, DeltaTime);
 }
 
 void APacmanPlayerController::BeginPlay()

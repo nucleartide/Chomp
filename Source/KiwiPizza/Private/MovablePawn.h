@@ -34,7 +34,7 @@ public:
 	void WrapAroundWorld();
 
 	// Move this pawn around by Value.
-	virtual void MoveVector(FVector2D Value);
+	virtual void MoveVector(FVector2D Value, float DeltaTime);
 
 	// Extend collision raycasts by this factor for the sake of more robust collision checks.
 	UPROPERTY(EditDefaultsOnly, Category = "Tolerance Customization")
@@ -43,4 +43,7 @@ public:
 	// Reference to the ULevelLoader. Needed for bounds checks.
 	UPROPERTY(EditAnywhere, Category = "Loaded Level")
 	TSubclassOf<class ULevelLoader> Level;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Tolerance Customization")
+	float RotationInterpSpeed = 1.0f;
 };

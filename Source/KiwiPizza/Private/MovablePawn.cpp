@@ -1,5 +1,7 @@
 #include "MovablePawn.h"
 #include "LevelLoader.h"
+#include "Math/UnrealMathUtility.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "GameplayTag.h"
 
 AMovablePawn::AMovablePawn()
@@ -59,7 +61,7 @@ void AMovablePawn::WrapAroundWorld()
 	SetActorLocation(Location);
 }
 
-void AMovablePawn::MoveVector(FVector2D Value)
+void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 {
 	// Declare some variables.
 	FVector DeltaLocation(Value.X, Value.Y, 0.0f);
@@ -114,7 +116,7 @@ void AMovablePawn::MoveVector(FVector2D Value)
 
 	// Let's apply the offset first.
 	auto OldActorLocation = GetActorLocation();
-	AddActorLocalOffset(DeltaLocation, false);
+	AddActorWorldOffset(DeltaLocation, false);
 
 	// However, in the case where we're overlapping with a wall after applying the offset,
 	if (DeltaLocation.X != 0.0f || DeltaLocation.Y != 0.0f)
@@ -139,5 +141,22 @@ void AMovablePawn::MoveVector(FVector2D Value)
 				}
 			}
 		}
+	}
+
+	if (Value.X != 0 || Value.Y != 0)
+	{
+		// Get current rotation.
+		auto ActorRotation = GetActorRotation();
+
+		// Get target rotation.
+		auto ActorLocation = GetActorLocation();
+		FVector DeltaLocation2(Value.X, Value.Y, 0.0f);
+		auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(ActorLocation, ActorLocation + DeltaLocation2);
+
+		// Lerp to target rotation.
+		auto NewRotation = FMath::RInterpTo(ActorRotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
+
+		// Set rotation to interpolated rotation value.
+		SetActorRotation(NewRotation);
 	}
 }

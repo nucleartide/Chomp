@@ -9,9 +9,12 @@ void AGhostAIController::BeginPlay()
 {
     Super::BeginPlay();
 
-    FVector2D Origin(0.0f, 0.0f);
-    FVector2D Destination(100 * 10.0f, 0.0f);
-    StartMovingFrom(Origin, Destination);
+    if (IsTestOriginAndDestinationEnabled)
+    {
+        FVector2D Origin(0.0f, 0.0f);
+        FVector2D Destination(100 * 10.5f, 0.0f);
+        StartMovingFrom(Origin, Destination);
+    }
 }
 
 void AGhostAIController::Tick(float DeltaTime)
@@ -70,7 +73,7 @@ void AGhostAIController::Move(float DeltaTime)
     check(GhostPawn);
 
     // Move the ghost pawn.
-    GhostPawn->MoveVector(ScaledMovementDirection);
+    GhostPawn->MoveVector(ScaledMovementDirection, DeltaTime);
 
     // Pawn has exceeded destination if...
     auto ActorLocation = GhostPawn->GetActorLocation();
@@ -90,9 +93,6 @@ void AGhostAIController::Move(float DeltaTime)
     {
         IsAtDestination = true;
     }
-
-    // (later) update the pawn's orientation too.
-    // ...
 
 /*
     // Update the elapsed time.

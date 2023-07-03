@@ -32,7 +32,7 @@ public:
 	/**
 	 *  Move this pawn around by Value.
 	 */
-	virtual void MoveVector(FVector2D Value) override;
+	virtual void MoveVector(FVector2D Value, float DeltaTime) override;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnPacmanDiedSignature OnPacmanDiedDelegate;

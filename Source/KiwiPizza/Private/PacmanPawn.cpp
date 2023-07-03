@@ -19,7 +19,7 @@ void APacmanPawn::Tick(float DeltaTime)
 	WrapAroundWorld();
 }
 
-void APacmanPawn::MoveVector(FVector2D Value)
+void APacmanPawn::MoveVector(FVector2D Value, float DeltaTime)
 {
 
 	//
@@ -39,7 +39,7 @@ void APacmanPawn::MoveVector(FVector2D Value)
 	// Invoke the MoveVector() behavior in the parent class.
 	//
 
-	Super::MoveVector(Value);
+	Super::MoveVector(Value, DeltaTime);
 }
 
 void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
