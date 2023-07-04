@@ -15,7 +15,7 @@ UCLASS()
 class KIWIPIZZA_API ALevelGenerationActor : public AActor
 {
 	GENERATED_BODY()
-	
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -39,6 +39,8 @@ private:
 
 	UFUNCTION(BlueprintCallable)
 	void HandleDotConsumption();
+
+	TArray<AActor *> Walls;
 
 public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)

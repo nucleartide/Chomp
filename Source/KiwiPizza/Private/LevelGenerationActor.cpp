@@ -34,14 +34,22 @@ void ALevelGenerationActor::BeginPlay()
 
 void ALevelGenerationActor::RegenerateDots()
 {
-	//
 	// Load level.
-	//
-
 	auto Level = ULevelLoader::GetInstance(LevelLoader);
 	Level->LoadLevel();
 	DEBUG_LOG(TEXT("Level width: %d"), Level->GetLevelWidth());
 	DEBUG_LOG(TEXT("Level height: %d"), Level->GetLevelHeight());
+
+	// Destroy existing walls if there are any.
+	if (Walls.Num() > 0)
+	{
+		DEBUG_LOG(TEXT("Restarting game - destroying existing walls, then recreating..."));
+
+		for (auto Wall : Walls)
+			Wall->Destroy();
+
+		Walls.Empty();
+	}
 
 	for (int32 x = 0; x < Level->StringList.Num(); x++)
 	{
@@ -75,6 +83,9 @@ void ALevelGenerationActor::RegenerateDots()
 				// Spawn the actor at the desired location.
 				auto SpawnedActor = World->SpawnActor<AStaticMeshActor>(SelectedTile, Location, FRotator::ZeroRotator, SpawnParams);
 				check(SpawnedActor);
+
+				// Add actor so we can destroy later on.
+				Walls.Add(SpawnedActor);
 			}
 			else if (Character == ' ')
 			{

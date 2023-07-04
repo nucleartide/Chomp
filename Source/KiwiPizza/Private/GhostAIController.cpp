@@ -78,7 +78,6 @@ void AGhostAIController::Move(float DeltaTime)
     // Pawn has exceeded destination if...
     auto ActorLocation = GhostPawn->GetActorLocation();
     bool ExceededDestination = false;
-    DEBUG_LOG(TEXT("%s"), *(ActorLocation.ToString()));
     if (MovementDirection.Y < 0)
         ExceededDestination = ActorLocation.Y <= CurrentDestination.Y;
     else if (MovementDirection.Y > 0)
@@ -108,13 +107,11 @@ void AGhostAIController::Move(float DeltaTime)
     FVector Origin3D(CurrentOrigin.X, CurrentOrigin.Y, 0.0f);
     FVector Destination3D(CurrentDestination.X, CurrentDestination.Y, 0.0f);
     auto NewLocation = FMath::Lerp(Origin3D, Destination3D, LerpParam);
-    // DEBUG_LOG(TEXT("%s"), *(NewLocation.ToString()));
 
     // Grab reference to GhostPawn.
 
     // Compute the delta required to move the ghost.
     auto CurrentLocation = GhostPawn->GetActorLocation();
     FVector2D Delta(NewLocation.X - CurrentLocation.X, NewLocation.Y - CurrentLocation.Y);
-    DEBUG_LOG(TEXT("%s"), *(Delta.ToString()));
 */
 }
