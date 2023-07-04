@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "AIController.h"
+#include "Math/IntPoint.h"
 #include "GhostAIController.generated.h"
 
 UCLASS()
@@ -18,12 +19,17 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
 	bool IsTestOriginAndDestinationEnabled = false;
 
-	void MoveFrom(FVector2D Source, FVector2D Destination);
-	void Move(float DeltaTime);
-	void StartMovingFrom(FVector2D Origin, FVector2D Destination);
+	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
+	TSubclassOf<class ULevelLoader> Level;
 
-	FVector2D CurrentOrigin;
-	FVector2D CurrentDestination;
+	using GridPosition = FIntPoint;
+
+	void StartMovingFrom(GridPosition Origin, GridPosition Destination);
+	void Move(float DeltaTime);
+
+	GridPosition CurrentOriginGridPos;
+	GridPosition CurrentDestinationGridPos;
+
 	bool IsAtDestination = false;
 	float ElapsedTime = 0.0f;
 	float TotalTime = 0.0f;

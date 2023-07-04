@@ -26,18 +26,18 @@ int ULevelLoader::GetLevelHeight()
     return LengthOfLineInLevel;
 }
 
-FVector2D ULevelLoader::GridToWorld(FVector2D GridPosition)
+FVector2D ULevelLoader::GridToWorld(FIntPoint GridPosition)
 {
     FVector2D WorldPosition;
-    WorldPosition.X = (FMath::FloorToFloat(GridPosition.X) - .5f * GetLevelHeight()) * 100.0f;
-    WorldPosition.Y = (FMath::FloorToFloat(GridPosition.Y) - .5f * GetLevelWidth()) * 100.0f;
+    WorldPosition.X = ((float)GridPosition.X - .5f * GetLevelHeight()) * 100.0f;
+    WorldPosition.Y = ((float)GridPosition.Y - .5f * GetLevelWidth()) * 100.0f;
     return WorldPosition;
 }
 
 // Inverse operation of GridToWorld().
-FVector2D ULevelLoader::WorldToGrid(FVector2D WorldPosition)
+FIntPoint ULevelLoader::WorldToGrid(FVector2D WorldPosition)
 {
-    FVector2D GridPosition;
+    FIntPoint GridPosition;
     GridPosition.X = FMath::FloorToFloat(WorldPosition.X * .01f);
     GridPosition.Y = FMath::FloorToFloat(WorldPosition.Y * .01f);
     GridPosition.X += .5f * GetLevelHeight();

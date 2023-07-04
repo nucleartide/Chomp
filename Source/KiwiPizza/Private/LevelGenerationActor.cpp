@@ -9,6 +9,7 @@
 #include "Debug.h"
 #include "ConsumableDotActor.h"
 #include "PacmanGameMode.h"
+#include "Math/IntPoint.h"
 
 // Called when the game starts or when spawned
 void ALevelGenerationActor::BeginPlay()
@@ -69,7 +70,7 @@ void ALevelGenerationActor::RegenerateDots()
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Set the desired location.
-				FVector2D GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				FIntPoint GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 
@@ -97,7 +98,7 @@ void ALevelGenerationActor::RegenerateDots()
 				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Set the desired location for the actor
-				FVector2D GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				FIntPoint GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 

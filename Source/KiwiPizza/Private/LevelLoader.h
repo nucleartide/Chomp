@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/NoExportTypes.h"
+#include "Math/IntPoint.h"
 #include "LevelLoader.generated.h"
 
 UCLASS(Blueprintable)
@@ -13,8 +14,8 @@ public:
 	int GetLevelWidth();
 	int GetLevelHeight();
 	void LoadLevel();
-	FVector2D GridToWorld(FVector2D GridPosition);
-	FVector2D WorldToGrid(FVector2D WorldPosition);
+	FVector2D GridToWorld(FIntPoint GridPosition);
+	FIntPoint WorldToGrid(FVector2D WorldPosition);
 
 	// This method returns a reference to the Blueprint asset's single instance.
 	static ULevelLoader *GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass);

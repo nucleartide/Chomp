@@ -4,6 +4,7 @@
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Debug.h"
+#include "LevelLoader.h"
 
 void AGhostAIController::BeginPlay()
 {
@@ -11,8 +12,17 @@ void AGhostAIController::BeginPlay()
 
     if (IsTestOriginAndDestinationEnabled)
     {
-        FVector2D Origin(0.0f, 0.0f);
-        FVector2D Destination(100 * 10.5f, 0.0f);
+        // Get current world position.
+        auto ActorLocation = GetPawn()->GetActorLocation();
+        FVector2D ActorLocation2D(ActorLocation.X, ActorLocation.Y);
+
+        // Convert the world position to grid position. This will be the origin.
+        auto Origin = ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
+
+        // Add 10 to the x component of the grid position. This will be the destination.
+        GridPosition Destination(Origin.X + 10, Origin.Y);
+
+        // Start moving from the origin to the destination specified above.
         StartMovingFrom(Origin, Destination);
     }
 }
@@ -21,40 +31,21 @@ void AGhostAIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Get the pawn.
-    // auto Pawn = GetPawn();
-    // check(Pawn);
-
-    // Cast the pawn.
-    // auto GhostPawn = Cast<AGhostPawn>(Pawn);
-    // check(GhostPawn);
-
-    // Call MoveVector(), and move by 100 cm/s to the left.
-    // FVector2D DeltaLocation(-100.0f, 0.0f);
-    // GhostPawn->MoveVector(MovementSpeed * DeltaLocation * DeltaTime);
-
     // Move the Ghost, given the currently saved Source and Destination.
     Move(DeltaTime);
 }
 
-void AGhostAIController::StartMovingFrom(FVector2D Origin, FVector2D Destination)
+void AGhostAIController::StartMovingFrom(GridPosition Origin, GridPosition Destination)
 {
     // Ensure Origin and Destination are axis-aligned.
     check((Origin.X == Destination.X) != (Origin.Y == Destination.Y));
 
     // Save the current Origin and Destination.
-    CurrentOrigin = Origin;
-    CurrentDestination = Destination;
+    CurrentOriginGridPos = Origin;
+    CurrentDestinationGridPos = Destination;
 
     // Reset some internal bookkeeping.
     IsAtDestination = false;
-    // ElapsedTime = 0.0f;
-
-    // Compute the difference in units.
-    // auto Difference = FMath::Abs(Origin.X - Destination.X) + FMath::Abs(Origin.Y - Destination.Y);
-
-    // Multiply the number of units by the TimeToTraverseOneUnit to get the total time.
-    // TotalTime = Difference * TimeToTraverseOneUnit;
 }
 
 void AGhostAIController::Move(float DeltaTime)
@@ -63,7 +54,7 @@ void AGhostAIController::Move(float DeltaTime)
         return;
 
     // Compute the movement direction.
-    FVector2D MovementDirection(CurrentDestination.X - CurrentOrigin.X, CurrentDestination.Y - CurrentOrigin.Y);
+    FVector2D MovementDirection(CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y);
 
     // Magnify the movement direction by the movement speed and delta time.
     auto ScaledMovementDirection = MovementDirection.GetSafeNormal() * DeltaTime * MovementSpeed;
@@ -78,40 +69,19 @@ void AGhostAIController::Move(float DeltaTime)
     // Pawn has exceeded destination if...
     auto ActorLocation = GhostPawn->GetActorLocation();
     bool ExceededDestination = false;
+    auto Dest = ULevelLoader::GetInstance(Level)->GridToWorld(CurrentDestinationGridPos);
     if (MovementDirection.Y < 0)
-        ExceededDestination = ActorLocation.Y <= CurrentDestination.Y;
+        ExceededDestination = ActorLocation.Y <= Dest.Y;
     else if (MovementDirection.Y > 0)
-        ExceededDestination = ActorLocation.Y >= CurrentDestination.Y;
+        ExceededDestination = ActorLocation.Y >= Dest.Y;
     else if (MovementDirection.X < 0)
-        ExceededDestination = ActorLocation.X <= CurrentDestination.X;
+        ExceededDestination = ActorLocation.X <= Dest.X;
     else if (MovementDirection.X > 0)
-        ExceededDestination = ActorLocation.X >= CurrentDestination.X;
+        ExceededDestination = ActorLocation.X >= Dest.X;
 
     // If the pawn has exceeded the destination, update internal bookkeeping.
     if (ExceededDestination)
     {
         IsAtDestination = true;
     }
-
-/*
-    // Update the elapsed time.
-    ElapsedTime += DeltaTime;
-
-    // Clamp the ElapsedTime to 0 and TotalTime.
-    ElapsedTime = FMath::Clamp(ElapsedTime, 0.0f, TotalTime);
-
-    // Inverse lerp to get a lerp parameter.
-    float LerpParam = UKismetMathLibrary::NormalizeToRange(ElapsedTime, 0.0f, TotalTime); // what happens if I don't include...
-
-    // Lerp between CurrentOrigin and CurrentDestination, and get a new FVector2D.
-    FVector Origin3D(CurrentOrigin.X, CurrentOrigin.Y, 0.0f);
-    FVector Destination3D(CurrentDestination.X, CurrentDestination.Y, 0.0f);
-    auto NewLocation = FMath::Lerp(Origin3D, Destination3D, LerpParam);
-
-    // Grab reference to GhostPawn.
-
-    // Compute the delta required to move the ghost.
-    auto CurrentLocation = GhostPawn->GetActorLocation();
-    FVector2D Delta(NewLocation.X - CurrentLocation.X, NewLocation.Y - CurrentLocation.Y);
-*/
 }
