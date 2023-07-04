@@ -85,3 +85,22 @@ void AGhostAIController::Move(float DeltaTime)
         IsAtDestination = true;
     }
 }
+
+void GhostAIController::Pathfind(GridPosition Destination)
+{
+    // TODO.
+    // Need to customize yesterday's A-star implementation.
+    // Just use the Manhattan distance heuristic for now, we can rationalize the heuristic later.
+
+    // TODO: Construct a Graph. Let's do this after dinner.
+    // ...
+
+    /*
+template <typename Location, typename Graph>
+void a_star_search(Graph graph,
+                   Location start,
+                   Location goal,
+                   std::unordered_map<Location, Location> &came_from,
+                   std::unordered_map<Location, double> &cost_so_far)
+    */
+}

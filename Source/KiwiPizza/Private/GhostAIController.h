@@ -26,6 +26,7 @@ private:
 
 	void StartMovingFrom(GridPosition Origin, GridPosition Destination);
 	void Move(float DeltaTime);
+	void Pathfind(GridPosition Destination);
 
 	GridPosition CurrentOriginGridPos;
 	GridPosition CurrentDestinationGridPos;
