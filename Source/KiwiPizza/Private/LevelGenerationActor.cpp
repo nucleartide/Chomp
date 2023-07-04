@@ -69,9 +69,9 @@ void ALevelGenerationActor::RegenerateDots()
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Set the desired location.
-				auto LocationX = x * 100.0f - Level->StringList.Num() * 0.5f * 100.0f + 50.0f;
-				auto LocationY = y * 100.0f - Element.Len() * 0.5f * 100.0f + 50.0f;
-				FVector Location(LocationY, LocationX, 0.0f);
+				FVector2D GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				auto WorldPosition = Level->GridToWorld(GridPosition);
+				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 
 				// Select tile.
 				TSubclassOf<AStaticMeshActor> SelectedTile;
@@ -97,9 +97,9 @@ void ALevelGenerationActor::RegenerateDots()
 				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Set the desired location for the actor
-				auto LocationX = x * 100.0f - Level->StringList.Num() * 0.5f * 100.0f + 50.0f;
-				auto LocationY = y * 100.0f - Element.Len() * 0.5f * 100.0f + 50.0f;
-				FVector Location(LocationY, LocationX, 0.0f);
+				FVector2D GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				auto WorldPosition = Level->GridToWorld(GridPosition);
+				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 
 				// Spawn the actor at the desired location
 				FVector BogusLocation(10000.0f, 10000.0f, 10000.0f);
