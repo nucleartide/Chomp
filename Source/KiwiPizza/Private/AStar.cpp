@@ -6,6 +6,8 @@
  License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
 */
 
+#if false
+
 #include <iostream>
 #include <iomanip>
 #include <unordered_map>
@@ -456,3 +458,5 @@ breadth_first_search(Graph graph, Location start, Location goal)
     }
     return came_from;
 }
+
+#endif

@@ -71,6 +71,7 @@ void ALevelGenerationActor::RegenerateDots()
 
 				// Set the desired location.
 				FIntPoint GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				Level->AddWallTile(y, x);
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 
@@ -124,7 +125,25 @@ void ALevelGenerationActor::RegenerateDots()
 		}
 	}
 
+	// Final thing for the night, debug the wall data structure that was created in LevelLoader.
 	DEBUG_LOG(TEXT("%d dots generated."), NumDotsGenerated);
+	DEBUG_LOG(TEXT("Wall debug:"));
+	for (int X = Level->GetLevelHeight() - 1; X >= 0; X--)
+	{
+		FString Line = TEXT("");
+		for (int Y = 0; Y < Level->GetLevelWidth(); Y++)
+		{
+			if (Level->IsWall(X, Y))
+				Line += TEXT("X");
+			else
+				Line += TEXT(" ");
+		}
+		DEBUG_LOG(TEXT("%s"), *Line);
+	}
+
+	// TODO: We can focus on implementing a_star_search for LevelLoader tomorrow.
+	// TODO: Be able to say `.Pathfind(GridLocation{x, y})`, and have the ghost move to that location.
+	// ...
 }
 
 void ALevelGenerationActor::HandleDotConsumption()

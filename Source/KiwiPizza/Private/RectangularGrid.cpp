@@ -1,11 +1,5 @@
 #include "RectangularGrid.h"
 
-std::array<GridLocation, 4> RectangularGrid::DIRS = {
-    GridLocation{1, 0},  // North
-    GridLocation{-1, 0}, // South
-    GridLocation{0, -1}, // East
-    GridLocation{0, 1}}; // West
-
 bool RectangularGrid::InBounds(GridLocation Id) const
 {
     return 0 <= Id.X && Id.X < Width && 0 <= Id.Y && Id.Y < Height;

@@ -1,5 +1,12 @@
 #include "LevelLoader.h"
 #include "Kismet/KismetMathLibrary.h"
+#include <algorithm>
+
+std::array<GridLocation, 4> ULevelLoader::DIRS = {
+    GridLocation{1, 0},  // North
+    GridLocation{-1, 0}, // South
+    GridLocation{0, -1}, // East
+    GridLocation{0, 1}}; // West
 
 ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass)
 {
@@ -12,14 +19,14 @@ ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader> &Bluepri
     return Level;
 }
 
-int ULevelLoader::GetLevelWidth()
+int ULevelLoader::GetLevelWidth() const
 {
     check(NumberOfLinesInLevel % 2 == 0);
     check(NumberOfLinesInLevel != 0);
     return NumberOfLinesInLevel;
 }
 
-int ULevelLoader::GetLevelHeight()
+int ULevelLoader::GetLevelHeight() const
 {
     check(LengthOfLineInLevel % 2 == 0);
     check(LengthOfLineInLevel != 0);
@@ -70,4 +77,52 @@ void ULevelLoader::LoadLevel()
         LengthOfLineInLevel = Element.Len();
         break;
     }
+}
+
+bool ULevelLoader::InBounds(GridLocation Id) const
+{
+    return 0 <= Id.X && Id.X < GetLevelHeight() && 0 <= Id.Y && Id.Y < GetLevelWidth();
+}
+
+bool ULevelLoader::Passable(GridLocation Id) const
+{
+    return Walls.find(Id) == Walls.end();
+}
+
+// Get the neighbors of a GridLocation.
+std::vector<GridLocation> ULevelLoader::Neighbors(GridLocation Id) const
+{
+    std::vector<GridLocation> Results;
+
+    for (GridLocation Direction : DIRS)
+    {
+        GridLocation Next{Id.X + Direction.X, Id.Y + Direction.Y};
+        if (InBounds(Next) && Passable(Next))
+            Results.push_back(Next);
+    }
+
+    // Not 100% sure why we need this, but see this link for explanations: https://www.redblobgames.com/pathfinding/a-star/implementation.html#troubleshooting-ugly-path
+    if ((Id.X + Id.Y) % 2 == 0)
+    {
+        // Reverse the list of neighbors.
+        std::reverse(Results.begin(), Results.end());
+    }
+
+    return Results;
+}
+
+// Add an individual wall tile.
+void ULevelLoader::AddWallTile(int X, int Y)
+{
+    Walls.insert(GridLocation{X, Y});
+}
+
+void ULevelLoader::ClearWalls()
+{
+    Walls.clear();
+}
+
+bool ULevelLoader::IsWall(int X, int Y)
+{
+    return Walls.find(GridLocation{X, Y}) != Walls.end();
 }
