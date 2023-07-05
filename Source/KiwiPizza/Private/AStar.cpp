@@ -29,6 +29,11 @@ struct SimpleGraph
     }
 };
 
+struct GridLocation
+{
+    int x, y;
+};
+
 // Jason: Creating an example graph struct.
 SimpleGraph example_graph{{
     {'A', {'B'}},
@@ -40,11 +45,6 @@ SimpleGraph example_graph{{
 }};
 
 // Jason: GridLocation definition.
-struct GridLocation
-{
-    int x, y;
-};
-
 // Jason: Implement a hash function for GridLocations, so that GridLocations can be used as keys into an unordered_set.
 namespace std
 {
@@ -397,53 +397,62 @@ void a_star_search(Graph graph,
     }
 }
 
-void breadth_first_search(SimpleGraph graph, char start) {
-  std::queue<char> frontier;
-  frontier.push(start);
+void breadth_first_search(SimpleGraph graph, char start)
+{
+    std::queue<char> frontier;
+    frontier.push(start);
 
-  std::unordered_set<char> reached;
-  reached.insert(start);
+    std::unordered_set<char> reached;
+    reached.insert(start);
 
-  while (!frontier.empty()) {
-    char current = frontier.front();
-    frontier.pop();
+    while (!frontier.empty())
+    {
+        char current = frontier.front();
+        frontier.pop();
 
-    std::cout << "  Visiting " << current << '\n';
-    for (char next : graph.neighbors(current)) {
-      if (reached.find(next) == reached.end()) {
-        frontier.push(next);
-        reached.insert(next);
-      }
+        std::cout << "  Visiting " << current << '\n';
+        for (char next : graph.neighbors(current))
+        {
+            if (reached.find(next) == reached.end())
+            {
+                frontier.push(next);
+                reached.insert(next);
+            }
+        }
     }
-  }
 }
 
 // this implementation uses external storage (versus internal storage like a separate Node class)
 // the external storage is the unordered_map
-template<typename Location, typename Graph>
+template <typename Location, typename Graph>
 std::unordered_map<Location, Location>
-breadth_first_search(Graph graph, Location start, Location goal) {
-  std::queue<Location> frontier;
-  frontier.push(start);
+breadth_first_search(Graph graph, Location start, Location goal)
+{
+    std::queue<Location> frontier;
+    frontier.push(start);
 
-  std::unordered_map<Location, Location> came_from;
-  came_from[start] = start;
+    std::unordered_map<Location, Location> came_from;
+    came_from[start] = start;
 
-  while (!frontier.empty()) {
-    Location current = frontier.front();
-    frontier.pop();
+    while (!frontier.empty())
+    {
+        Location current = frontier.front();
+        frontier.pop();
 
-    // break as soon as we find the goal
-    if (current == goal) {
-      break;
+        // break as soon as we find the goal
+        if (current == goal)
+        {
+            break;
+        }
+
+        for (Location next : graph.neighbors(current))
+        {
+            if (came_from.find(next) == came_from.end())
+            {
+                frontier.push(next);
+                came_from[next] = current;
+            }
+        }
     }
-
-    for (Location next : graph.neighbors(current)) {
-      if (came_from.find(next) == came_from.end()) {
-        frontier.push(next);
-        came_from[next] = current;
-      }
-    }
-  }
-  return came_from;
+    return came_from;
 }

@@ -86,7 +86,7 @@ void AGhostAIController::Move(float DeltaTime)
     }
 }
 
-void GhostAIController::Pathfind(GridPosition Destination)
+void AGhostAIController::Pathfind(GridPosition Destination)
 {
     // TODO.
     // Need to customize yesterday's A-star implementation.
