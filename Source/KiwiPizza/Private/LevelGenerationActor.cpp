@@ -9,7 +9,7 @@
 #include "Debug.h"
 #include "ConsumableDotActor.h"
 #include "PacmanGameMode.h"
-#include "Math/IntPoint.h"
+#include "GridLocation.h"
 
 // Called when the game starts or when spawned
 void ALevelGenerationActor::BeginPlay()
@@ -70,7 +70,7 @@ void ALevelGenerationActor::RegenerateDots()
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Set the desired location.
-				FIntPoint GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				GridLocation GridPosition{y, x}; // Flipping the axes because we want to display the level horizontally.
 				Level->AddWallTile(y, x);
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
@@ -99,7 +99,7 @@ void ALevelGenerationActor::RegenerateDots()
 				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Set the desired location for the actor
-				FIntPoint GridPosition(y, x); // Flipping the axes because we want to display the level horizontally.
+				GridLocation GridPosition{y, x}; // Flipping the axes because we want to display the level horizontally.
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 
@@ -140,10 +140,6 @@ void ALevelGenerationActor::RegenerateDots()
 		}
 		DEBUG_LOG(TEXT("%s"), *Line);
 	}
-
-	// TODO: We can focus on implementing a_star_search for LevelLoader tomorrow.
-	// TODO: Be able to say `.Pathfind(GridLocation{x, y})`, and have the ghost move to that location.
-	// ...
 }
 
 void ALevelGenerationActor::HandleDotConsumption()

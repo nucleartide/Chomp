@@ -6,6 +6,108 @@
  License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
 */
 
+#include "AStar.h"
+
+// PriorityQueue provides a simple wrapper around std::priority_queue
+// so that I only use the API methods I've studied the docs for.
+template <typename T, typename priority_t>
+struct PriorityQueue
+{
+    typedef std::pair<priority_t, T> PQElement;
+
+    std::priority_queue<
+        PQElement,               // Type of stored element.
+        std::vector<PQElement>,  // Type of container used to store elements.
+        std::greater<PQElement>> // The elements with greatest priority are ordered first, then we take the last element in this ordering.
+        elements;
+
+    // Clear the priority queue's elements.
+    inline bool empty() const
+    {
+        return elements.empty();
+    }
+
+    inline void put(T item, priority_t priority)
+    {
+        // Using emplace avoids the necessity of having to copy/move a std::pair.
+        // Instead, the std::pair is constructed within the .emplace() implementation.
+        elements.emplace(priority, item);
+    }
+
+    T get()
+    {
+        T best_item = elements.top().second; // Get the top element of the priority queue, and the underlying item within the pair.
+        elements.pop();                      // Pop off the top element.
+        return best_item;                    // Return the top element.
+    }
+};
+
+double ManhattanDistanceHeuristic(GridLocation a, GridLocation b)
+{
+    return std::abs(a.X - b.X) + std::abs(a.Y - b.Y);
+}
+
+// TODO, after lunch:
+// [ ] write astarsearch example code
+// [ ] once written, reconstruct the ideal path with a reconstructing function
+// [ ] given this reconstructed path, figure out how to make AGhostAIController move along this path
+// ---
+// [ ] move onto further game impl tasks
+
+template <typename Location>
+void AStarSearch(IGraph *Graph,
+                 Location Start,
+                 Location Goal,
+                 std::unordered_map<Location, Location> &CameFrom,
+                 std::unordered_map<Location, double> &CostSoFar,
+                 const std::function<double(Location, Location)> &Heuristic)
+{
+    PriorityQueue<Location, double> Frontier;
+    Frontier.put(Start, 0);
+
+    CameFrom[Start] = Start;
+    CostSoFar[Start] = 0;
+
+    while (!Frontier.empty())
+    {
+        auto Current = Frontier.get();
+        if (Current == Goal)
+            // Then we're done! Break and end the search.
+            break;
+
+        for (auto Next : Graph->Neighbors(Current))
+        {
+            // There is no difference in cost between Pacman maze nodes, so
+            // this A* implementation devolves into Dijkstra's algorithm.
+            auto NewCost = CostSoFar[Current] + Graph->Cost(Current, Next); // Always zero.
+
+            // If we haven't recorded a cost for this neighbor node,
+            // or if the new cost is less than the current cost (never happens with a constant cost),
+            if (CostSoFar.find(Next) == CostSoFar.end() || NewCost < CostSoFar[Next])
+            {
+                // Place neighbor into priority queue.
+                // The priority of the neighbor is solely based on the result of the heuristic function.
+                // With the default Manhattan distance heuristic, nodes with the smallest Manhattan distance
+                // will take priority for exploration.
+                double Priority = NewCost + Heuristic(Next, Goal);
+                Frontier.put(Next, Priority);
+
+                // Update our maps.
+                CostSoFar[Next] = NewCost; // Always zero.
+                CameFrom[Next] = Current;  // Provides a link to parent node.
+            }
+        }
+    }
+}
+
+template
+void AStarSearch(IGraph *Graph,
+                 GridLocation Start,
+                 GridLocation Goal,
+                 std::unordered_map<GridLocation, GridLocation> &CameFrom,
+                 std::unordered_map<GridLocation, double> &CostSoFar,
+                 const std::function<double(GridLocation, GridLocation)> &Heuristic);
+
 #if false
 
 #include <iostream>
@@ -45,22 +147,6 @@ SimpleGraph example_graph{{
     {'E', {'F'}},
     {'F', {}},
 }};
-
-// Jason: GridLocation definition.
-// Jason: Implement a hash function for GridLocations, so that GridLocations can be used as keys into an unordered_set.
-namespace std
-{
-    /* implement hash function so we can put GridLocation into an unordered_set */
-    template <>
-    struct hash<GridLocation>
-    {
-        std::size_t operator()(const GridLocation &id) const noexcept
-        {
-            // NOTE: better to use something like boost hash_combine
-            return std::hash<int>()(id.x ^ (id.y << 16));
-        }
-    };
-}
 
 // Jason: defining the data structure for a square grid.
 // i guess this is more properly a rectangular grid, because width and height can be different.
@@ -113,28 +199,6 @@ std::array<GridLocation, 4> SquareGrid::DIRS = {
     /* East, West, North, South */
     GridLocation{1, 0}, GridLocation{-1, 0},
     GridLocation{0, -1}, GridLocation{0, 1}};
-
-// Helpers for GridLocation
-bool operator==(GridLocation a, GridLocation b)
-{
-    return a.x == b.x && a.y == b.y;
-}
-
-bool operator!=(GridLocation a, GridLocation b)
-{
-    return !(a == b);
-}
-
-bool operator<(GridLocation a, GridLocation b)
-{
-    return std::tie(a.x, a.y) < std::tie(b.x, b.y);
-}
-
-std::basic_iostream<char>::basic_ostream &operator<<(std::basic_iostream<char>::basic_ostream &out, const GridLocation &loc)
-{
-    out << '(' << loc.x << ',' << loc.y << ')';
-    return out;
-}
 
 // This outputs a grid. Pass in a distances map if you want to print
 // the distances, or pass in a point_to map if you want to print
@@ -263,33 +327,6 @@ GridWithWeights make_diagram4()
     return grid;
 }
 
-// jason: priority queue wrapper around std::priority_queue
-template <typename T, typename priority_t>
-struct PriorityQueue
-{
-    typedef std::pair<priority_t, T> PQElement;
-    std::priority_queue<PQElement, std::vector<PQElement>,
-                        std::greater<PQElement>>
-        elements;
-
-    inline bool empty() const
-    {
-        return elements.empty();
-    }
-
-    inline void put(T item, priority_t priority)
-    {
-        elements.emplace(priority, item);
-    }
-
-    T get()
-    {
-        T best_item = elements.top().second;
-        elements.pop();
-        return best_item;
-    }
-};
-
 // jason: implementation of dijkstra
 template <typename Location, typename Graph>
 void dijkstra_search(Graph graph,
@@ -354,49 +391,6 @@ GridWithWeights make_diagram_nopath()
     GridWithWeights grid(10, 10);
     add_rect(grid, 5, 0, 6, 10);
     return grid;
-}
-
-// jason: heuristic function, uses manhattan distance
-inline double heuristic(GridLocation a, GridLocation b)
-{
-    return std::abs(a.x - b.x) + std::abs(a.y - b.y);
-}
-
-// jason: implementation of a-star
-template <typename Location, typename Graph>
-void a_star_search(Graph graph,
-                   Location start,
-                   Location goal,
-                   std::unordered_map<Location, Location> &came_from,
-                   std::unordered_map<Location, double> &cost_so_far)
-{
-    PriorityQueue<Location, double> frontier;
-    frontier.put(start, 0);
-
-    came_from[start] = start;
-    cost_so_far[start] = 0;
-
-    while (!frontier.empty())
-    {
-        Location current = frontier.get();
-
-        if (current == goal)
-        {
-            break;
-        }
-
-        for (Location next : graph.neighbors(current))
-        {
-            double new_cost = cost_so_far[current] + graph.cost(current, next);
-            if (cost_so_far.find(next) == cost_so_far.end() || new_cost < cost_so_far[next])
-            {
-                cost_so_far[next] = new_cost;
-                double priority = new_cost + heuristic(next, goal);
-                frontier.put(next, priority);
-                came_from[next] = current;
-            }
-        }
-    }
 }
 
 void breadth_first_search(SimpleGraph graph, char start)

@@ -5,6 +5,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Debug.h"
 #include "LevelLoader.h"
+#include "AStar.h"
 
 void AGhostAIController::BeginPlay()
 {
@@ -20,10 +21,23 @@ void AGhostAIController::BeginPlay()
         auto Origin = ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
 
         // Add 10 to the x component of the grid position. This will be the destination.
-        GridPosition Destination(Origin.X + 10, Origin.Y);
+        GridLocation Destination{Origin.X + 10, Origin.Y};
 
         // Start moving from the origin to the destination specified above.
         StartMovingFrom(Origin, Destination);
+
+        // Call out to AStarSearch().
+        auto LevelInstance = ULevelLoader::GetInstance(Level);
+        std::unordered_map<GridLocation, GridLocation> CameFrom;
+        std::unordered_map<GridLocation, double> CostSoFar;
+        std::function<double(GridLocation, GridLocation)> FunctionObject = &ManhattanDistanceHeuristic;
+        AStarSearch(
+            LevelInstance,
+            Origin,
+            Destination,
+            CameFrom,
+            CostSoFar,
+            FunctionObject);
     }
 }
 
@@ -35,7 +49,7 @@ void AGhostAIController::Tick(float DeltaTime)
     Move(DeltaTime);
 }
 
-void AGhostAIController::StartMovingFrom(GridPosition Origin, GridPosition Destination)
+void AGhostAIController::StartMovingFrom(GridLocation Origin, GridLocation Destination)
 {
     // Ensure Origin and Destination are axis-aligned.
     check((Origin.X == Destination.X) != (Origin.Y == Destination.Y));
@@ -86,21 +100,16 @@ void AGhostAIController::Move(float DeltaTime)
     }
 }
 
-void AGhostAIController::Pathfind(GridPosition Destination)
+// TODO: Be able to say `.Pathfind(GridLocation{x, y})`, and have the ghost move to that location.
+// [ ] Just use the Manhattan distance heuristic for now, we can rationalize the heuristic later.
+void AGhostAIController::Pathfind(GridLocation Destination)
 {
-    // TODO.
-    // Need to customize yesterday's A-star implementation.
-    // Just use the Manhattan distance heuristic for now, we can rationalize the heuristic later.
-
-    // TODO: Construct a Graph. Let's do this after dinner.
-    // ...
-
     /*
 template <typename Location, typename Graph>
-void a_star_search(Graph graph,
-                   Location start,
-                   Location goal,
-                   std::unordered_map<Location, Location> &came_from,
-                   std::unordered_map<Location, double> &cost_so_far)
+void a_star_search(Graph graph, - pass in the LevelLoader*
+                   Location start, - this is GridLocation
+                   Location goal, - this is GridLocation
+                   const std::unordered_map<Location, Location> &came_from, -- this can be an empty map
+                   const std::unordered_map<Location, double> &cost_so_far) -- this can be an empty map
     */
 }

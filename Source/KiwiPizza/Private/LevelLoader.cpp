@@ -33,7 +33,7 @@ int ULevelLoader::GetLevelHeight() const
     return LengthOfLineInLevel;
 }
 
-FVector2D ULevelLoader::GridToWorld(FIntPoint GridPosition)
+FVector2D ULevelLoader::GridToWorld(GridLocation GridPosition)
 {
     FVector2D WorldPosition;
     WorldPosition.X = ((float)GridPosition.X - .5f * GetLevelHeight()) * 100.0f;
@@ -42,9 +42,9 @@ FVector2D ULevelLoader::GridToWorld(FIntPoint GridPosition)
 }
 
 // Inverse operation of GridToWorld().
-FIntPoint ULevelLoader::WorldToGrid(FVector2D WorldPosition)
+GridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
 {
-    FIntPoint GridPosition;
+    GridLocation GridPosition;
     GridPosition.X = FMath::FloorToFloat(WorldPosition.X * .01f);
     GridPosition.Y = FMath::FloorToFloat(WorldPosition.Y * .01f);
     GridPosition.X += .5f * GetLevelHeight();
@@ -125,4 +125,10 @@ void ULevelLoader::ClearWalls()
 bool ULevelLoader::IsWall(int X, int Y)
 {
     return Walls.find(GridLocation{X, Y}) != Walls.end();
+}
+
+double ULevelLoader::Cost(GridLocation FromNode, GridLocation ToNode) const
+{
+    // NOTE: It is assumed that FromNode and ToNode are neighbors.
+    return 1.0; // Arbitrary non-zero constant.
 }

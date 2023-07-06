@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Math/IntPoint.h"
+#include "GridLocation.h"
 #include "GhostAIController.generated.h"
 
 UCLASS()
@@ -22,14 +23,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
 	TSubclassOf<class ULevelLoader> Level;
 
-	using GridPosition = FIntPoint;
-
-	void StartMovingFrom(GridPosition Origin, GridPosition Destination);
+	void StartMovingFrom(GridLocation Origin, GridLocation Destination);
 	void Move(float DeltaTime);
-	void Pathfind(GridPosition Destination);
+	void Pathfind(GridLocation Destination);
 
-	GridPosition CurrentOriginGridPos;
-	GridPosition CurrentDestinationGridPos;
+	GridLocation CurrentOriginGridPos;
+	GridLocation CurrentDestinationGridPos;
 
 	bool IsAtDestination = false;
 	float ElapsedTime = 0.0f;
