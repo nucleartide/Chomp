@@ -75,7 +75,7 @@ void ALevelGenerationActor::RegenerateDots()
 
 				// Set the desired location.
 				FGridLocation GridPosition{y, x}; // Flipping the axes because we want to display the level horizontally.
-				Level->AddWallTile(y, x);
+				// Level->AddWallTile(y, x);
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
 
@@ -128,7 +128,7 @@ void ALevelGenerationActor::RegenerateDots()
 			}
 			else
 			{
-				Level->AddWallTile(y, x);
+				// Level->AddWallTile(y, x);
 			}
 		}
 	}

@@ -119,11 +119,10 @@ void AGhostAIController::BeginPlay()
             FString Line = TEXT("");
             for (int Y = 0; Y < LevelInstance->GetLevelWidth(); Y++)
             {
-                if (LevelInstance->IsWall(X, Y))
+                auto To = FGridLocation{X, Y};
+                auto From = CameFrom[FGridLocation{X, Y}];
+                if (!LevelInstance->Passable(From, To))
                 {
-                    if (CameFrom.find(FGridLocation{X, Y}) != CameFrom.end())
-                    {
-                    }
                     Line += TEXT("X");
                 }
                 else

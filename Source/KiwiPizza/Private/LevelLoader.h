@@ -14,7 +14,10 @@
 #include "LevelLoader.generated.h"
 
 /**
- * ULevelLoader loads the contents of a level file (.txt file extension) into memory.
+ * ULevelLoader loads the contents of a level file (.txt file extension) into memory,
+ * then also serves as an instance of the loaded level afterward.
+ *
+ * TODO: This could probably be split into 2 classes: ULevelLoader, and ULevel. Not that important though.
  */
 UCLASS(Blueprintable)
 class ULevelLoader : public UObject, public IGraph
@@ -70,9 +73,9 @@ public:
 	FGridLocation WorldToGrid(FVector2D WorldPosition);
 
 	/**
-	 * Check whether a grid position is passable. That is, it's not a wall.
+	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
-	bool Passable(FGridLocation GridPosition) const;
+	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.
@@ -98,15 +101,29 @@ public:
 	 */
 	TArray<FString> StringList;
 
-#if false
-	// TODO: after lunch, fill in implementation of new API above.
-public:
-	// TODO: can we flip the layout of the map, horizontal <> vertical is confusing.
-	static std::array<FGridLocation, 4> DIRS; // this can be private
-	int NumberOfLinesInLevel = -1; // this can be private
-	int LengthOfLineInLevel = -1; // this can be private
-	std::unordered_set<FGridLocation> Walls;// this can be private
-	void AddWallTile(int X, int Y); // this can be private
-	void ClearWalls(); // this can be private, also it's redundant since I have a Clear()
-#endif
+private:
+	/**
+	 * The number of rows in the level.
+	 */
+	int NumberOfRows = 0;
+
+	/**
+	 * The number of columns in the level.
+	 */
+	int NumberOfColumns = 0;
+
+	/**
+	 * A set of FGridLocations that describe all the wall tiles in the level.
+	 */
+	std::unordered_set<FGridLocation> Walls;
+
+	/**
+	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
+	 */
+	std::unordered_set<FGridLocation> OnlyGoUpTiles;
+
+	/**
+	 * The cardinal directions.
+	 */
+	static std::array<FGridLocation, 4> CARDINAL_DIRECTIONS;
 };
