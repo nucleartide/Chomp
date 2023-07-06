@@ -7,6 +7,7 @@
 */
 
 #include "AStar.h"
+#include "Debug.h"
 
 // PriorityQueue provides a simple wrapper around std::priority_queue
 // so that I only use the API methods I've studied the docs for.
@@ -48,7 +49,10 @@ double ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)
 }
 
 // TODO, after lunch:
-// [ ] write astarsearch example code
+// [x] write astarsearch example code
+// [ ] update level format for less confusion
+// [ ] it's the 0,0, 1,1
+// [ ] why doesn't astarsearch break? i thought we reach the goal
 // [ ] once written, reconstruct the ideal path with a reconstructing function
 // [ ] given this reconstructed path, figure out how to make AGhostAIController move along this path
 // ---
@@ -71,9 +75,13 @@ void AStarSearch(IGraph *Graph,
     while (!Frontier.empty())
     {
         auto Current = Frontier.get();
+        DEBUG_LOG(TEXT("%d, %d"), Current.X, Current.Y);
         if (Current == Goal)
+        {
+            DEBUG_LOG(TEXT("breaking early"));
             // Then we're done! Break and end the search.
             break;
+        }
 
         for (auto Next : Graph->Neighbors(Current))
         {
