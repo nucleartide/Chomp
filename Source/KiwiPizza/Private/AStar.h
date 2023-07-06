@@ -16,7 +16,7 @@
 #include <cstdlib>
 #include "GridLocation.h"
 
-double ManhattanDistanceHeuristic(GridLocation a, GridLocation b);
+double ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b);
 
 template <typename Location>
 void AStarSearch(IGraph *Graph,

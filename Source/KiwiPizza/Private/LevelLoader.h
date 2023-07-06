@@ -19,8 +19,8 @@ public:
 	int GetLevelWidth() const;
 	int GetLevelHeight() const;
 	void LoadLevel();
-	FVector2D GridToWorld(GridLocation GridPosition);
-	GridLocation WorldToGrid(FVector2D WorldPosition);
+	FVector2D GridToWorld(FGridLocation GridPosition);
+	FGridLocation WorldToGrid(FVector2D WorldPosition);
 
 	// This method returns a reference to the Blueprint asset's single instance.
 	static ULevelLoader *GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass);
@@ -34,14 +34,14 @@ private:
 
 public:
 	TArray<FString> StringList;
-	static std::array<GridLocation, 4> DIRS;
-	bool InBounds(GridLocation Id) const;
-	bool Passable(GridLocation Id) const;
-	std::vector<GridLocation> Neighbors(GridLocation Id) const override;
-    double Cost(GridLocation FromNode, GridLocation ToNode) const override;
+	static std::array<FGridLocation, 4> DIRS;
+	bool InBounds(FGridLocation Id) const;
+	bool Passable(FGridLocation Id) const;
+	std::vector<FGridLocation> Neighbors(FGridLocation Id) const override;
+    double Cost(FGridLocation FromNode, FGridLocation ToNode) const override;
 
 	// TODO: Gotta initialize these walls.
-	std::unordered_set<GridLocation> Walls;
+	std::unordered_set<FGridLocation> Walls;
 
 	void AddWallTile(int X, int Y);
 	void ClearWalls();

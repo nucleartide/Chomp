@@ -23,12 +23,18 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
 	TSubclassOf<class ULevelLoader> Level;
 
-	void StartMovingFrom(GridLocation Origin, GridLocation Destination);
-	void Move(float DeltaTime);
-	void Pathfind(GridLocation Destination);
+	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
+	FGridLocation Origin;
 
-	GridLocation CurrentOriginGridPos;
-	GridLocation CurrentDestinationGridPos;
+	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
+	FGridLocation Destination;
+
+	void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
+	void Move(float DeltaTime);
+	void Pathfind(FGridLocation Destination);
+
+	FGridLocation CurrentOriginGridPos;
+	FGridLocation CurrentDestinationGridPos;
 
 	bool IsAtDestination = false;
 	float ElapsedTime = 0.0f;

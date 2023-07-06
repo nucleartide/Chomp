@@ -2,11 +2,11 @@
 #include "Kismet/KismetMathLibrary.h"
 #include <algorithm>
 
-std::array<GridLocation, 4> ULevelLoader::DIRS = {
-    GridLocation{1, 0},  // North
-    GridLocation{-1, 0}, // South
-    GridLocation{0, -1}, // East
-    GridLocation{0, 1}}; // West
+std::array<FGridLocation, 4> ULevelLoader::DIRS = {
+    FGridLocation{1, 0},  // North
+    FGridLocation{-1, 0}, // South
+    FGridLocation{0, -1}, // East
+    FGridLocation{0, 1}}; // West
 
 ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass)
 {
@@ -33,7 +33,7 @@ int ULevelLoader::GetLevelHeight() const
     return LengthOfLineInLevel;
 }
 
-FVector2D ULevelLoader::GridToWorld(GridLocation GridPosition)
+FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition)
 {
     FVector2D WorldPosition;
     WorldPosition.X = ((float)GridPosition.X - .5f * GetLevelHeight()) * 100.0f;
@@ -42,9 +42,9 @@ FVector2D ULevelLoader::GridToWorld(GridLocation GridPosition)
 }
 
 // Inverse operation of GridToWorld().
-GridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
+FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
 {
-    GridLocation GridPosition;
+    FGridLocation GridPosition;
     GridPosition.X = FMath::FloorToFloat(WorldPosition.X * .01f);
     GridPosition.Y = FMath::FloorToFloat(WorldPosition.Y * .01f);
     GridPosition.X += .5f * GetLevelHeight();
@@ -79,24 +79,24 @@ void ULevelLoader::LoadLevel()
     }
 }
 
-bool ULevelLoader::InBounds(GridLocation Id) const
+bool ULevelLoader::InBounds(FGridLocation Id) const
 {
     return 0 <= Id.X && Id.X < GetLevelHeight() && 0 <= Id.Y && Id.Y < GetLevelWidth();
 }
 
-bool ULevelLoader::Passable(GridLocation Id) const
+bool ULevelLoader::Passable(FGridLocation Id) const
 {
     return Walls.find(Id) == Walls.end();
 }
 
-// Get the neighbors of a GridLocation.
-std::vector<GridLocation> ULevelLoader::Neighbors(GridLocation Id) const
+// Get the neighbors of a FGridLocation.
+std::vector<FGridLocation> ULevelLoader::Neighbors(FGridLocation Id) const
 {
-    std::vector<GridLocation> Results;
+    std::vector<FGridLocation> Results;
 
-    for (GridLocation Direction : DIRS)
+    for (FGridLocation Direction : DIRS)
     {
-        GridLocation Next{Id.X + Direction.X, Id.Y + Direction.Y};
+        FGridLocation Next{Id.X + Direction.X, Id.Y + Direction.Y};
         if (InBounds(Next) && Passable(Next))
             Results.push_back(Next);
     }
@@ -114,7 +114,7 @@ std::vector<GridLocation> ULevelLoader::Neighbors(GridLocation Id) const
 // Add an individual wall tile.
 void ULevelLoader::AddWallTile(int X, int Y)
 {
-    Walls.insert(GridLocation{X, Y});
+    Walls.insert(FGridLocation{X, Y});
 }
 
 void ULevelLoader::ClearWalls()
@@ -124,10 +124,10 @@ void ULevelLoader::ClearWalls()
 
 bool ULevelLoader::IsWall(int X, int Y)
 {
-    return Walls.find(GridLocation{X, Y}) != Walls.end();
+    return Walls.find(FGridLocation{X, Y}) != Walls.end();
 }
 
-double ULevelLoader::Cost(GridLocation FromNode, GridLocation ToNode) const
+double ULevelLoader::Cost(FGridLocation FromNode, FGridLocation ToNode) const
 {
     // NOTE: It is assumed that FromNode and ToNode are neighbors.
     return 1.0; // Arbitrary non-zero constant.

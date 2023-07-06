@@ -1,20 +1,31 @@
 #pragma once
 
-struct GridLocation {
-  int X, Y;
+#include "CoreMinimal.h"
+#include "GridLocation.generated.h"
+
+USTRUCT(BlueprintType, Blueprintable)
+struct FGridLocation
+{
+    GENERATED_BODY()
+
+    UPROPERTY(EditAnywhere, SimpleDisplay, meta = (Input))
+    int X;
+
+    UPROPERTY(EditAnywhere, SimpleDisplay, meta = (Input))
+    int Y;
 };
 
-bool operator == (GridLocation a, GridLocation b);
-bool operator!=(GridLocation a, GridLocation b);
-bool operator<(GridLocation a, GridLocation b);
+bool operator==(FGridLocation a, FGridLocation b);
+bool operator!=(FGridLocation a, FGridLocation b);
+bool operator<(FGridLocation a, FGridLocation b);
 
 namespace std
 {
-    /* implement hash function so we can put GridLocation into an unordered_set */
+    /* implement hash function so we can put FGridLocation into an unordered_set */
     template <>
-    struct hash<GridLocation>
+    struct hash<FGridLocation>
     {
-        std::size_t operator()(const GridLocation &id) const noexcept
+        std::size_t operator()(const FGridLocation &id) const noexcept
         {
             // NOTE: better to use something like boost hash_combine
             return std::hash<int>()(id.X ^ (id.Y << 16));

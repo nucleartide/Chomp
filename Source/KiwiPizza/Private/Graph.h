@@ -7,6 +7,6 @@
 class IGraph
 {
 public:
-	virtual std::vector<GridLocation> Neighbors(GridLocation Id) const = 0;
-    virtual double Cost(GridLocation FromNode, GridLocation ToNode) const = 0;
+	virtual std::vector<FGridLocation> Neighbors(FGridLocation Id) const = 0;
+    virtual double Cost(FGridLocation FromNode, FGridLocation ToNode) const = 0;
 };

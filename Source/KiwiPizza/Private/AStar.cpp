@@ -42,7 +42,7 @@ struct PriorityQueue
     }
 };
 
-double ManhattanDistanceHeuristic(GridLocation a, GridLocation b)
+double ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)
 {
     return std::abs(a.X - b.X) + std::abs(a.Y - b.Y);
 }
@@ -102,11 +102,11 @@ void AStarSearch(IGraph *Graph,
 
 template
 void AStarSearch(IGraph *Graph,
-                 GridLocation Start,
-                 GridLocation Goal,
-                 std::unordered_map<GridLocation, GridLocation> &CameFrom,
-                 std::unordered_map<GridLocation, double> &CostSoFar,
-                 const std::function<double(GridLocation, GridLocation)> &Heuristic);
+                 FGridLocation Start,
+                 FGridLocation Goal,
+                 std::unordered_map<FGridLocation, FGridLocation> &CameFrom,
+                 std::unordered_map<FGridLocation, double> &CostSoFar,
+                 const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
 #if false
 
@@ -133,7 +133,7 @@ struct SimpleGraph
     }
 };
 
-struct GridLocation
+struct FGridLocation
 {
     int x, y;
 };
@@ -150,34 +150,34 @@ SimpleGraph example_graph{{
 
 // Jason: defining the data structure for a square grid.
 // i guess this is more properly a rectangular grid, because width and height can be different.
-// uses GridLocation as key for graph nodes
+// uses FGridLocation as key for graph nodes
 struct SquareGrid
 {
-    static std::array<GridLocation, 4> DIRS;
+    static std::array<FGridLocation, 4> DIRS;
 
     int width, height;
-    std::unordered_set<GridLocation> walls;
+    std::unordered_set<FGridLocation> walls;
 
     SquareGrid(int width_, int height_)
         : width(width_), height(height_) {}
 
-    bool in_bounds(GridLocation id) const
+    bool in_bounds(FGridLocation id) const
     {
         return 0 <= id.x && id.x < width && 0 <= id.y && id.y < height;
     }
 
-    bool passable(GridLocation id) const
+    bool passable(FGridLocation id) const
     {
         return walls.find(id) == walls.end();
     }
 
-    std::vector<GridLocation> neighbors(GridLocation id) const
+    std::vector<FGridLocation> neighbors(FGridLocation id) const
     {
-        std::vector<GridLocation> results;
+        std::vector<FGridLocation> results;
 
-        for (GridLocation dir : DIRS)
+        for (FGridLocation dir : DIRS)
         {
-            GridLocation next{id.x + dir.x, id.y + dir.y};
+            FGridLocation next{id.x + dir.x, id.y + dir.y};
             if (in_bounds(next) && passable(next))
             {
                 results.push_back(next);
@@ -195,10 +195,10 @@ struct SquareGrid
 };
 
 // declaring the values for some static variables
-std::array<GridLocation, 4> SquareGrid::DIRS = {
+std::array<FGridLocation, 4> SquareGrid::DIRS = {
     /* East, West, North, South */
-    GridLocation{1, 0}, GridLocation{-1, 0},
-    GridLocation{0, -1}, GridLocation{0, 1}};
+    FGridLocation{1, 0}, FGridLocation{-1, 0},
+    FGridLocation{0, -1}, FGridLocation{0, 1}};
 
 // This outputs a grid. Pass in a distances map if you want to print
 // the distances, or pass in a point_to map if you want to print
@@ -208,11 +208,11 @@ std::array<GridLocation, 4> SquareGrid::DIRS = {
 // jason: could always implement this function by instantiating actors in unreal
 template <class Graph>
 void draw_grid(const Graph &graph,
-               std::unordered_map<GridLocation, double> *distances = nullptr,
-               std::unordered_map<GridLocation, GridLocation> *point_to = nullptr,
-               std::vector<GridLocation> *path = nullptr,
-               GridLocation *start = nullptr,
-               GridLocation *goal = nullptr)
+               std::unordered_map<FGridLocation, double> *distances = nullptr,
+               std::unordered_map<FGridLocation, FGridLocation> *point_to = nullptr,
+               std::vector<FGridLocation> *path = nullptr,
+               FGridLocation *start = nullptr,
+               FGridLocation *goal = nullptr)
 {
     const int field_width = 3;
     std::cout << std::string(field_width * graph.width, '_') << '\n';
@@ -220,7 +220,7 @@ void draw_grid(const Graph &graph,
     {
         for (int x = 0; x != graph.width; ++x)
         {
-            GridLocation id{x, y};
+            FGridLocation id{x, y};
             if (graph.walls.find(id) != graph.walls.end())
             {
                 std::cout << std::string(field_width, '#');
@@ -239,7 +239,7 @@ void draw_grid(const Graph &graph,
             }
             else if (point_to != nullptr && point_to->count(id))
             {
-                GridLocation next = (*point_to)[id];
+                FGridLocation next = (*point_to)[id];
                 if (next.x == x + 1)
                 {
                     std::cout << " > ";
@@ -282,7 +282,7 @@ void add_rect(SquareGrid &grid, int x1, int y1, int x2, int y2)
     {
         for (int y = y1; y < y2; ++y)
         {
-            grid.walls.insert(GridLocation{x, y});
+            grid.walls.insert(FGridLocation{x, y});
         }
     }
 }
@@ -302,9 +302,9 @@ SquareGrid make_diagram1()
 // from_node isn't used in the cost() method though
 struct GridWithWeights : SquareGrid
 {
-    std::unordered_set<GridLocation> forests;
+    std::unordered_set<FGridLocation> forests;
     GridWithWeights(int w, int h) : SquareGrid(w, h) {}
-    double cost(GridLocation from_node, GridLocation to_node) const
+    double cost(FGridLocation from_node, FGridLocation to_node) const
     {
         return forests.find(to_node) != forests.end() ? 5 : 1;
     }
@@ -315,8 +315,8 @@ GridWithWeights make_diagram4()
 {
     GridWithWeights grid(10, 10);
     add_rect(grid, 1, 7, 4, 9);
-    typedef GridLocation L;
-    grid.forests = std::unordered_set<GridLocation>{
+    typedef FGridLocation L;
+    grid.forests = std::unordered_set<FGridLocation>{
         L{3, 4}, L{3, 5}, L{4, 1}, L{4, 2},
         L{4, 3}, L{4, 4}, L{4, 5}, L{4, 6},
         L{4, 7}, L{4, 8}, L{5, 1}, L{5, 2},
