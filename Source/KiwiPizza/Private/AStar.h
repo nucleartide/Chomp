@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Graph.h"
-#include "Math/IntPoint.h"
+#include <algorithm>
 #include <iostream>
 #include <functional>
 #include <iomanip>
@@ -12,9 +11,12 @@
 #include <utility>
 #include <queue>
 #include <tuple>
-#include <algorithm>
 #include <cstdlib>
+
+#include "Math/IntPoint.h"
+
 #include "GridLocation.h"
+#include "Graph.h"
 
 double ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b);
 
@@ -25,3 +27,8 @@ void AStarSearch(IGraph *Graph,
                  std::unordered_map<Location, Location> &CameFrom,
                  std::unordered_map<Location, double> &CostSoFar,
                  const std::function<double(Location, Location)> &Heuristic);
+
+template <typename Location>
+std::vector<Location> ReconstructPath(Location Start,
+                                      Location Goal,
+                                      std::unordered_map<Location, Location> &CameFrom);

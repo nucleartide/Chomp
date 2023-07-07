@@ -13,6 +13,8 @@ struct FGridLocation
 
     UPROPERTY(EditAnywhere, SimpleDisplay, meta = (Input))
     int Y;
+
+    FString ToString() const;
 };
 
 bool operator==(FGridLocation a, FGridLocation b);

@@ -5,6 +5,9 @@
 #include "LevelLoader.h"
 #include "TestActor.generated.h"
 
+/**
+ * ATestActor is an actor that is for trying pieces of code.
+ */
 UCLASS()
 class ATestActor : public AActor
 {

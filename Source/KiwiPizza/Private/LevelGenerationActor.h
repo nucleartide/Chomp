@@ -16,33 +16,59 @@ class KIWIPIZZA_API ALevelGenerationActor : public AActor
 {
 	GENERATED_BODY()
 
-protected:
-	virtual void BeginPlay() override;
-
-private:
-	UFUNCTION(BlueprintCallable)
-	void RegenerateDots();
-
-	UPROPERTY(EditDefaultsOnly, Category = "Wall Tile Customization")
-	TSubclassOf<AStaticMeshActor> WallTile;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Pacman Dot Customization")
-	TSubclassOf<AStaticMeshActor> PacmanDot;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Gate Tile Customization")
-	TSubclassOf<AStaticMeshActor> GateTile;
-
+public:
 	UPROPERTY(EditDefaultsOnly, Category = "Level Loader Customization")
 	TSubclassOf<ULevelLoader> LevelLoader;
 
-	int NumDotsGenerated = 0;
+	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
+	TSubclassOf<AStaticMeshActor> WallTile;
 
-	UFUNCTION(BlueprintCallable)
-	void HandleDotConsumption();
+	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
+	TSubclassOf<AStaticMeshActor> PacmanDot;
 
-	TArray<AActor *> Walls;
+	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
+	TSubclassOf<AStaticMeshActor> GateTile;
 
-public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnLevelClearedSignature OnLevelClearedDelegate;
+
+private:
+	/**
+	 * A list of generated tiles in the scene.
+	 */
+	TArray<AActor *> Tiles;
+
+	/**
+	 * A count of the number of active dots in the scene.
+	 */
+	int NumberOfDotsRemaining = 0;
+
+	/**
+	 * Override BeginPlay() to customize initialization.
+	 */
+	void BeginPlay() override;
+
+	/**
+	 * Clear any leftover tiles in the level.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void ClearLeftoverTiles();
+
+	/**
+	 * Generate tiles from the current LevelLoader's level data.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void GenerateTiles();
+
+	/**
+	 * Reset the level's tiles to that of the original level data.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void ResetTiles();
+
+	/**
+	 * Handle when a dot in the level is consumed.
+	 */
+	UFUNCTION(BlueprintCallable)
+	void HandleDotConsumption();
 };

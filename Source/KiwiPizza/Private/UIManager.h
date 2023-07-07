@@ -6,6 +6,9 @@
 #include "Blueprint/UserWidget.h"
 #include "UIManager.generated.h"
 
+/**
+ * AUIManager manages the lifetime of the user interface of the game.
+ */
 UCLASS()
 class AUIManager : public AActor
 {

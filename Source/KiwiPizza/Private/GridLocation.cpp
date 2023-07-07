@@ -14,3 +14,8 @@ bool operator<(FGridLocation a, FGridLocation b)
 {
     return std::tie(a.X, a.Y) < std::tie(b.X, b.Y);
 }
+
+FString FGridLocation::ToString() const
+{
+    return FString::Printf(TEXT("(%d, %d)"), X, Y);
+}

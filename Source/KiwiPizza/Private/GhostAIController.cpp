@@ -1,85 +1,12 @@
-#include "GhostAIController.h"
-#include "GhostPawn.h"
 #include "Math/UnrealMathUtility.h"
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
+
+#include "GhostAIController.h"
+#include "GhostPawn.h"
 #include "Debug.h"
 #include "LevelLoader.h"
 #include "AStar.h"
-
-/*
-// This outputs a grid. Pass in a distances map if you want to print
-// the distances, or pass in a point_to map if you want to print
-// arrows that point to the parent location, or pass in a path vector
-// if you want to draw the path.
-void draw_grid(IGraph *graph,
-               std::unordered_map<FGridLocation, double> *distances = nullptr,
-               std::unordered_map<FGridLocation, FGridLocation> *point_to = nullptr,
-               std::vector<FGridLocation> *path = nullptr,
-               FGridLocation *start = nullptr,
-               FGridLocation *goal = nullptr)
-{
-    const int field_width = 3;
-    std::cout << std::string(field_width * graph.width, '_') << '\n';
-    for (int y = 0; y != graph.height; ++y)
-    {
-        for (int x = 0; x != graph.width; ++x)
-        {
-            FGridLocation id{x, y};
-            if (graph.walls.find(id) != graph.walls.end())
-            {
-                std::cout << std::string(field_width, '#');
-            }
-            else if (start && id == *start)
-            {
-                std::cout << " A ";
-            }
-            else if (goal && id == *goal)
-            {
-                std::cout << " Z ";
-            }
-            else if (path != nullptr && find(path->begin(), path->end(), id) != path->end())
-            {
-                std::cout << " @ ";
-            }
-            else if (point_to != nullptr && point_to->count(id))
-            {
-                FGridLocation next = (*point_to)[id];
-                if (next.x == x + 1)
-                {
-                    std::cout << " > ";
-                }
-                else if (next.x == x - 1)
-                {
-                    std::cout << " < ";
-                }
-                else if (next.y == y + 1)
-                {
-                    std::cout << " v ";
-                }
-                else if (next.y == y - 1)
-                {
-                    std::cout << " ^ ";
-                }
-                else
-                {
-                    std::cout << " * ";
-                }
-            }
-            else if (distances != nullptr && distances->count(id))
-            {
-                std::cout << ' ' << std::left << std::setw(field_width - 1) << (*distances)[id];
-            }
-            else
-            {
-                std::cout << " . ";
-            }
-        }
-        std::cout << '\n';
-    }
-    std::cout << std::string(field_width * graph.width, '~') << '\n';
-}
-*/
 
 void AGhostAIController::BeginPlay()
 {
@@ -93,10 +20,6 @@ void AGhostAIController::BeginPlay()
 
         // Convert the world position to grid position. This will be the origin.
         auto LevelInstance = ULevelLoader::GetInstance(Level);
-        // auto Origin = ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
-
-        // Add 10 to the x component of the grid position. This will be the destination.
-        // FGridLocation Destination{Origin.X + 10, Origin.Y};
 
         // Start moving from the origin to the destination specified above.
         StartMovingFrom(Origin, Destination);
@@ -105,7 +28,7 @@ void AGhostAIController::BeginPlay()
         std::unordered_map<FGridLocation, FGridLocation> CameFrom;
         std::unordered_map<FGridLocation, double> CostSoFar;
         std::function<double(FGridLocation, FGridLocation)> FunctionObject = &ManhattanDistanceHeuristic;
-        AStarSearch(
+        AStarSearch<FGridLocation>(
             LevelInstance,
             Origin,
             Destination,
@@ -119,30 +42,34 @@ void AGhostAIController::BeginPlay()
             FString Line = TEXT("");
             for (int Y = 0; Y < LevelInstance->GetLevelWidth(); Y++)
             {
-                auto To = FGridLocation{X, Y};
-                auto From = CameFrom[FGridLocation{X, Y}];
-                if (!LevelInstance->Passable(From, To))
+                if (CameFrom.find(FGridLocation{X, Y}) == CameFrom.end())
                 {
-                    Line += TEXT("X");
+                    Line += TEXT("W");
                 }
                 else
                 {
-                    auto Parent = CameFrom[FGridLocation{X, Y}];
-                    if (Parent.X < X)
+                    auto From = CameFrom[FGridLocation{X, Y}];
+                    auto To = FGridLocation{X, Y};
+                    if (From.X < X)
                         Line += TEXT("v");
-                    else if (Parent.X > X)
+                    else if (From.X > X)
                         Line += TEXT("^");
-                    else if (Parent.Y < Y)
+                    else if (From.Y < Y)
                         Line += TEXT("<");
-                    else if (Parent.Y > Y)
+                    else if (From.Y > Y)
                         Line += TEXT(">");
                     else
-                    {
-                        Line += TEXT(" ");
-                    }
+                        Line += TEXT("@");
                 }
             }
             DEBUG_LOG(TEXT("%s"), *Line);
+        }
+
+        auto Path = ReconstructPath(Origin, Destination, CameFrom);
+        DEBUG_LOG(TEXT("Vector below:"));
+        for (auto Element : Path)
+        {
+            DEBUG_LOG(TEXT("%s"), *Element.ToString());
         }
     }
 }

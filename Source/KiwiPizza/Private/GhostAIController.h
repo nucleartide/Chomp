@@ -1,9 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "AIController.h"
 #include "Math/IntPoint.h"
+
+#include "AIController.h"
 #include "GridLocation.h"
+
 #include "GhostAIController.generated.h"
 
 UCLASS()

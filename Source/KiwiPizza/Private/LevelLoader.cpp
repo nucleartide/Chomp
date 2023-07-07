@@ -3,6 +3,9 @@
 #include <algorithm>
 
 #include "Kismet/KismetMathLibrary.h"
+#include "Algo/Reverse.h"
+
+#include "Debug.h"
 
 ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass)
 {
@@ -41,6 +44,10 @@ void ULevelLoader::LoadLevel()
         NumberOfColumns = Element.Len();
         break;
     }
+
+    // Reverse the StringList so that we can iterate from X=0 to X=NumberOfRows-1,
+    // bottom row to top row.
+    Algo::Reverse(StringList);
 
     // Load up our data structures that track blocking tiles.
     for (auto X = 0; X < NumberOfRows; X++)
@@ -105,7 +112,12 @@ FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
 
 bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
 {
-    check(FMath::Abs(FromNode.X - ToNode.X) + FMath::Abs(FromNode.Y - ToNode.Y) == 1);
+    if (FMath::Abs(FromNode.X - ToNode.X) + FMath::Abs(FromNode.Y - ToNode.Y) != 1)
+    {
+        // DEBUG_LOG(TEXT("Not passable. From: %s, to: %s"), *FromNode.ToString(), *ToNode.ToString());
+        return false;
+    }
+
     if (Walls.find(ToNode) != Walls.end())
         return false;
     else if (OnlyGoUpTiles.find(ToNode) != OnlyGoUpTiles.end())

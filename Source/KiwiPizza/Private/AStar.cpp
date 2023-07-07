@@ -74,47 +74,78 @@ void AStarSearch(IGraph *Graph,
 
     while (!Frontier.empty())
     {
+        // If we're at the goal, then we're done! Break and end the search.
         auto Current = Frontier.get();
-        DEBUG_LOG(TEXT("%d, %d"), Current.X, Current.Y);
         if (Current == Goal)
         {
             DEBUG_LOG(TEXT("breaking early"));
-            // Then we're done! Break and end the search.
             break;
         }
 
+        // For each neighbor,
         for (auto Next : Graph->Neighbors(Current))
         {
-            // There is no difference in cost between Pacman maze nodes, so
-            // this A* implementation devolves into Dijkstra's algorithm.
-            auto NewCost = CostSoFar[Current] + Graph->Cost(Current, Next); // Always zero.
+            // Compute the new cost.
+            auto NewCost = CostSoFar[Current] + Graph->Cost(Current, Next);
 
-            // If we haven't recorded a cost for this neighbor node,
-            // or if the new cost is less than the current cost (never happens with a constant cost),
+            if (Next.X == 5 && Next.Y == 6)
+            {
+                check(false);
+            }
+
+            // If we haven't recorded a cost for this neighbor node, or if the new cost is less than the current cost,
             if (CostSoFar.find(Next) == CostSoFar.end() || NewCost < CostSoFar[Next])
             {
                 // Place neighbor into priority queue.
-                // The priority of the neighbor is solely based on the result of the heuristic function.
-                // With the default Manhattan distance heuristic, nodes with the smallest Manhattan distance
-                // will take priority for exploration.
                 double Priority = NewCost + Heuristic(Next, Goal);
                 Frontier.put(Next, Priority);
 
                 // Update our maps.
-                CostSoFar[Next] = NewCost; // Always zero.
-                CameFrom[Next] = Current;  // Provides a link to parent node.
+                CostSoFar[Next] = NewCost;
+                CameFrom[Next] = Current;
             }
         }
     }
 }
 
-template
-void AStarSearch(IGraph *Graph,
-                 FGridLocation Start,
-                 FGridLocation Goal,
-                 std::unordered_map<FGridLocation, FGridLocation> &CameFrom,
-                 std::unordered_map<FGridLocation, double> &CostSoFar,
-                 const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
+template void AStarSearch(IGraph *Graph,
+                          FGridLocation Start,
+                          FGridLocation Goal,
+                          std::unordered_map<FGridLocation, FGridLocation> &CameFrom,
+                          std::unordered_map<FGridLocation, double> &CostSoFar,
+                          const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
+
+template <typename Location>
+std::vector<Location> ReconstructPath(
+    Location Start,
+    Location Goal,
+    std::unordered_map<Location, Location> &CameFrom)
+{
+    std::vector<Location> Path;
+    Location Current = Goal;
+
+    // If Goal is not found,
+    if (CameFrom.find(Goal) == CameFrom.end())
+    {
+        // Then no Path could be found.
+        return Path;
+    }
+
+    // Reconstruct path.
+    do
+    {
+        Path.push_back(Current);
+        Current = CameFrom[Current];
+    } while (Current != Start);
+
+    // Return the reversed path.
+    std::reverse(Path.begin(), Path.end());
+    return Path;
+}
+
+template std::vector<FGridLocation> ReconstructPath(FGridLocation Start,
+                                                    FGridLocation Goal,
+                                                    std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
 
 #if false
 
@@ -371,27 +402,6 @@ void dijkstra_search(Graph graph,
     }
 }
 
-// jason: reconstructing a path given a computed map of preceding nodes on a path
-template <typename Location>
-std::vector<Location> reconstruct_path(
-    Location start, Location goal,
-    std::unordered_map<Location, Location> came_from)
-{
-    std::vector<Location> path;
-    Location current = goal;
-    if (came_from.find(goal) == came_from.end())
-    {
-        return path; // no path can be found
-    }
-    while (current != start)
-    {
-        path.push_back(current);
-        current = came_from[current];
-    }
-    path.push_back(start); // optional
-    std::reverse(path.begin(), path.end());
-    return path;
-}
 
 // jason: exactly as the function states
 GridWithWeights make_diagram_nopath()
