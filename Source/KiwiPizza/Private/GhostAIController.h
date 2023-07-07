@@ -43,4 +43,12 @@ private:
 	float TotalTime = 0.0f;
 
 	virtual void BeginPlay() override;
+
+	struct Path
+	{
+		int CurrentIndex = 0;
+		std::vector<FGridLocation> Locations;
+	};
+
+	Path CurrentPath;
 };

@@ -21,8 +21,11 @@ void AGhostAIController::BeginPlay()
         // Convert the world position to grid position. This will be the origin.
         auto LevelInstance = ULevelLoader::GetInstance(Level);
 
+        auto OriginWorldPosition = LevelInstance->GridToWorld(Origin);
+        GetPawn()->SetActorLocation(OriginWorldPosition);
+
         // Start moving from the origin to the destination specified above.
-        StartMovingFrom(Origin, Destination);
+        // StartMovingFrom(Origin, Destination);
 
         // Call out to AStarSearch().
         std::unordered_map<FGridLocation, FGridLocation> CameFrom;
@@ -71,6 +74,15 @@ void AGhostAIController::BeginPlay()
         {
             DEBUG_LOG(TEXT("%s"), *Element.ToString());
         }
+        check(Path.size() >= 2);
+
+        // Set current path.
+        CurrentPath = Path{0, Path};
+
+        // Initialize movement.
+        auto Current = Path[0];
+        auto Next = Path[1];
+        StartMovingFrom(Current, Next);
     }
 }
 
@@ -80,6 +92,14 @@ void AGhostAIController::Tick(float DeltaTime)
 
     // Move the Ghost, given the currently saved Source and Destination.
     Move(DeltaTime);
+
+    // TODO: Fill in CurrentPath handling.
+    // if CurrentPath is not at last index
+        // auto Current = Path[Current];
+        // auto Next = Path[Current+1];
+        // StartMovingFrom(Current, Next);
+    // else
+        // regenerate currentpath by calling out to a-star;
 }
 
 void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _Destination)
@@ -93,6 +113,7 @@ void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _D
 
     // Reset some internal bookkeeping.
     IsAtDestination = false;
+
 }
 
 void AGhostAIController::Move(float DeltaTime)
@@ -130,6 +151,7 @@ void AGhostAIController::Move(float DeltaTime)
     if (ExceededDestination)
     {
         IsAtDestination = true;
+        CurrentPath.CurrentIndex++;
     }
 }
 
