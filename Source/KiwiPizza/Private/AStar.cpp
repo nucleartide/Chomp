@@ -132,11 +132,12 @@ std::vector<Location> ReconstructPath(
     }
 
     // Reconstruct path.
-    do
+    while (Current != Start)
     {
         Path.push_back(Current);
         Current = CameFrom[Current];
-    } while (Current != Start);
+    }
+    Path.push_back(Current);
 
     // Return the reversed path.
     std::reverse(Path.begin(), Path.end());

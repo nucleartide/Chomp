@@ -16,3 +16,8 @@
 * [ ] What is the CAR/STAR writeup?
 * [ ] Is there a GIF that wows the viewer?
 * [ ] How might you update the thumbnail for this project? See the following game programming portfolios for examples: [Molly Jameson](http://www.mollyjameson.com/), [Levi Lindsey](https://www.levi.dev/), [Max Kaufman](https://littlepolygon.com/)
+
+- ✅ **Per pull request**: Run through my pull request quality checklist.
+- ✅ when I have something new: Cut a new build in Unreal and upload a GitHub release.
+- ✅ when I have something new: Share portfolio update with WorkWithIndies, and get feedback about whether I’m on the right track.
+- ✅ when I have something new: Publish write-up / tech guide on LinkedIn.

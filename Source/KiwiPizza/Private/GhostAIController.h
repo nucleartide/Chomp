@@ -48,6 +48,17 @@ private:
 	{
 		int CurrentIndex = 0;
 		std::vector<FGridLocation> Locations;
+
+	    // Copy assignment operator
+		Path& operator=(const Path& other) {
+			if (this != &other) {
+				// Copy the data from the other object
+				CurrentIndex = other.CurrentIndex;
+				Locations = other.Locations;
+			}
+			// Return the reference to the current object
+			return *this;
+		}
 	};
 
 	Path CurrentPath;

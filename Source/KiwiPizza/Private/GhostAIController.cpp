@@ -1,8 +1,9 @@
+#include "GhostAIController.h"
+
 #include "Math/UnrealMathUtility.h"
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "GhostAIController.h"
 #include "GhostPawn.h"
 #include "Debug.h"
 #include "LevelLoader.h"
@@ -22,7 +23,8 @@ void AGhostAIController::BeginPlay()
         auto LevelInstance = ULevelLoader::GetInstance(Level);
 
         auto OriginWorldPosition = LevelInstance->GridToWorld(Origin);
-        GetPawn()->SetActorLocation(OriginWorldPosition);
+        FVector OriginWorldPos(OriginWorldPosition.X, OriginWorldPosition.Y, 0.0f);
+        GetPawn()->SetActorLocation(OriginWorldPos);
 
         // Start moving from the origin to the destination specified above.
         // StartMovingFrom(Origin, Destination);
@@ -77,7 +79,7 @@ void AGhostAIController::BeginPlay()
         check(Path.size() >= 2);
 
         // Set current path.
-        CurrentPath = Path{0, Path};
+        CurrentPath = {0, Path};
 
         // Initialize movement.
         auto Current = Path[0];
@@ -93,13 +95,40 @@ void AGhostAIController::Tick(float DeltaTime)
     // Move the Ghost, given the currently saved Source and Destination.
     Move(DeltaTime);
 
-    // TODO: Fill in CurrentPath handling.
-    // if CurrentPath is not at last index
-        // auto Current = Path[Current];
-        // auto Next = Path[Current+1];
-        // StartMovingFrom(Current, Next);
-    // else
-        // regenerate currentpath by calling out to a-star;
+    if (IsAtDestination)
+    {
+        // Then bump our index.
+        CurrentPath.CurrentIndex++;
+
+        // If CurrentIndex is not at the last index,
+        if (CurrentPath.CurrentIndex < CurrentPath.Locations.size() - 1)
+        {
+            // Start moving on the next path segment.
+            auto Current = CurrentPath.Locations[CurrentPath.CurrentIndex];
+            auto Next = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
+            StartMovingFrom(Current, Next);
+        }
+        else // Otherwise,
+        {
+            // We've arrived. Do nothing for the time being.
+            // (No-op.)
+#if false
+            // Grab references to our new Origin and Destination.
+            auto Origin = CurrentPath.Locations[CurrentPath.CurrentIndex];
+            auto Destination = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
+
+            // Call out to A* search.
+            std::unordered_map<FGridLocation, FGridLocation> CameFrom;
+            std::unordered_map<FGridLocation, double> CostSoFar;
+            std::function<double(FGridLocation, FGridLocation)> FunctionObject = &ManhattanDistanceHeuristic;
+            AStarSearch<FGridLocation>(LevelInstance, Origin, Destination, CameFrom, CostSoFar, FunctionObject);
+
+            // Regenerate the path.
+            auto Path = ReconstructPath(Origin, Destination, CameFrom);
+            check(Path.size() >= 2);
+#endif
+        }
+    }
 }
 
 void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _Destination)
@@ -113,7 +142,6 @@ void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _D
 
     // Reset some internal bookkeeping.
     IsAtDestination = false;
-
 }
 
 void AGhostAIController::Move(float DeltaTime)
@@ -122,6 +150,10 @@ void AGhostAIController::Move(float DeltaTime)
         return;
 
     // Compute the movement direction.
+    // auto LevelInstance = ULevelLoader::GetInstance(Level);
+    // FVector2D CurrentWorldPos(ActorLocation.X, ActorLocation.Y);
+    // auto CurrentDestinationWorldPos = LevelInstance->GridToWorld(CurrentDestinationGridPos);
+    // FVector2D MovementDirection = CurrentDestinationWorldPos - CurrentWorldPos;
     FVector2D MovementDirection(CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y);
 
     // Magnify the movement direction by the movement speed and delta time.
@@ -135,7 +167,7 @@ void AGhostAIController::Move(float DeltaTime)
     GhostPawn->MoveVector(ScaledMovementDirection, DeltaTime);
 
     // Pawn has exceeded destination if...
-    auto ActorLocation = GhostPawn->GetActorLocation();
+    auto ActorLocation = GetPawn()->GetActorLocation();
     bool ExceededDestination = false;
     auto Dest = ULevelLoader::GetInstance(Level)->GridToWorld(CurrentDestinationGridPos);
     if (MovementDirection.Y < 0)
@@ -151,7 +183,6 @@ void AGhostAIController::Move(float DeltaTime)
     if (ExceededDestination)
     {
         IsAtDestination = true;
-        CurrentPath.CurrentIndex++;
     }
 }
 
