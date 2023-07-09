@@ -29,11 +29,11 @@ void AGhostAIController::BeginPlay()
         // Start moving from the origin to the destination specified above.
         // StartMovingFrom(Origin, Destination);
 
-        // Call out to AStarSearch().
+        // Call out to Pathfind().
         std::unordered_map<FGridLocation, FGridLocation> CameFrom;
         std::unordered_map<FGridLocation, double> CostSoFar;
-        std::function<double(FGridLocation, FGridLocation)> FunctionObject = &ManhattanDistanceHeuristic;
-        AStarSearch<FGridLocation>(
+        std::function<double(FGridLocation, FGridLocation)> FunctionObject = &AStar::ManhattanDistanceHeuristic;
+        AStar::Pathfind<FGridLocation>(
             LevelInstance,
             Origin,
             Destination,
@@ -70,7 +70,7 @@ void AGhostAIController::BeginPlay()
             DEBUG_LOG(TEXT("%s"), *Line);
         }
 
-        auto Path = ReconstructPath(Origin, Destination, CameFrom);
+        auto Path = AStar::ReconstructPath(Origin, Destination, CameFrom);
         DEBUG_LOG(TEXT("Vector below:"));
         for (auto Element : Path)
         {
@@ -121,7 +121,7 @@ void AGhostAIController::Tick(float DeltaTime)
             std::unordered_map<FGridLocation, FGridLocation> CameFrom;
             std::unordered_map<FGridLocation, double> CostSoFar;
             std::function<double(FGridLocation, FGridLocation)> FunctionObject = &ManhattanDistanceHeuristic;
-            AStarSearch<FGridLocation>(LevelInstance, Origin, Destination, CameFrom, CostSoFar, FunctionObject);
+            Pathfind<FGridLocation>(LevelInstance, Origin, Destination, CameFrom, CostSoFar, FunctionObject);
 
             // Regenerate the path.
             auto Path = ReconstructPath(Origin, Destination, CameFrom);
