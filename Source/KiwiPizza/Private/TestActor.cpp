@@ -1,5 +1,5 @@
 #include "TestActor.h"
-#include "Debug.h"
+#include "Utils/Debug.h"
 #include "PacmanGameMode.h"
 
 ATestActor::ATestActor()

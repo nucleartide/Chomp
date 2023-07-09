@@ -1,6 +1,6 @@
 #include "PacmanPlayerController.h"
 #include "PacmanPawn.h"
-#include "Debug.h"
+#include "Utils/Debug.h"
 
 APacmanPlayerController::APacmanPlayerController()
 {

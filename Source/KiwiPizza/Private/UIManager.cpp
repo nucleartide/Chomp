@@ -1,8 +1,8 @@
 #include "UIManager.h"
-#include "Debug.h"
+#include "Utils/Debug.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
-#include "GameOverWidget.h"
+#include "UI/GameOverWidget.h"
 #include "PacmanGameMode.h"
 #include "PacmanPawn.h"
 

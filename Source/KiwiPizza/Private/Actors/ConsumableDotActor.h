@@ -12,8 +12,12 @@ class AConsumableDotActor : public AStaticMeshActor
 	GENERATED_BODY()
 
 public:
-	virtual void Destroyed() override;
-
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnDotConsumedSignature OnDotConsumedDelegate;
+
+private:
+	/**
+	 * Called when the actor has been explicitly destroyed.
+	 */
+	virtual void Destroyed() override;
 };

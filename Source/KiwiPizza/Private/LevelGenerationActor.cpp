@@ -6,11 +6,11 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "Debug.h"
-#include "ConsumableDotActor.h"
+#include "Utils/Debug.h"
+#include "Actors/ConsumableDotActor.h"
 #include "PacmanGameMode.h"
 #include "GridLocation.h"
-#include "AStar.h"
+#include "AStar/AStar.h"
 
 void ALevelGenerationActor::BeginPlay()
 {

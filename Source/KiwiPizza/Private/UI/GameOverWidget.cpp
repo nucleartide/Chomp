@@ -1,5 +1,5 @@
-#include "GameOverWidget.h"
-#include "Debug.h"
+#include "UI/GameOverWidget.h"
+#include "Utils/Debug.h"
 #include "Components/Button.h"
 
 void UGameOverWidget::NativeConstruct()

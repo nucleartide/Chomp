@@ -6,9 +6,9 @@
  License: Apache v2.0 <http://www.apache.org/licenses/LICENSE-2.0.html>
 */
 
-#include "AStar.h"
+#include "AStar/AStar.h"
 
-#include "Debug.h"
+#include "Utils/Debug.h"
 #include "PriorityQueue.h"
 
 double AStar::ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)

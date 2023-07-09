@@ -1,4 +1,4 @@
-#include "ConsumableDotActor.h"
+#include "Actors/ConsumableDotActor.h"
 
 void AConsumableDotActor::Destroyed()
 {

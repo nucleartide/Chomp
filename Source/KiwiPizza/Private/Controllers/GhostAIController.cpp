@@ -1,13 +1,13 @@
-#include "GhostAIController.h"
+#include "Controllers/GhostAIController.h"
 
 #include "Math/UnrealMathUtility.h"
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
 
 #include "GhostPawn.h"
-#include "Debug.h"
+#include "Utils/Debug.h"
 #include "LevelLoader.h"
-#include "AStar.h"
+#include "AStar/AStar.h"
 
 void AGhostAIController::BeginPlay()
 {

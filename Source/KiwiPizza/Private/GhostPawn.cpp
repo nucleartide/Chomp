@@ -1,5 +1,5 @@
 #include "GhostPawn.h"
-#include "Debug.h"
+#include "Utils/Debug.h"
 
 AGhostPawn::AGhostPawn()
 {
