@@ -9,7 +9,7 @@
 #include "AStar/AStar.h"
 
 #include "Utils/Debug.h"
-#include "PriorityQueue.h"
+#include "Utils/PriorityQueue.h"
 
 double AStar::ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)
 {

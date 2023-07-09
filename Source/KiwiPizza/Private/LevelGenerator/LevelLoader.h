@@ -8,8 +8,8 @@
 #include "UObject/NoExportTypes.h"
 #include "Math/IntPoint.h"
 
-#include "Graph.h"
-#include "GridLocation.h"
+#include "AStar/Graph.h"
+#include "AStar/GridLocation.h"
 
 #include "LevelLoader.generated.h"
 

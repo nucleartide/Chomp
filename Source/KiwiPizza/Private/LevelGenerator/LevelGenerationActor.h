@@ -6,7 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "Engine/StaticMeshActor.h"
 #include "Templates/SubclassOf.h"
-#include "LevelLoader.h"
+#include "Actors/LevelLoader.h"
 #include "LevelGenerationActor.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelClearedSignature);

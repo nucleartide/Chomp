@@ -4,8 +4,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "LevelLoader.h"
-#include "MovablePawn.h"
+#include "Actors/LevelLoader.h"
+#include "Pawns/MovablePawn.h"
 #include "PacmanPawn.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPacmanDiedSignature);

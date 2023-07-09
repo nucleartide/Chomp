@@ -1,6 +1,6 @@
-#include "PacmanPawnManager.h"
+#include "Pawns/PacmanPawnManager.h"
 #include "PacmanGameMode.h"
-#include "PacmanPawn.h"
+#include "Pawns/PacmanPawn.h"
 
 APacmanPawnManager::APacmanPawnManager()
 {

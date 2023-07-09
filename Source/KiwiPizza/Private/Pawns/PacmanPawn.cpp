@@ -1,7 +1,7 @@
-#include "PacmanPawn.h"
+#include "Pawns/PacmanPawn.h"
 #include "PacmanGameMode.h"
 #include "Utils/Debug.h"
-#include "GhostPawn.h"
+#include "Pawns/GhostPawn.h"
 
 APacmanPawn::APacmanPawn()
 {

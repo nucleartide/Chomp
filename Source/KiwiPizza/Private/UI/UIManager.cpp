@@ -1,10 +1,10 @@
-#include "UIManager.h"
+#include "UI/UIManager.h"
 #include "Utils/Debug.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
 #include "PacmanGameMode.h"
-#include "PacmanPawn.h"
+#include "Pawns/PacmanPawn.h"
 
 AUIManager::AUIManager()
 {

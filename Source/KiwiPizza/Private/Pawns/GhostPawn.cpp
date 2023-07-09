@@ -1,4 +1,4 @@
-#include "GhostPawn.h"
+#include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 
 AGhostPawn::AGhostPawn()

@@ -1,4 +1,4 @@
-#include "LevelGenerationActor.h"
+#include "Actors/LevelGenerationActor.h"
 
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
@@ -9,7 +9,7 @@
 #include "Utils/Debug.h"
 #include "Actors/ConsumableDotActor.h"
 #include "PacmanGameMode.h"
-#include "GridLocation.h"
+#include "AStar/GridLocation.h"
 #include "AStar/AStar.h"
 
 void ALevelGenerationActor::BeginPlay()

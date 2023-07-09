@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Math/IntPoint.h"
-#include "GridLocation.h"
+#include "AStar/GridLocation.h"
 #include <vector>
 
 class IGraph

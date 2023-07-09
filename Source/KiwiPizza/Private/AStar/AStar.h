@@ -16,8 +16,8 @@
 #include "CoreMinimal.h"
 #include "Math/IntPoint.h"
 
-#include "GridLocation.h"
-#include "Graph.h"
+#include "AStar/GridLocation.h"
+#include "AStar/Graph.h"
 
 class AStar
 {

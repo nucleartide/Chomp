@@ -2,7 +2,7 @@
 
 #include "PacmanGameMode.h"
 #include "Kismet/GameplayStatics.h"
-#include "PacmanPlayerController.h"
+#include "Controllers/PacmanPlayerController.h"
 #include "Utils/Debug.h"
 
 void APacmanGameMode::SetGameState(PacmanGameState NewState)

@@ -4,9 +4,9 @@
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#include "GhostPawn.h"
+#include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
-#include "LevelLoader.h"
+#include "Actors/LevelLoader.h"
 #include "AStar/AStar.h"
 
 void AGhostAIController::BeginPlay()

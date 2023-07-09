@@ -3,7 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Math/Color.h"
-#include "MovablePawn.h"
+#include "Pawns/MovablePawn.h"
 #include "GhostPawn.generated.h"
 
 UCLASS()

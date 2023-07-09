@@ -1,4 +1,4 @@
-#include "GridLocation.h"
+#include "AStar/GridLocation.h"
 #include <functional>
 
 bool operator == (FGridLocation a, FGridLocation b) {

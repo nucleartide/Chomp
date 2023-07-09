@@ -4,7 +4,7 @@
 #include "Math/IntPoint.h"
 
 #include "AIController.h"
-#include "GridLocation.h"
+#include "AStar/GridLocation.h"
 
 #include "GhostAIController.generated.h"
 

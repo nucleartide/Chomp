@@ -1,5 +1,5 @@
-#include "PacmanPlayerController.h"
-#include "PacmanPawn.h"
+#include "Controllers/PacmanPlayerController.h"
+#include "Pawns/PacmanPawn.h"
 #include "Utils/Debug.h"
 
 APacmanPlayerController::APacmanPlayerController()
