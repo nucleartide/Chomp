@@ -12,7 +12,7 @@
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnLevelClearedSignature);
 
 UCLASS()
-class KIWIPIZZA_API ALevelGenerationActor : public AActor
+class CHOMP_API ALevelGenerationActor : public AActor
 {
 	GENERATED_BODY()
 

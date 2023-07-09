@@ -18,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameRestartedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, PacmanGameState, GameState);
 
 UCLASS()
-class KIWIPIZZA_API APacmanGameMode : public AGameModeBase
+class CHOMP_API APacmanGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 

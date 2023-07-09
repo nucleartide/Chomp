@@ -1,15 +1,13 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 using UnrealBuildTool;
 using System.Collections.Generic;
 
-public class KiwiPizzaEditorTarget : TargetRules
+public class ChompEditorTarget : TargetRules
 {
-	public KiwiPizzaEditorTarget( TargetInfo Target) : base(Target)
+	public ChompEditorTarget( TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
-		ExtraModuleNames.Add("KiwiPizza");
+		ExtraModuleNames.Add("Chomp");
 	}
 }

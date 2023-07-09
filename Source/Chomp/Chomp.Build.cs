@@ -2,9 +2,9 @@
 
 using UnrealBuildTool;
 
-public class KiwiPizza : ModuleRules
+public class Chomp : ModuleRules
 {
-	public KiwiPizza(ReadOnlyTargetRules Target) : base(Target)
+	public Chomp(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
