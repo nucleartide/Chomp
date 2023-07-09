@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Actors/LevelLoader.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "TestActor.generated.h"
 
 /**

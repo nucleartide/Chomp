@@ -1,4 +1,4 @@
-#include "Actors/LevelGenerationActor.h"
+#include "LevelGenerator/LevelGenerationActor.h"
 
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"

@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "Actors/LevelGenerationActor.h"
+#include "LevelGenerator/LevelGenerationActor.h"
 #include "Blueprint/UserWidget.h"
 #include "UIManager.generated.h"
 

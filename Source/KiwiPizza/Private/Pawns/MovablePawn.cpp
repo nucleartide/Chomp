@@ -1,5 +1,5 @@
 #include "MovablePawn.h"
-#include "Actors/LevelLoader.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Constants/GameplayTag.h"

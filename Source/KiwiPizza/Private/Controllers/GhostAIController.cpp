@@ -6,7 +6,7 @@
 
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
-#include "Actors/LevelLoader.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "AStar/AStar.h"
 
 void AGhostAIController::BeginPlay()

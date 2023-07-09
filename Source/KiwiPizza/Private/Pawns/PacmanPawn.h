@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
-#include "Actors/LevelLoader.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "Pawns/MovablePawn.h"
 #include "PacmanPawn.generated.h"
 
