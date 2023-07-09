@@ -1,25 +1,25 @@
-#include "Pawns/PacmanPawn.h"
-#include "PacmanGameMode.h"
+#include "Pawns/ChompPawn.h"
+#include "ChompGameMode.h"
 #include "Utils/Debug.h"
 #include "Pawns/GhostPawn.h"
 
-APacmanPawn::APacmanPawn()
+AChompPawn::AChompPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void APacmanPawn::BeginPlay()
+void AChompPawn::BeginPlay()
 {
 	Super::BeginPlay();
 }
 
-void APacmanPawn::Tick(float DeltaTime)
+void AChompPawn::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	WrapAroundWorld();
 }
 
-void APacmanPawn::MoveVector(FVector2D Value, float DeltaTime)
+void AChompPawn::MoveVector(FVector2D Value, float DeltaTime)
 {
 
 	//
@@ -29,10 +29,10 @@ void APacmanPawn::MoveVector(FVector2D Value, float DeltaTime)
 	auto GameMode = GetWorld()->GetAuthGameMode();
 	check(GameMode);
 
-	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
-	check(PacmanGameMode);
+	auto ChompGameMode = Cast<AChompGameMode>(GameMode);
+	check(ChompGameMode);
 
-	if (PacmanGameMode->GameState != PacmanGameState::Playing)
+	if (ChompGameMode->GameState != PacmanGameState::Playing)
 		return;
 
 	//
@@ -42,7 +42,7 @@ void APacmanPawn::MoveVector(FVector2D Value, float DeltaTime)
 	Super::MoveVector(Value, DeltaTime);
 }
 
-void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
+void AChompPawn::NotifyActorBeginOverlap(AActor *Other)
 {
 
 	//
@@ -52,10 +52,10 @@ void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 	auto GameMode = GetWorld()->GetAuthGameMode();
 	check(GameMode);
 
-	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
-	check(PacmanGameMode);
+	auto ChompGameMode = Cast<AChompGameMode>(GameMode);
+	check(ChompGameMode);
 
-	if (PacmanGameMode->GameState != PacmanGameState::Playing)
+	if (ChompGameMode->GameState != PacmanGameState::Playing)
 		return;
 
 	// If we overlapped with a dot, then consume the other dot.
@@ -71,7 +71,7 @@ void APacmanPawn::NotifyActorBeginOverlap(AActor *Other)
 	}
 }
 
-void APacmanPawn::NotifyActorEndOverlap(AActor *Other)
+void AChompPawn::NotifyActorEndOverlap(AActor *Other)
 {
 	// No-op.
 }

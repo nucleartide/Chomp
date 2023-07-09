@@ -17,13 +17,14 @@ struct FGridLocation
     FString ToString() const;
 };
 
+// Overload some operators.
 bool operator==(FGridLocation a, FGridLocation b);
 bool operator!=(FGridLocation a, FGridLocation b);
 bool operator<(FGridLocation a, FGridLocation b);
 
+// Implement hash function so we can put FGridLocation into an unordered_set.
 namespace std
 {
-    /* implement hash function so we can put FGridLocation into an unordered_set */
     template <>
     struct hash<FGridLocation>
     {

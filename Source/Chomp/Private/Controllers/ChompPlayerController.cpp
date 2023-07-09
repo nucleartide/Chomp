@@ -1,23 +1,23 @@
-#include "Controllers/PacmanPlayerController.h"
-#include "Pawns/PacmanPawn.h"
+#include "Controllers/ChompPlayerController.h"
+#include "Pawns/ChompPawn.h"
 #include "Utils/Debug.h"
 
-APacmanPlayerController::APacmanPlayerController()
+AChompPlayerController::AChompPlayerController()
 {
     PrimaryActorTick.bCanEverTick = true;
 }
 
-void APacmanPlayerController::OnMoveVertical(float Delta)
+void AChompPlayerController::OnMoveVertical(float Delta)
 {
     VerticalAxisDelta = Delta;
 }
 
-void APacmanPlayerController::OnMoveHorizontal(float Delta)
+void AChompPlayerController::OnMoveHorizontal(float Delta)
 {
     HorizontalAxisDelta = Delta;
 }
 
-void APacmanPlayerController::Tick(float DeltaTime)
+void AChompPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
@@ -29,21 +29,21 @@ void APacmanPlayerController::Tick(float DeltaTime)
     auto Pawn = GetPawn();
     check(Pawn);
 
-    // Cast to PacmanPawn.
-    auto PacmanPawn = Cast<APacmanPawn>(Pawn);
-    check(PacmanPawn);
+    // Cast to ChompPawn.
+    auto ChompPawn = Cast<AChompPawn>(Pawn);
+    check(ChompPawn);
 
     // Move the pawn using our computed delta.
-    PacmanPawn->MoveVector(Delta, DeltaTime);
+    ChompPawn->MoveVector(Delta, DeltaTime);
 }
 
-void APacmanPlayerController::BeginPlay()
+void AChompPlayerController::BeginPlay()
 {
     Super::BeginPlay();
 
     // Bind input axes.
-    InputComponent->BindAxis("Move Forward / Backward", this, &APacmanPlayerController::OnMoveVertical);
-    InputComponent->BindAxis("Move Right / Left", this, &APacmanPlayerController::OnMoveHorizontal);
+    InputComponent->BindAxis("Move Forward / Backward", this, &AChompPlayerController::OnMoveVertical);
+    InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
 
     // Disable this. We want to manage the active camera ourselves.
     bAutoManageActiveCameraTarget = false;

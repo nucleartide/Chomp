@@ -27,7 +27,7 @@ public:
 	ALevelGenerationActor* LevelGenerator;
 
 	UPROPERTY(EditAnywhere, Category = "Level Generator Reference")
-	class APacmanPawn* PacmanPawn;
+	class AChompPawn* ChompPawn;
 
 	UFUNCTION(BlueprintCallable)
 	void HandleDotsCleared();

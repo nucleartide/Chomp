@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include "PacmanGameMode.generated.h"
+#include "ChompGameMode.generated.h"
 
 UENUM(BlueprintType)
 enum class PacmanGameState : uint8
@@ -18,7 +18,7 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameRestartedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, PacmanGameState, GameState);
 
 UCLASS()
-class CHOMP_API APacmanGameMode : public AGameModeBase
+class CHOMP_API AChompGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
 

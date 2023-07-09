@@ -8,7 +8,7 @@
 
 #include "Utils/Debug.h"
 #include "Actors/ConsumableDotActor.h"
-#include "PacmanGameMode.h"
+#include "ChompGameMode.h"
 #include "AStar/GridLocation.h"
 #include "AStar/AStar.h"
 
@@ -26,9 +26,9 @@ void ALevelGenerationActor::BeginPlay()
 	// Lastly, add a listener to regenerate tiles when the game restarts.
 	{
 		auto GameMode = GetWorld()->GetAuthGameMode();
-		auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
-		check(PacmanGameMode);
-		PacmanGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
+		auto ChompGameMode = Cast<AChompGameMode>(GameMode);
+		check(ChompGameMode);
+		ChompGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
 	}
 }
 
@@ -143,11 +143,11 @@ void ALevelGenerationActor::HandleDotConsumption()
 
 		// Update the GameMode's state.
 		//
-		// We are already coupled to the PacmanGameMode because we need to listen to game restarts,
-		// so reaching out to update the PacmanGameMode directly doesn't cause further harm.
+		// We are already coupled to the ChompGameMode because we need to listen to game restarts,
+		// so reaching out to update the ChompGameMode directly doesn't cause further harm.
 		auto GameMode = GetWorld()->GetAuthGameMode();
-		auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
-		check(PacmanGameMode);
-		PacmanGameMode->SetGameState(PacmanGameState::GameOverWin);
+		auto ChompGameMode = Cast<AChompGameMode>(GameMode);
+		check(ChompGameMode);
+		ChompGameMode->SetGameState(PacmanGameState::GameOverWin);
 	}
 }

@@ -3,8 +3,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
-#include "PacmanGameMode.h"
-#include "Pawns/PacmanPawn.h"
+#include "ChompGameMode.h"
+#include "Pawns/ChompPawn.h"
 
 AUIManager::AUIManager()
 {
@@ -15,7 +15,7 @@ void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
 	LevelGenerator->OnLevelClearedDelegate.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
-	PacmanPawn->OnPacmanDiedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
+	ChompPawn->OnPacmanDiedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
 }
 
 void AUIManager::Tick(float DeltaTime)
@@ -79,17 +79,17 @@ void AUIManager::HandleRestartGameClicked()
 {
 	DEBUG_LOG(TEXT("Handling game restarted in UIManager..."))
 
-	// By reaching out to the current game mode, this class becomes coupled to PacmanGameMode.
+	// By reaching out to the current game mode, this class becomes coupled to ChompGameMode.
 	// That's okay. This class is intended to be game-specific anyway.
 	auto GameMode = GetWorld()->GetAuthGameMode();
 	check(GameMode);
 
 	// TODO: Does casting to an interface avoid hard references? What is a hard reference anyway, and why is avoiding hard refs important?
 	// Something to investigate for later.
-	auto PacmanGameMode = Cast<APacmanGameMode>(GameMode);
-	check(PacmanGameMode);
+	auto ChompGameMode = Cast<AChompGameMode>(GameMode);
+	check(ChompGameMode);
 
-	PacmanGameMode->SetGameState(PacmanGameState::Playing);
+	ChompGameMode->SetGameState(PacmanGameState::Playing);
 
 	// Hide the widget.
 	GameOverWidgetInstance->RemoveFromParent();

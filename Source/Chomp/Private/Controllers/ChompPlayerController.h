@@ -2,15 +2,15 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
-#include "PacmanPlayerController.generated.h"
+#include "ChompPlayerController.generated.h"
 
 UCLASS()
-class APacmanPlayerController : public APlayerController
+class AChompPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
 public:
-	APacmanPlayerController();
+	AChompPlayerController();
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 	void OnMoveHorizontal(float Delta);

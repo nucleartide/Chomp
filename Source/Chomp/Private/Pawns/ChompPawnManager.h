@@ -2,19 +2,19 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include "PacmanPawnManager.generated.h"
+#include "ChompPawnManager.generated.h"
 
 /**
- * APacmanPawnManager defines the starting location of the player pawn,
+ * AChompPawnManager defines the starting location of the player pawn,
  * and resets the player pawn's position when the game is restarted.
  */
 UCLASS()
-class APacmanPawnManager : public AActor
+class AChompPawnManager : public AActor
 {
 	GENERATED_BODY()
 
 public:
-	APacmanPawnManager();
+	AChompPawnManager();
 
 protected:
 	virtual void BeginPlay() override;
@@ -26,7 +26,7 @@ protected:
 	void HandlePacmanDied();
 
 	UPROPERTY(EditAnywhere)
-	class APacmanPawn *PacmanPawn;
+	class AChompPawn *ChompPawn;
 
 public:
 	virtual void Tick(float DeltaTime) override;

@@ -1,11 +1,11 @@
 // Copyright Epic Games, Inc. All Rights Reserved.
 
-#include "PacmanGameMode.h"
+#include "ChompGameMode.h"
 #include "Kismet/GameplayStatics.h"
-#include "Controllers/PacmanPlayerController.h"
+#include "Controllers/ChompPlayerController.h"
 #include "Utils/Debug.h"
 
-void APacmanGameMode::SetGameState(PacmanGameState NewState)
+void AChompGameMode::SetGameState(PacmanGameState NewState)
 {
     if (NewState == PacmanGameState::Playing)
     {

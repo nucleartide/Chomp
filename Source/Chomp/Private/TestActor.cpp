@@ -1,6 +1,6 @@
 #include "TestActor.h"
 #include "Utils/Debug.h"
-#include "PacmanGameMode.h"
+#include "ChompGameMode.h"
 
 ATestActor::ATestActor()
 {

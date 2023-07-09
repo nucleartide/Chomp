@@ -6,17 +6,17 @@
 #include "GameFramework/Pawn.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "Pawns/MovablePawn.h"
-#include "PacmanPawn.generated.h"
+#include "ChompPawn.generated.h"
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPacmanDiedSignature);
 
 UCLASS()
-class APacmanPawn : public AMovablePawn
+class AChompPawn : public AMovablePawn
 {
 	GENERATED_BODY()
 
 public:
-	APacmanPawn();
+	AChompPawn();
 
 protected:
 	virtual void BeginPlay() override;
