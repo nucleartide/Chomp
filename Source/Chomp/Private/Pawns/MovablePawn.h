@@ -37,13 +37,13 @@ public:
 	virtual void MoveVector(FVector2D Value, float DeltaTime);
 
 	// Extend collision raycasts by this factor for the sake of more robust collision checks.
-	UPROPERTY(EditDefaultsOnly, Category = "Tolerance Customization")
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float Tolerance = 2.0f;
 
 	// Reference to the ULevelLoader. Needed for bounds checks.
-	UPROPERTY(EditAnywhere, Category = "Loaded Level")
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Tolerance Customization")
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float RotationInterpSpeed = 1.0f;
 };
