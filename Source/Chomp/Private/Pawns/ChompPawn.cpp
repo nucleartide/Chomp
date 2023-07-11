@@ -1,7 +1,8 @@
-#include "Pawns/ChompPawn.h"
 #include "ChompGameMode.h"
-#include "Utils/Debug.h"
+#include "Constants/GameplayTag.h"
+#include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
+#include "Utils/Debug.h"
 
 AChompPawn::AChompPawn()
 {
@@ -59,7 +60,7 @@ void AChompPawn::NotifyActorBeginOverlap(AActor *Other)
 		return;
 
 	// If we overlapped with a dot, then consume the other dot.
-	if (Other->Tags.Contains(FName("SmallDot"))) // TODO: One could check tags or cast against a type. Checking tags is prone to typos, but casting has dependency issues. Wonder which is the better tradeoff?
+	if (Other->Tags.Contains(FName(GameplayTag::SmallDot)))
 	{
 		Other->Destroy();
 	}
