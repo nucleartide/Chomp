@@ -1,6 +1,7 @@
+#include "Pawns/ChompPawn.h"
+
 #include "ChompGameMode.h"
 #include "Constants/GameplayTag.h"
-#include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 

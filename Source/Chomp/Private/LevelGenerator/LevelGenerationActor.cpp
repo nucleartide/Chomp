@@ -6,11 +6,12 @@
 #include "GameFramework/Actor.h"
 #include "Kismet/GameplayStatics.h"
 
-#include "Utils/Debug.h"
 #include "Actors/ConsumableDotActor.h"
-#include "ChompGameMode.h"
 #include "AStar/GridLocation.h"
 #include "AStar/AStar.h"
+#include "ChompGameMode.h"
+#include "ChompGameState.h"
+#include "Utils/Debug.h"
 
 void ALevelGenerationActor::BeginPlay()
 {
@@ -150,4 +151,12 @@ void ALevelGenerationActor::HandleDotConsumption()
 		check(ChompGameMode);
 		ChompGameMode->SetGameState(PacmanGameState::GameOverWin);
 	}
+
+	// Reach out to ChompGameMode, and update the score.
+	//
+	// We are already coupled to the ChompGameMode because we need to listen to game restarts,
+	// so reaching out to update the ChompGameMode directly doesn't cause further harm.
+	auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
+	check(ChompGameState);
+	ChompGameState->IncrementScore(1);
 }
