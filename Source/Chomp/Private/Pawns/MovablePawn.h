@@ -44,6 +44,7 @@ public:
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
+	// Scaling factor that is fed to RInterpTo.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float RotationInterpSpeed = 1.0f;
 };
