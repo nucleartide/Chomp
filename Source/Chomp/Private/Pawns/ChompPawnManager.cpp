@@ -31,6 +31,7 @@ void AChompPawnManager::Tick(float DeltaTime)
 void AChompPawnManager::HandleGameRestarted()
 {
 	ChompPawn->SetActorLocation(GetActorLocation());
+	ChompPawn->SetActorRotation(GetActorRotation());
 }
 
 void AChompPawnManager::HandlePacmanDied()

@@ -14,20 +14,19 @@ class AChompPawnManager : public AActor
 	GENERATED_BODY()
 
 public:
+	UPROPERTY(EditAnywhere)
+	class AChompPawn *ChompPawn;
+
 	AChompPawnManager();
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
+private:
 	UFUNCTION()
 	void HandleGameRestarted();
 
 	UFUNCTION()
 	void HandlePacmanDied();
-
-	UPROPERTY(EditAnywhere)
-	class AChompPawn *ChompPawn;
-
-public:
-	virtual void Tick(float DeltaTime) override;
 };
