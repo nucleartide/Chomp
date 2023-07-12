@@ -8,8 +8,6 @@
 #include "Pawns/MovablePawn.h"
 #include "ChompPawn.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPacmanDiedSignature);
-
 UCLASS()
 class AChompPawn : public AMovablePawn
 {
@@ -33,7 +31,4 @@ public:
 	 *  Move this pawn around by Value.
 	 */
 	virtual void MoveVector(FVector2D Value, float DeltaTime) override;
-
-	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnPacmanDiedSignature OnPacmanDiedDelegate;
 };

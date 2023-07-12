@@ -39,8 +39,6 @@ private:
 	FGridLocation CurrentDestinationGridPos;
 
 	bool IsAtDestination = false;
-	float ElapsedTime = 0.0f;
-	float TotalTime = 0.0f;
 
 	virtual void BeginPlay() override;
 

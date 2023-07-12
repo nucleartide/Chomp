@@ -135,29 +135,9 @@ void ALevelGenerationActor::ResetTiles()
 
 void ALevelGenerationActor::HandleDotConsumption()
 {
-	// Update state.
-	NumberOfDotsRemaining--;
-	DEBUG_LOG(TEXT("Dot consumed. Remaining dots: %d"), NumberOfDotsRemaining);
-
-	// Reach out to ChompGameMode, and update the score.
-	//
-	// We are already coupled to the ChompGameMode because we need to listen to game restarts,
-	// so reaching out to update the ChompGameMode directly doesn't cause further harm.
-	auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
+	// Relay the dot consumption event to our GameState.
+	auto GameState = GetWorld()->GetGameState();
+	auto ChompGameState = Cast<AChompGameState>(GameState);
 	check(ChompGameState);
-	ChompGameState->IncrementScore(1);
-
-	if (NumberOfDotsRemaining == 0)
-	{
-		OnLevelClearedDelegate.Broadcast();
-
-		// Update the GameMode's state.
-		//
-		// We are already coupled to the ChompGameMode because we need to listen to game restarts,
-		// so reaching out to update the ChompGameMode directly doesn't cause further harm.
-		auto GameMode = GetWorld()->GetAuthGameMode();
-		auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-		check(ChompGameMode);
-		ChompGameMode->SetGameState(PacmanGameState::GameOverWin);
-	}
+	ChompGameState->ConsumeDot();
 }

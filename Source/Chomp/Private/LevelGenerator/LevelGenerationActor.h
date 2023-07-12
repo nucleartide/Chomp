@@ -39,11 +39,6 @@ private:
 	TArray<AActor *> Tiles;
 
 	/**
-	 * A count of the number of active dots in the scene.
-	 */
-	int NumberOfDotsRemaining = 0;
-
-	/**
 	 * Override BeginPlay() to customize initialization.
 	 */
 	void BeginPlay() override;
