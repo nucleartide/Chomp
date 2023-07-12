@@ -4,17 +4,12 @@
 #include "Engine/StaticMeshActor.h"
 #include "ConsumableDotActor.generated.h"
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotConsumedSignature);
-
 UCLASS()
 class AConsumableDotActor : public AStaticMeshActor
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnDotConsumedSignature OnDotConsumedDelegate;
-
 	/**
 	 * Consume the dot.
 	 *

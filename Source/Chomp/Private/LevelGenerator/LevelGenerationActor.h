@@ -59,11 +59,5 @@ private:
 	 * Reset the level's tiles to that of the original level data.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void ResetTiles();
-
-	/**
-	 * Handle when a dot in the level is consumed.
-	 */
-	UFUNCTION(BlueprintCallable)
-	void HandleDotConsumption();
+	void ResetTiles(EChompGameState OldState, EChompGameState NewState);
 };

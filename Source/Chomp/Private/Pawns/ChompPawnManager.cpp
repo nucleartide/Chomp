@@ -1,46 +1,20 @@
 #include "Pawns/ChompPawnManager.h"
 #include "ChompGameMode.h"
+#include "ChompGameState.h"
 #include "Pawns/ChompPawn.h"
-
-AChompPawnManager::AChompPawnManager()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
 
 void AChompPawnManager::BeginPlay()
 {
 	Super::BeginPlay();
-
-	auto GameMode = GetWorld()->GetAuthGameMode();
-	check(GameMode);
-
-	auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-	check(ChompGameMode);
-
-	ChompGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &AChompPawnManager::HandleGameRestarted);
-	ChompPawn->OnPacmanDiedDelegate.AddUniqueDynamic(this, &AChompPawnManager::HandlePacmanDied);
-
-	ChompPawn->SetActorLocation(GetActorLocation());
+	HandleGameRestarted(EChompGameState::None, EChompGameState::Playing);
+	GetWorld()->GetGameState<AChompGameState>()->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPawnManager::HandleGameRestarted);
 }
 
-void AChompPawnManager::Tick(float DeltaTime)
+void AChompPawnManager::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
 {
-	Super::Tick(DeltaTime);
-}
-
-void AChompPawnManager::HandleGameRestarted()
-{
-	ChompPawn->SetActorLocation(GetActorLocation());
-	ChompPawn->SetActorRotation(GetActorRotation());
-}
-
-void AChompPawnManager::HandlePacmanDied()
-{
-	auto GameMode = GetWorld()->GetAuthGameMode();
-	check(GameMode);
-
-	auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-	check(ChompGameMode);
-
-	ChompGameMode->SetGameState(PacmanGameState::GameOverLose);
+	if (NewState == EChompGameState::Playing)
+	{
+		ChompPawn->SetActorLocation(GetActorLocation());
+		ChompPawn->SetActorRotation(GetActorRotation());
+	}
 }

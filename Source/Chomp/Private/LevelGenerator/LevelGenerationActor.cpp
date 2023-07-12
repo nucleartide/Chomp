@@ -25,12 +25,8 @@ void ALevelGenerationActor::BeginPlay()
 	GenerateTiles();
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
-	{
-		auto GameMode = GetWorld()->GetAuthGameMode();
-		auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-		check(ChompGameMode);
-		ChompGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
-	}
+	auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
+	ChompGameMode->OnLateGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
 }
 
 void ALevelGenerationActor::ClearLeftoverTiles()
@@ -51,7 +47,7 @@ void ALevelGenerationActor::ClearLeftoverTiles()
 void ALevelGenerationActor::GenerateTiles()
 {
 	auto Level = ULevelLoader::GetInstance(LevelLoader);
-	NumberOfDotsRemaining = 0;
+	auto NumberOfDotsRemaining = 0;
 
 	for (int X = 0; X < Level->GetLevelHeight(); X++)
 	{
@@ -109,7 +105,6 @@ void ALevelGenerationActor::GenerateTiles()
 				// Finally, attach a handler for when a dot is consumed.
 				auto ConsumableDotActor = Cast<AConsumableDotActor>(Actor);
 				check(ConsumableDotActor);
-				ConsumableDotActor->OnDotConsumedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::HandleDotConsumption);
 
 				// Keep track of the generated dot.
 				Tiles.Add(ConsumableDotActor);
@@ -125,19 +120,15 @@ void ALevelGenerationActor::GenerateTiles()
 			}
 		}
 	}
+
+	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetTiles()
+void ALevelGenerationActor::ResetTiles(EChompGameState OldState, EChompGameState NewState)
 {
-	ClearLeftoverTiles();
-	GenerateTiles();
-}
-
-void ALevelGenerationActor::HandleDotConsumption()
-{
-	// Relay the dot consumption event to our GameState.
-	auto GameState = GetWorld()->GetGameState();
-	auto ChompGameState = Cast<AChompGameState>(GameState);
-	check(ChompGameState);
-	ChompGameState->ConsumeDot();
+	if (NewState == EChompGameState::Playing)
+	{
+		ClearLeftoverTiles();
+		GenerateTiles();
+	}
 }

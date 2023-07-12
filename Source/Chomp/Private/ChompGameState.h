@@ -6,23 +6,22 @@
 #include "ChompGameState.generated.h"
 
 UENUM(BlueprintType)
-enum class ChompGameState : uint8
+enum class EChompGameState : uint8
 {
+	None,
 	Playing,
 	GameOverWin,
 	GameOverLose,
 };
 
 // Dot lifecycle events.
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsResetSignature, int, NumberOfDots);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotConsumedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
 
-// Player death event.
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChompDiedSignature);
+// Score update event.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
 
 // State change events.
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, ChompGameState, OldState, ChompGameState, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, EChompGameState, OldState, EChompGameState, NewState);
 
 UCLASS()
 class AChompGameState : public AGameStateBase
@@ -30,10 +29,23 @@ class AChompGameState : public AGameStateBase
 	GENERATED_BODY()
 
 public:
+	/**
+	 * The score amount that should be awarded upon dot consumption.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	float SCORE_MULTIPLIER = 10;
+
 	void ResetDots(int NumberOfDots);
+
 	void ConsumeDot();
+
 	void NotifyPlayerDeath();
-	void TransitionTo(ChompGameState NewState);
+
+	void TransitionTo(EChompGameState NewState);
+
+	EChompGameState GetEnum();
+
+	int GetScore();
 
 public:
 
@@ -44,22 +56,26 @@ public:
 	 */
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsResetSignature OnDotsResetDelegate;
-
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotConsumedSignature OnDotConsumedDelegate;
-
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsClearedSignature OndotsClearedDelegate;
-
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnChompDiedSignature OnChompDiedDelegate;
+	FOnDotsClearedSignature OnDotsClearedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGameStateChangedSignature OnGameStateChangedDelegate;
 
+	/**
+	 * Used for callbacks that you want executed after those assigned to OnGameStateChangedDelegate.
+	 *
+	 * Example:
+	 *   1. Reset the player's position in OnGameStateChangedDelegate
+	 *   2. Reset the level's dots in OnLateGameStateChangedDelegate
+	 */
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnGameStateChangedSignature OnLateGameStateChangedDelegate;
+
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnScoreUpdatedSignature OnScoreUpdatedDelegate;
+
 private:
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
-	ChompGameState GameState = ChompGameState::Playing;
+	EChompGameState GameState = EChompGameState::Playing;
 };

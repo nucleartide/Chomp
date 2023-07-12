@@ -15,8 +15,8 @@ protected:
 
 private:
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock *ScoreText;
+	class UTextBlock *ScoreTextBlock;
 
 	UFUNCTION()
-	void HandleScoreUpdated(int NewScore);
+	void HandleScoreUpdated(int Score);
 };
