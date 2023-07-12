@@ -13,13 +13,16 @@ enum class ChompGameState : uint8
 	GameOverLose,
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, NewScore);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsDecrementedSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
+// Dot lifecycle events.
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsResetSignature, int, NumberOfDots);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnGameRestartedSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGameStateChangedSignature, PacmanGameState, GameState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnPacmanDiedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotConsumedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
+
+// Player death event.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnChompDiedSignature);
+
+// State change events.
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, ChompGameState, OldState, ChompGameState, NewState);
 
 UCLASS()
 class AChompGameState : public AGameStateBase
@@ -27,31 +30,33 @@ class AChompGameState : public AGameStateBase
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnScoreUpdatedSignature OnScoreUpdatedDelegate;
+	void ResetDots(int NumberOfDots);
+	void ConsumeDot();
+	void NotifyPlayerDeath();
+	void TransitionTo(ChompGameState NewState);
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsDecrementedSignature OnDotsDecrementedDelegate;
+public:
 
-	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsDecrementedSignature OnDotsClearedDelegate;
+	/**
+	 * Note that only ChompGameState should be invoking .Broadcast() on these delegates.
+	 *
+	 * If you want to call a delegate from outside ChompGameState, replace the call with a call to a public method instead.
+	 */
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnDotsResetSignature OnDotsResetDelegate;
 
-	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGameRestartedSignature OnGameRestartedDelegate;
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnDotConsumedSignature OnDotConsumedDelegate;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnDotsClearedSignature OndotsClearedDelegate;
+
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnChompDiedSignature OnChompDiedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGameStateChangedSignature OnGameStateChangedDelegate;
-
-	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnPacmanDiedSignature OnPacmanDiedDelegate;
-
-	/**
-	 * Update score and number of dots remaining.
-	 */
-	void ConsumeDot();
 
 private:
 	int Score = 0;
