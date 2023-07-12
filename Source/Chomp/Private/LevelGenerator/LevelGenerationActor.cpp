@@ -51,6 +51,7 @@ void ALevelGenerationActor::ClearLeftoverTiles()
 void ALevelGenerationActor::GenerateTiles()
 {
 	auto Level = ULevelLoader::GetInstance(LevelLoader);
+	NumberOfDotsRemaining = 0;
 
 	for (int X = 0; X < Level->GetLevelHeight(); X++)
 	{
@@ -134,9 +135,17 @@ void ALevelGenerationActor::ResetTiles()
 
 void ALevelGenerationActor::HandleDotConsumption()
 {
+	// Update state.
 	NumberOfDotsRemaining--;
-
 	DEBUG_LOG(TEXT("Dot consumed. Remaining dots: %d"), NumberOfDotsRemaining);
+
+	// Reach out to ChompGameMode, and update the score.
+	//
+	// We are already coupled to the ChompGameMode because we need to listen to game restarts,
+	// so reaching out to update the ChompGameMode directly doesn't cause further harm.
+	auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
+	check(ChompGameState);
+	ChompGameState->IncrementScore(1);
 
 	if (NumberOfDotsRemaining == 0)
 	{
@@ -151,12 +160,4 @@ void ALevelGenerationActor::HandleDotConsumption()
 		check(ChompGameMode);
 		ChompGameMode->SetGameState(PacmanGameState::GameOverWin);
 	}
-
-	// Reach out to ChompGameMode, and update the score.
-	//
-	// We are already coupled to the ChompGameMode because we need to listen to game restarts,
-	// so reaching out to update the ChompGameMode directly doesn't cause further harm.
-	auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
-	check(ChompGameState);
-	ChompGameState->IncrementScore(1);
 }

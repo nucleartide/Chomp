@@ -5,6 +5,7 @@
 #include "UI/GameOverWidget.h"
 #include "ChompGameMode.h"
 #include "Pawns/ChompPawn.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 AUIManager::AUIManager()
 {
@@ -39,10 +40,9 @@ void AUIManager::HandleDotsCleared()
 		GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
 	}
 
+// TODO: fix score updating
+// TODO: unit test state updates
 	WidgetInstance->AddToViewport();
-
-	auto ViewportClient = World->GetGameViewport();
-	check(ViewportClient);
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
@@ -67,9 +67,6 @@ void AUIManager::HandlePlayerDeath()
 
 	WidgetInstance->AddToViewport();
 
-	auto ViewportClient = World->GetGameViewport();
-	check(ViewportClient);
-
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
 	Controller->SetInputMode(FInputModeGameAndUI());
@@ -91,9 +88,19 @@ void AUIManager::HandleRestartGameClicked()
 
 	ChompGameMode->SetGameState(PacmanGameState::Playing);
 
+	TArray<UUserWidget *> FoundWidgets;
+	UWidgetBlueprintLibrary::GetAllWidgetsOfClass(
+		GetWorld(),
+		FoundWidgets,
+		UGameOverWidget::StaticClass(),
+		false);
+
 	// Hide the widget.
-	GameOverWidgetInstance->RemoveFromParent();
-	GameOverWidgetInstance->Destruct();
+	for (auto Widget : FoundWidgets)
+	{
+		Widget->RemoveFromParent();
+		Widget->Destruct();
+	}
 	GameOverWidgetInstance = nullptr;
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);

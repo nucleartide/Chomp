@@ -4,6 +4,7 @@
 #include "Constants/GameplayTag.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
+#include "Actors/ConsumableDotActor.h"
 
 AChompPawn::AChompPawn()
 {
@@ -61,9 +62,10 @@ void AChompPawn::NotifyActorBeginOverlap(AActor *Other)
 		return;
 
 	// If we overlapped with a dot, then consume the other dot.
-	if (Other->Tags.Contains(FName(GameplayTag::SmallDot)))
+	auto PossibleDot = Cast<AConsumableDotActor>(Other);
+	if (PossibleDot)
 	{
-		Other->Destroy();
+		PossibleDot->Consume();
 	}
 	// Otherwise, if we overlapped with a ghost, then log for now.
 	else if (Cast<AGhostPawn>(Other))

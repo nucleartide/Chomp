@@ -1,7 +1,7 @@
 #include "Actors/ConsumableDotActor.h"
 
-void AConsumableDotActor::Destroyed()
+void AConsumableDotActor::Consume()
 {
-    Super::Destroyed();
     OnDotConsumedDelegate.Broadcast();
+    Destroy();
 }
