@@ -14,37 +14,46 @@ class AUIManager : public AActor
 {
 	GENERATED_BODY()
 	
-public:	
+public:
+	/**
+	 * A reference to the map's LevelGenerationActor, so that we can listen for level cleared events.
+	 */
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	ALevelGenerationActor* LevelGenerator;
+
+	/**
+	 * A reference to the player pawn, so that we can listen for player death events.
+	 */
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	class AChompPawn* ChompPawn;
+
+	/**
+	 * The UI to display when the player wins the game.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<UUserWidget> GameOverWinWidgetClass;
+
+	/**
+	 * The UI to display when the player loses the game.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<UUserWidget> GameOverLoseWidgetClass;
+
 	AUIManager();
 
 protected:
 	virtual void BeginPlay() override;
-
-public:	
 	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(EditAnywhere, Category = "Level Generator Reference")
-	ALevelGenerationActor* LevelGenerator;
-
-	UPROPERTY(EditAnywhere, Category = "Level Generator Reference")
-	class AChompPawn* ChompPawn;
-
-	UFUNCTION(BlueprintCallable)
-	void HandleDotsCleared();
-
-	UFUNCTION(BlueprintCallable)
-	void HandlePlayerDeath();
-
-	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
-	TSubclassOf<UUserWidget> GameOverWinWidgetClass;
-
-	UPROPERTY(EditDefaultsOnly, Category = "UWidget References")
-	TSubclassOf<UUserWidget> GameOverLoseWidgetClass;
 
 private:
 	class UGameOverWidget* GameOverWidgetInstance;
 
-public:
+	UFUNCTION()
+	void HandleDotsCleared();
+
+	UFUNCTION()
+	void HandlePlayerDeath();
+
 	UFUNCTION()
 	void HandleRestartGameClicked();
 };
