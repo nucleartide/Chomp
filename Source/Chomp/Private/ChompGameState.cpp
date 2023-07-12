@@ -3,17 +3,25 @@
 
 void AChompGameState::ResetDots(int NumberOfDots)
 {
-	Score = 0;
-    OnScoreUpdatedDelegate.Broadcast(Score);
-	NumberOfDotsRemaining = NumberOfDots;
+    UpdateScore(0);
+    UpdateNumberOfDotsRemaining(NumberOfDots);
 }
 
 void AChompGameState::ConsumeDot()
 {
-    Score += 1 * SCORE_MULTIPLIER;
-    OnScoreUpdatedDelegate.Broadcast(Score);
+    UpdateScore(Score + SCORE_MULTIPLIER);
+    UpdateNumberOfDotsRemaining(NumberOfDotsRemaining - 1);
+}
 
-    NumberOfDotsRemaining--;
+void AChompGameState::UpdateScore(int NewScore)
+{
+    Score = NewScore;
+    OnScoreUpdatedDelegate.Broadcast(NewScore);
+}
+
+void AChompGameState::UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining)
+{
+    NumberOfDotsRemaining = NewNumberOfDotsRemaining;
     if (NumberOfDotsRemaining == 0)
     {
         OnDotsClearedDelegate.Broadcast();
@@ -30,7 +38,6 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
 {
     auto OldState = GameState;
     check(OldState != NewState);
-
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
     OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);

@@ -78,4 +78,7 @@ private:
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
 	EChompGameState GameState = EChompGameState::Playing;
+
+	void UpdateScore(int NewScore);
+	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 };
