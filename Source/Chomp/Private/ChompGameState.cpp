@@ -9,7 +9,7 @@ void AChompGameState::ResetDots(int NumberOfDots)
 
 void AChompGameState::ConsumeDot()
 {
-    UpdateScore(Score + SCORE_MULTIPLIER);
+    UpdateScore(Score + ScoreMultiplier);
     UpdateNumberOfDotsRemaining(NumberOfDotsRemaining - 1);
 }
 
