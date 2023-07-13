@@ -39,7 +39,7 @@ struct FWave
 	EChompGamePlayingState PlayingState;
 
     UPROPERTY(EditAnywhere)
-	float Duration;
+	double Duration;
 };
 
 UCLASS()
@@ -59,6 +59,7 @@ public:
 	void TransitionTo(EChompGameState NewState);
 	EChompGameState GetEnum();
 	int GetScore();
+	EChompGamePlayingState GetCurrentWave();
 
 public:
 

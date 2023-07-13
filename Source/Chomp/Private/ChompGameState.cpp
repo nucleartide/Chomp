@@ -1,6 +1,14 @@
 #include "ChompGameState.h"
 #include "Utils/Debug.h"
 
+#if false
+// Meant for debugging current wave:
+AChompGameState::AChompGameState()
+{
+    PrimaryActorTick.bCanEverTick = true;
+}
+#endif
+
 void AChompGameState::ResetDots(int NumberOfDots)
 {
     UpdateScore(0);
@@ -53,3 +61,40 @@ int AChompGameState::GetScore()
 {
     return Score;
 }
+
+EChompGamePlayingState AChompGameState::GetCurrentWave()
+{
+    auto TimeSinceStart = GetWorld()->GetTimeSeconds();
+    auto DurationCounter = 0.0;
+
+    for (auto &Wave : Waves)
+    {
+        if (Wave.Duration < 0.0f)
+        {
+            auto DurationStart = DurationCounter;
+            return TimeSinceStart >= DurationStart ? Wave.PlayingState : EChompGamePlayingState::None;
+        }
+
+        auto DurationStart = DurationCounter;
+        auto DurationEnd = DurationCounter + Wave.Duration;
+        if (DurationStart <= TimeSinceStart && TimeSinceStart < DurationEnd)
+        {
+            return Wave.PlayingState;
+        }
+
+        DurationCounter += Wave.Duration;
+    }
+
+    // The "Waves" configuration is malformed if we reach this point. Fix the config!
+    check(false);
+    return EChompGamePlayingState::None;
+}
+
+#if false
+// Meant for debugging current wave:
+void AChompGameState::Tick(float DeltaTime)
+{
+    Super::Tick(DeltaTime);
+    DEBUG_LOG(TEXT("%f %d"), GetWorld()->GetTimeSeconds(), GetCurrentWave());
+}
+#endif
