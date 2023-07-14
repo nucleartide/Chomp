@@ -1,6 +1,6 @@
 # Chomp
 
-A game about chomping on foods and avoiding ghosts, that demonstrates and speaks to the end-to-end process of shipping a (small) Unreal game.
+> A game about chomping on foods and avoiding ghosts, that demonstrates and speaks to the end-to-end process of shipping a (small) game in Unreal Engine. Made in UE 5.2.
 
 ## Play the game
 
