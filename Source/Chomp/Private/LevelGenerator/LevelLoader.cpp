@@ -104,8 +104,8 @@ FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
 {
     // Note: this is the inverse operation of GridToWorld().
     FGridLocation GridPosition;
-    GridPosition.X = FMath::FloorToFloat(WorldPosition.X * .01f);
-    GridPosition.Y = FMath::FloorToFloat(WorldPosition.Y * .01f);
+    GridPosition.X = FMath::RoundToFloat(WorldPosition.X * .01f);
+    GridPosition.Y = FMath::RoundToFloat(WorldPosition.Y * .01f);
     GridPosition.X += .5f * GetLevelHeight();
     GridPosition.Y += .5f * GetLevelWidth();
     return GridPosition;
