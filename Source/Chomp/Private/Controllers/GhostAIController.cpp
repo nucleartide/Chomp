@@ -21,6 +21,10 @@ void AGhostAIController::BeginPlay()
 
     if (!IsTestOriginAndDestinationEnabled)
     {
+        // on reset,
+        // reset the starting position
+        // ensure A* gets called again
+
         // Set the starting position.
         auto LevelInstance = ULevelLoader::GetInstance(Level);
         auto StartingPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
