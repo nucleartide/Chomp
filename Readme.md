@@ -2,7 +2,7 @@
 
 > *A game about chomping on foods and avoiding ghosts, that demonstrates and speaks to the end-to-end process of shipping a game in Unreal Engine. Made in UE 5.2.*
 
-TODO: Need an eye-catching GIF here.
+(TODO: Need an eye-catching GIF here.)
 
 ## 🎮 Play the game
 
@@ -21,6 +21,18 @@ As such, you can use this project as a reference point for creating games in Unr
 This project will have something for you.
 
 Take a look at the list of topics below to study the coding problems that are relevant to your own games:
+
+### C++ versus Blueprints
+
+...
+
+### UI management
+
+...
+
+### Level editing and level generation
+
+...
 
 ### A* implementation
 
