@@ -25,12 +25,8 @@ void ALevelGenerationActor::BeginPlay()
 	GenerateTiles();
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
-	{
-		auto GameMode = GetWorld()->GetAuthGameMode();
-		auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-		check(ChompGameMode);
-		ChompGameMode->OnGameRestartedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
-	}
+	auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
+	ChompGameMode->OnLateGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
 }
 
 void ALevelGenerationActor::ClearLeftoverTiles()
@@ -51,6 +47,7 @@ void ALevelGenerationActor::ClearLeftoverTiles()
 void ALevelGenerationActor::GenerateTiles()
 {
 	auto Level = ULevelLoader::GetInstance(LevelLoader);
+	auto NumberOfDotsRemaining = 0;
 
 	for (int X = 0; X < Level->GetLevelHeight(); X++)
 	{
@@ -108,13 +105,12 @@ void ALevelGenerationActor::GenerateTiles()
 				// Finally, attach a handler for when a dot is consumed.
 				auto ConsumableDotActor = Cast<AConsumableDotActor>(Actor);
 				check(ConsumableDotActor);
-				ConsumableDotActor->OnDotConsumedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::HandleDotConsumption);
 
 				// Keep track of the generated dot.
 				Tiles.Add(ConsumableDotActor);
 				NumberOfDotsRemaining++;
 			}
-			else if (Character == 'x')
+			else if (Character == 'x' || Character == 'o')
 			{
 				// No-op.
 			}
@@ -124,39 +120,15 @@ void ALevelGenerationActor::GenerateTiles()
 			}
 		}
 	}
+
+	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetTiles()
+void ALevelGenerationActor::ResetTiles(EChompGameState OldState, EChompGameState NewState)
 {
-	ClearLeftoverTiles();
-	GenerateTiles();
-}
-
-void ALevelGenerationActor::HandleDotConsumption()
-{
-	NumberOfDotsRemaining--;
-
-	DEBUG_LOG(TEXT("Dot consumed. Remaining dots: %d"), NumberOfDotsRemaining);
-
-	if (NumberOfDotsRemaining == 0)
+	if (NewState == EChompGameState::Playing)
 	{
-		OnLevelClearedDelegate.Broadcast();
-
-		// Update the GameMode's state.
-		//
-		// We are already coupled to the ChompGameMode because we need to listen to game restarts,
-		// so reaching out to update the ChompGameMode directly doesn't cause further harm.
-		auto GameMode = GetWorld()->GetAuthGameMode();
-		auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-		check(ChompGameMode);
-		ChompGameMode->SetGameState(PacmanGameState::GameOverWin);
+		ClearLeftoverTiles();
+		GenerateTiles();
 	}
-
-	// Reach out to ChompGameMode, and update the score.
-	//
-	// We are already coupled to the ChompGameMode because we need to listen to game restarts,
-	// so reaching out to update the ChompGameMode directly doesn't cause further harm.
-	auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
-	check(ChompGameState);
-	ChompGameState->IncrementScore(1);
 }

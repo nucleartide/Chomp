@@ -59,7 +59,7 @@ void ULevelLoader::LoadLevel()
                 Walls.insert(FGridLocation{X, Y});
             else if (Character == '-')
                 OnlyGoUpTiles.insert(FGridLocation{X, Y});
-            else if (Character == ' ')
+            else if (Character == ' ' || Character == 'o') // ' ' = dot, 'o' = no dot
             {
                 // No-op.
             }

@@ -8,58 +8,66 @@
 
 #include "GhostAIController.generated.h"
 
+struct Path
+{
+	int CurrentIndex = 0;
+	std::vector<FGridLocation> Locations;
+
+	void Initialize(const std::vector<FGridLocation>& NewLocations)
+	{
+		Locations = NewLocations;
+	}
+};
+
 UCLASS()
 class AGhostAIController : public AAIController
 {
 	GENERATED_BODY()
 
+	/**
+	 * Fields.
+	 */
+
 private:
-	virtual void Tick(float DeltaTime) override;
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
-	float MovementSpeed = 1.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
-	bool IsTestOriginAndDestinationEnabled = false;
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
-	TSubclassOf<class ULevelLoader> Level;
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
-	FGridLocation Origin;
-
-	UPROPERTY(EditDefaultsOnly, Category = "AI Controller Customization")
-	FGridLocation Destination;
-
-	void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
-	void Move(float DeltaTime);
-	void Pathfind(FGridLocation Destination);
-
+	Path CurrentPath;
 	FGridLocation CurrentOriginGridPos;
 	FGridLocation CurrentDestinationGridPos;
-
 	bool IsAtDestination = false;
-	float ElapsedTime = 0.0f;
-	float TotalTime = 0.0f;
 
+	/**
+	 * Properties.
+	 */
+
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	float MovementSpeed = 1.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	bool IsTestOriginAndDestinationEnabled = false;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<class ULevelLoader> Level;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FGridLocation Origin;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FGridLocation Destination;
+
+	/**
+	 * Callbacks.
+	 */
+
+protected:
 	virtual void BeginPlay() override;
+	virtual void Tick(float DeltaTime) override;
 
-	struct Path
-	{
-		int CurrentIndex = 0;
-		std::vector<FGridLocation> Locations;
+	/**
+	 * Behavior.
+	 */
 
-	    // Copy assignment operator
-		Path& operator=(const Path& other) {
-			if (this != &other) {
-				// Copy the data from the other object
-				CurrentIndex = other.CurrentIndex;
-				Locations = other.Locations;
-			}
-			// Return the reference to the current object
-			return *this;
-		}
-	};
-
-	Path CurrentPath;
+private:
+	void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
+	void Move(float DeltaTime);
+	void DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
 };

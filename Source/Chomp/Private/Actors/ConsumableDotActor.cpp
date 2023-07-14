@@ -1,7 +1,8 @@
 #include "Actors/ConsumableDotActor.h"
+#include "ChompGameState.h"
 
-void AConsumableDotActor::Destroyed()
+void AConsumableDotActor::Consume()
 {
-    Super::Destroyed();
-    OnDotConsumedDelegate.Broadcast();
+    GetWorld()->GetGameState<AChompGameState>()->ConsumeDot();
+    Destroy();
 }

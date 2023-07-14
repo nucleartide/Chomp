@@ -4,7 +4,9 @@
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
 #include "ChompGameMode.h"
+#include "ChompGameState.h"
 #include "Pawns/ChompPawn.h"
+#include "Blueprint/WidgetBlueprintLibrary.h"
 
 AUIManager::AUIManager()
 {
@@ -14,8 +16,9 @@ AUIManager::AUIManager()
 void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
-	LevelGenerator->OnLevelClearedDelegate.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
-	ChompPawn->OnPacmanDiedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
+	auto GameState = GetWorld()->GetGameState<AChompGameState>();
+	GameState->OnDotsClearedDelegate.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
+	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
 }
 
 void AUIManager::Tick(float DeltaTime)
@@ -27,48 +30,26 @@ void AUIManager::HandleDotsCleared()
 {
 	DEBUG_LOG(TEXT("Dots cleared, showing game over win UI..."))
 
-	auto World = GetWorld();
-	check(World);
-
-	auto WidgetInstance = CreateWidget(World, GameOverWinWidgetClass);
-	check(WidgetInstance);
-
-	{
-		GameOverWidgetInstance = Cast<UGameOverWidget>(WidgetInstance);
-		check(GameOverWidgetInstance);
-		GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
-	}
-
-	WidgetInstance->AddToViewport();
-
-	auto ViewportClient = World->GetGameViewport();
-	check(ViewportClient);
+	GameOverWidgetInstance = Cast<UGameOverWidget>(CreateWidget(GetWorld(), GameOverWinWidgetClass));
+	GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
+	GameOverWidgetInstance->AddToViewport();
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
-void AUIManager::HandlePlayerDeath()
+void AUIManager::HandlePlayerDeath(EChompGameState OldState, EChompGameState NewState)
 {
+	auto DidLose = OldState != NewState && NewState == EChompGameState::GameOverLose;
+	if (!DidLose)
+		return;
+
 	DEBUG_LOG(TEXT("Player died, showing game over *lose* UI..."))
 
-	auto World = GetWorld();
-	check(World);
-
-	auto WidgetInstance = CreateWidget(World, GameOverLoseWidgetClass);
-	check(WidgetInstance);
-
-	{
-		GameOverWidgetInstance = Cast<UGameOverWidget>(WidgetInstance);
-		check(GameOverWidgetInstance);
-		GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
-	}
-
-	WidgetInstance->AddToViewport();
-
-	auto ViewportClient = World->GetGameViewport();
-	check(ViewportClient);
+	GameOverWidgetInstance = Cast<UGameOverWidget>(CreateWidget(GetWorld(), GameOverLoseWidgetClass));
+	GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
+	GameOverWidgetInstance->AddToViewport();
 
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
@@ -77,25 +58,16 @@ void AUIManager::HandlePlayerDeath()
 
 void AUIManager::HandleRestartGameClicked()
 {
+	// Perform game state transition.
 	DEBUG_LOG(TEXT("Handling game restarted in UIManager..."))
-
-	// By reaching out to the current game mode, this class becomes coupled to ChompGameMode.
-	// That's okay. This class is intended to be game-specific anyway.
-	auto GameMode = GetWorld()->GetAuthGameMode();
-	check(GameMode);
-
-	// TODO: Does casting to an interface avoid hard references? What is a hard reference anyway, and why is avoiding hard refs important?
-	// Something to investigate for later.
-	auto ChompGameMode = Cast<AChompGameMode>(GameMode);
-	check(ChompGameMode);
-
-	ChompGameMode->SetGameState(PacmanGameState::Playing);
+	GetWorld()->GetGameState<AChompGameState>()->TransitionTo(EChompGameState::Playing);
 
 	// Hide the widget.
 	GameOverWidgetInstance->RemoveFromParent();
 	GameOverWidgetInstance->Destruct();
 	GameOverWidgetInstance = nullptr;
 
+	// Reset mouse cursor state.
 	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
 	Controller->SetInputMode(FInputModeGameOnly());

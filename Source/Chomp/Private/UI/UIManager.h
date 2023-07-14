@@ -52,7 +52,7 @@ private:
 	void HandleDotsCleared();
 
 	UFUNCTION()
-	void HandlePlayerDeath();
+	void HandlePlayerDeath(EChompGameState OldState, EChompGameState NewState);
 
 	UFUNCTION()
 	void HandleRestartGameClicked();

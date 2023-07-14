@@ -8,18 +8,13 @@
 void UScoreWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-
     auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
-    check(ChompGameState);
-
     ChompGameState->OnScoreUpdatedDelegate.AddUniqueDynamic(this, &UScoreWidget::HandleScoreUpdated);
 }
 
-void UScoreWidget::HandleScoreUpdated(int NewScore)
+void UScoreWidget::HandleScoreUpdated(int Score)
 {
-    DEBUG_LOG(TEXT("New score: %d"), NewScore);
-    check(ScoreText);
-
-    auto NewScoreText = FText::FromString(FString::Printf(TEXT("%d"), NewScore));
-    ScoreText->SetText(NewScoreText);
+    check(ScoreTextBlock);
+    auto NewScoreText = FText::FromString(FString::Printf(TEXT("%d"), Score));
+    ScoreTextBlock->SetText(NewScoreText);
 }

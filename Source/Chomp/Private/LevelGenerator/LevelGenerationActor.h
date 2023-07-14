@@ -39,11 +39,6 @@ private:
 	TArray<AActor *> Tiles;
 
 	/**
-	 * A count of the number of active dots in the scene.
-	 */
-	int NumberOfDotsRemaining = 0;
-
-	/**
 	 * Override BeginPlay() to customize initialization.
 	 */
 	void BeginPlay() override;
@@ -64,11 +59,5 @@ private:
 	 * Reset the level's tiles to that of the original level data.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void ResetTiles();
-
-	/**
-	 * Handle when a dot in the level is consumed.
-	 */
-	UFUNCTION(BlueprintCallable)
-	void HandleDotConsumption();
+	void ResetTiles(EChompGameState OldState, EChompGameState NewState);
 };
