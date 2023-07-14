@@ -5,6 +5,7 @@
 
 #include "AIController.h"
 #include "AStar/GridLocation.h"
+#include "ChompGameState.h"
 
 #include "GhostAIController.generated.h"
 
@@ -89,4 +90,7 @@ private:
 	 * Hard-coded implementation for now. Later, we could move this implementation into a Behavior Tree (BT) task.
 	 */
 	void Chase();
+
+	UFUNCTION()
+	void HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState);
 };

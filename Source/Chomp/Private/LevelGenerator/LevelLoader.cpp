@@ -99,6 +99,7 @@ FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition)
     return WorldPosition;
 }
 
+// TODO: i'm not sure this is the right solution, can't be flooring, need to be rounding
 FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
 {
     // Note: this is the inverse operation of GridToWorld().

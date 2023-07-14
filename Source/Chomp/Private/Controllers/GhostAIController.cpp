@@ -3,6 +3,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "VectorTypes.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Kismet/GameplayStatics.h"
 
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
@@ -14,6 +15,9 @@ void AGhostAIController::BeginPlay()
 {
     Super::BeginPlay();
 
+    // Attach event handlers.
+    GetWorld()->GetGameState<AChompGameState>()->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGamePlayingStateChanged);
+
     if (!IsTestOriginAndDestinationEnabled)
     {
         // Set the starting position.
@@ -23,10 +27,12 @@ void AGhostAIController::BeginPlay()
         FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
         GetPawn()->SetActorLocation(StartingWorldPos);
 
+#if false
         // Then invoke our Scatter() behavior.
         // This could be made to a conditional (state could be Scatter or Chase),
         // but for now let's say that our config always has Scatter as the first mode.
         Scatter(StartingPosition, ScatterDestination);
+#endif
 
         // Early return to avoid the logic below.
         return;
@@ -66,6 +72,7 @@ void AGhostAIController::BeginPlay()
 
 void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
 {
+    return;
     auto LevelInstance = ULevelLoader::GetInstance(Level);
     for (int X = LevelInstance->GetLevelHeight() - 1; X >= 0; X--)
     {
@@ -132,12 +139,28 @@ void AGhostAIController::Tick(float DeltaTime)
     {
         // Re-evaluate A* after every grid-node visit.
         Chase();
+    }
+}
 
-        // todo; hook up gamestate changed events.
-        // ...
+void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState)
+{
+    check(OldState != NewState);
 
-        // todo:
-        // implement chase.
+    if (NewState == EChompGamePlayingState::Scatter)
+    {
+        // Set the starting position.
+        auto LevelInstance = ULevelLoader::GetInstance(Level);
+        auto ActorLocation = GetPawn<AGhostPawn>()->GetActorLocation();
+        FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+        auto ActorGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+
+        // Then invoke our Scatter() behavior.
+        Scatter(ActorGridLocation, ScatterDestination);
+    }
+    else if (NewState == EChompGamePlayingState::Chase)
+    {
+        // Then invoke our Chase() behavior.
+        Chase();
     }
 }
 
@@ -227,36 +250,26 @@ void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _Sc
 
 void AGhostAIController::Chase()
 {
+    // Grab reference to level instance.
+    auto LevelInstance = ULevelLoader::GetInstance(Level);
+
     // Compute the current grid position of the pawn.
-    // ...
+    FGridLocation ActorGridLocation;
+    {
+        auto ActorLocation = GetPawn()->GetActorLocation();
+        FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+        ActorGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+    }
 
     // Compute the current grid position of the player.
-    // ...
+    FGridLocation PlayerGridLocation;
+    {
+        auto PlayerLocation = UGameplayStatics::GetPlayerController(GetWorld(), 0)->GetPawn()->GetActorLocation();
+        FVector2D ActorLocation2D{PlayerLocation.X, PlayerLocation.Y};
+        PlayerGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+    }
 
     // Given the two grid positions above,
-    // call out to AStar::Pathfind().
-    // ...
-
-    // Debug the results of running A*.
-    // ...
-
-    // Reconstruct and save the path.
-    // ...
-
-    // Finally, initialize moving on the path.
-    // ...
-
-    // ===
-
-#if false
-    // Compute the current grid position of the pawn.
-    auto ActorLocation = GetPawn()->GetActorLocation();
-    FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-    auto LevelInstance = ULevelLoader::GetInstance(Level);
-    auto ActorGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
-
-    // Given the current grid position of the pawn,
-    // as well as the ScatterDestination of the pawn,
     // call out to AStar::Pathfind().
     std::unordered_map<FGridLocation, FGridLocation> CameFrom;
     std::unordered_map<FGridLocation, double> CostSoFar;
@@ -264,16 +277,16 @@ void AGhostAIController::Chase()
     AStar::Pathfind<FGridLocation>(
         LevelInstance,
         ActorGridLocation,
-        ScatterDestination,
+        PlayerGridLocation,
         CameFrom,
         CostSoFar,
         FunctionObject);
 
     // Debug the results of running A*.
-    DebugAStar(CameFrom);
+    // DebugAStar(CameFrom);
 
     // Reconstruct and save the path.
-    auto Path = AStar::ReconstructPath(ActorGridLocation, _ScatterDestination, CameFrom);
+    auto Path = AStar::ReconstructPath(ActorGridLocation, PlayerGridLocation, CameFrom);
     check(Path.size() >= 2);
     CurrentPath.Initialize(Path);
 
@@ -281,5 +294,4 @@ void AGhostAIController::Chase()
     auto Current = Path[0];
     auto Next = Path[1];
     StartMovingFrom(Current, Next);
-#endif
 }
