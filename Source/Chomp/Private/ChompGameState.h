@@ -14,10 +14,9 @@ enum class EChompGameState : uint8
 	GameOverLose,
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, EChompGameState, OldState, EChompGameState, NewState);
-
+/**
+ * When in the EChompGameState::Playing state, these would be the sub-states.
+ */
 UENUM()
 enum class EChompGamePlayingState : uint8
 {
@@ -26,6 +25,11 @@ enum class EChompGamePlayingState : uint8
 	Chase,
 	Frightened,
 };
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, EChompGameState, OldState, EChompGameState, NewState);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature, EChompGamePlayingState, OldSubstate, EChompGamePlayingState, NewSubstate);
 
 /**
  * An FWave is a period of time during which a particular EChompGamePlayingState is active.
@@ -53,6 +57,7 @@ public:
 	 * Public methods.
 	 */
 
+	AChompGameState();
 	void ResetDots(int NumberOfDots);
 	void ConsumeDot();
 	void NotifyPlayerDeath();
@@ -90,6 +95,12 @@ public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnScoreUpdatedSignature OnScoreUpdatedDelegate;
 
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnGamePlayingStateChangedSignature OnGamePlayingStateChangedDelegate;
+
+protected:
+	virtual void Tick(float DeltaTime) override;
+
 private:
 
 	/**
@@ -112,6 +123,7 @@ private:
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
 	EChompGameState GameState = EChompGameState::Playing;
+	EChompGamePlayingState LastKnownGamePlayingState = EChompGamePlayingState::None;
 
 	/**
 	 * Behavior.

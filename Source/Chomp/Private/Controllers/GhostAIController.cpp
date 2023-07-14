@@ -8,6 +8,7 @@
 #include "Utils/Debug.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "AStar/AStar.h"
+#include "ChompGameState.h"
 
 void AGhostAIController::BeginPlay()
 {
@@ -23,6 +24,8 @@ void AGhostAIController::BeginPlay()
         GetPawn()->SetActorLocation(StartingWorldPos);
 
         // Then invoke our Scatter() behavior.
+        // This could be made to a conditional (state could be Scatter or Chase),
+        // but for now let's say that our config always has Scatter as the first mode.
         Scatter(StartingPosition, ScatterDestination);
 
         // Early return to avoid the logic below.
@@ -100,7 +103,8 @@ void AGhostAIController::Tick(float DeltaTime)
     // Move the Ghost, given the currently saved Source and Destination.
     Move(DeltaTime);
 
-    if (IsAtDestination)
+    auto CurrentWave = GetWorld()->GetGameState<AChompGameState>()->GetCurrentWave();
+    if (IsAtDestination && CurrentWave == EChompGamePlayingState::Scatter)
     {
         // Then bump our index.
         CurrentPath.CurrentIndex++;
@@ -122,11 +126,18 @@ void AGhostAIController::Tick(float DeltaTime)
 
             // Then invoke Scatter() once again.
             Scatter(ScatterOrigin, ScatterDestination);
-
-            // Note that ScatterOrigin and ScatterDestination should be in the top-right corner for Blinky.
-            // You'll need to configure this in-engine.
-            // ...
         }
+    }
+    else if (IsAtDestination && CurrentWave == EChompGamePlayingState::Chase)
+    {
+        // Re-evaluate A* after every grid-node visit.
+        Chase();
+
+        // todo; hook up gamestate changed events.
+        // ...
+
+        // todo:
+        // implement chase.
     }
 }
 
@@ -204,7 +215,7 @@ void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _Sc
     DebugAStar(CameFrom);
 
     // Reconstruct and save the path.
-    auto Path = AStar::ReconstructPath(_ScatterOrigin, _ScatterDestination, CameFrom);
+    auto Path = AStar::ReconstructPath(ActorGridLocation, _ScatterDestination, CameFrom);
     check(Path.size() >= 2);
     CurrentPath.Initialize(Path);
 
@@ -216,4 +227,59 @@ void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _Sc
 
 void AGhostAIController::Chase()
 {
+    // Compute the current grid position of the pawn.
+    // ...
+
+    // Compute the current grid position of the player.
+    // ...
+
+    // Given the two grid positions above,
+    // call out to AStar::Pathfind().
+    // ...
+
+    // Debug the results of running A*.
+    // ...
+
+    // Reconstruct and save the path.
+    // ...
+
+    // Finally, initialize moving on the path.
+    // ...
+
+    // ===
+
+#if false
+    // Compute the current grid position of the pawn.
+    auto ActorLocation = GetPawn()->GetActorLocation();
+    FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+    auto LevelInstance = ULevelLoader::GetInstance(Level);
+    auto ActorGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+
+    // Given the current grid position of the pawn,
+    // as well as the ScatterDestination of the pawn,
+    // call out to AStar::Pathfind().
+    std::unordered_map<FGridLocation, FGridLocation> CameFrom;
+    std::unordered_map<FGridLocation, double> CostSoFar;
+    std::function<double(FGridLocation, FGridLocation)> FunctionObject = &AStar::ManhattanDistanceHeuristic;
+    AStar::Pathfind<FGridLocation>(
+        LevelInstance,
+        ActorGridLocation,
+        ScatterDestination,
+        CameFrom,
+        CostSoFar,
+        FunctionObject);
+
+    // Debug the results of running A*.
+    DebugAStar(CameFrom);
+
+    // Reconstruct and save the path.
+    auto Path = AStar::ReconstructPath(ActorGridLocation, _ScatterDestination, CameFrom);
+    check(Path.size() >= 2);
+    CurrentPath.Initialize(Path);
+
+    // Finally, initialize moving on the path.
+    auto Current = Path[0];
+    auto Next = Path[1];
+    StartMovingFrom(Current, Next);
+#endif
 }

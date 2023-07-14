@@ -1,13 +1,11 @@
 #include "ChompGameState.h"
 #include "Utils/Debug.h"
 
-#if false
 // Meant for debugging current wave:
 AChompGameState::AChompGameState()
 {
     PrimaryActorTick.bCanEverTick = true;
 }
-#endif
 
 void AChompGameState::ResetDots(int NumberOfDots)
 {
@@ -90,11 +88,22 @@ EChompGamePlayingState AChompGameState::GetCurrentWave()
     return EChompGamePlayingState::None;
 }
 
-#if false
-// Meant for debugging current wave:
 void AChompGameState::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
+
+    // Meant for debugging current wave:
     DEBUG_LOG(TEXT("%f %d"), GetWorld()->GetTimeSeconds(), GetCurrentWave());
+
+    // Compute the last known game playing state.
+    auto CurrentWave = GetCurrentWave();
+
+    // If there was a change in the last known game playing state, broadcast the event.
+    if (LastKnownGamePlayingState != CurrentWave)
+    {
+        OnGamePlayingStateChangedDelegate.Broadcast(LastKnownGamePlayingState, CurrentWave);
+    }
+
+    // Afterward, save the new game playing state.
+    LastKnownGamePlayingState = CurrentWave;
 }
-#endif
