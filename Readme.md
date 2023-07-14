@@ -41,3 +41,7 @@ Take a look at the list of topics below to study the coding problems that are re
 ### AI and Behavior Tree (BT) implementation
 
 ...
+
+### Chasing the core game loop
+
+...
