@@ -21,13 +21,17 @@ void AChompPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    // Check if pawn is alive.
+    auto Pawn = GetPawn();
+    if (!Pawn)
+    {
+        // Then pawn is most likely dead. Early return.
+        return;
+    }
+
     // Compute delta movement.
     FVector2D MovementVector(VerticalAxisDelta, HorizontalAxisDelta); // Note that HorizontalAxisDelta / VerticalAxisDelta are either 0 or 1.
     auto Delta = this->MovementSpeed * MovementVector.GetSafeNormal() * DeltaTime;
-
-    // Get pawn.
-    auto Pawn = GetPawn();
-    check(Pawn);
 
     // Cast to ChompPawn.
     auto ChompPawn = Cast<AChompPawn>(Pawn);

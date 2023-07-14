@@ -93,4 +93,7 @@ private:
 
 	UFUNCTION()
 	void HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState);
+
+	UFUNCTION()
+	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 };

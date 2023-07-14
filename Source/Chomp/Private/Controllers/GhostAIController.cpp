@@ -17,6 +17,7 @@ void AGhostAIController::BeginPlay()
 
     // Attach event handlers.
     GetWorld()->GetGameState<AChompGameState>()->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGamePlayingStateChanged);
+    GetWorld()->GetGameState<AChompGameState>()->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
 
     if (!IsTestOriginAndDestinationEnabled)
     {
@@ -107,6 +108,10 @@ void AGhostAIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    auto CurrentGameState = GetWorld()->GetGameState<AChompGameState>()->GetEnum();
+    if (CurrentGameState != EChompGameState::Playing)
+        return;
+
     // Move the Ghost, given the currently saved Source and Destination.
     Move(DeltaTime);
 
@@ -140,6 +145,12 @@ void AGhostAIController::Tick(float DeltaTime)
         // Re-evaluate A* after every grid-node visit.
         Chase();
     }
+}
+
+void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
+{
+    // Preconditions.
+    check(OldState != NewState);
 }
 
 void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState)

@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "UObject/WeakObjectPtrTemplates.h"
 #include "ChompPawnManager.generated.h"
 
 /**
@@ -18,7 +19,10 @@ protected:
 
 private:
 	UPROPERTY(EditAnywhere)
-	class AChompPawn *ChompPawn;
+	TWeakObjectPtr<class AChompPawn> ChompPawnInstance;
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<class AChompPawn> ChompPawn;
 
 	UFUNCTION()
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
