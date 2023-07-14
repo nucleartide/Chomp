@@ -1,10 +1,10 @@
 # Chomp
 
-> *A game about chomping on foods and avoiding ghosts, that demonstrates and speaks to the end-to-end process of shipping a (small) game in Unreal Engine. Made in UE 5.2.*
+> *A game about chomping on foods and avoiding ghosts, that demonstrates and speaks to the end-to-end process of shipping a game in Unreal Engine. Made in UE 5.2.*
 
 ## Play the game
 
-TODO.
+Please see the [latest releases](https://github.com/nucleartide/Chomp/releases) for a download link.
 
 ## Rationale
 
