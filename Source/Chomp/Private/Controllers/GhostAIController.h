@@ -48,9 +48,11 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
+	// Note: this is only used for testing.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation Origin;
 
+	// Note: this is only used for testing.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation Destination;
 

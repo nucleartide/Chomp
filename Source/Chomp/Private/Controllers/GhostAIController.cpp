@@ -14,7 +14,14 @@ void AGhostAIController::BeginPlay()
     Super::BeginPlay();
 
     if (!IsTestOriginAndDestinationEnabled)
+    {
+        auto LevelInstance = ULevelLoader::GetInstance(Level);
+        auto StartingPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
+        auto StartingWorldPosition = LevelInstance->GridToWorld(StartingPosition);
+        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
+        GetPawn()->SetActorLocation(StartingWorldPos);
         return;
+    }
 
     // Initialize pawn to configured origin.
     auto LevelInstance = ULevelLoader::GetInstance(Level);

@@ -29,3 +29,8 @@ void AGhostPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
+
+FGridLocation AGhostPawn::GetStartingPosition()
+{
+	return StartingPosition;
+}

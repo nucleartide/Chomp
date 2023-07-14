@@ -4,6 +4,7 @@
 #include "GameFramework/Pawn.h"
 #include "Math/Color.h"
 #include "Pawns/MovablePawn.h"
+#include "AStar/GridLocation.h"
 #include "GhostPawn.generated.h"
 
 UCLASS()
@@ -13,6 +14,7 @@ class AGhostPawn : public AMovablePawn
 
 public:
 	AGhostPawn();
+	FGridLocation GetStartingPosition();
 
 protected:
 	virtual void BeginPlay() override;
@@ -22,4 +24,7 @@ protected:
 private:
 	class UStaticMeshComponent* HeadStaticMesh;
 	class UStaticMeshComponent* BodyStaticMesh;
+
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	FGridLocation StartingPosition;
 };
