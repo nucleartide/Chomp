@@ -15,6 +15,13 @@ struct FGridLocation
     int Y;
 
     FString ToString() const;
+
+    // Copy assignment operator.
+    FGridLocation& operator=(const FGridLocation& other) {
+        X = other.X;
+        Y = other.Y;
+        return *this;
+    }
 };
 
 // Overload some operators.

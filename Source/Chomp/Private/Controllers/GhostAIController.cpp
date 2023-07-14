@@ -15,11 +15,17 @@ void AGhostAIController::BeginPlay()
 
     if (!IsTestOriginAndDestinationEnabled)
     {
+        // Set the starting position.
         auto LevelInstance = ULevelLoader::GetInstance(Level);
         auto StartingPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
         auto StartingWorldPosition = LevelInstance->GridToWorld(StartingPosition);
         FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
         GetPawn()->SetActorLocation(StartingWorldPos);
+
+        // Then invoke our Scatter() behavior.
+        Scatter(StartingPosition, ScatterDestination);
+
+        // Early return to avoid the logic below.
         return;
     }
 
@@ -109,8 +115,17 @@ void AGhostAIController::Tick(float DeltaTime)
         }
         else // Otherwise,
         {
-            // We've arrived. Do nothing for the time being.
-            // (No-op.)
+            // We've arrived. Swap the ScatterOrigin and ScatterDestination first.
+            FGridLocation Temp{ScatterOrigin.X, ScatterOrigin.Y};
+            ScatterOrigin = ScatterDestination;
+            ScatterDestination = Temp;
+
+            // Then invoke Scatter() once again.
+            Scatter(ScatterOrigin, ScatterDestination);
+
+            // Note that ScatterOrigin and ScatterDestination should be in the top-right corner for Blinky.
+            // You'll need to configure this in-engine.
+            // ...
         }
     }
 }
@@ -161,4 +176,44 @@ void AGhostAIController::Move(float DeltaTime)
     {
         IsAtDestination = true;
     }
+}
+
+void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _ScatterDestination)
+{
+    // Compute the current grid position of the pawn.
+    auto ActorLocation = GetPawn()->GetActorLocation();
+    FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+    auto LevelInstance = ULevelLoader::GetInstance(Level);
+    auto ActorGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+
+    // Given the current grid position of the pawn,
+    // as well as the ScatterDestination of the pawn,
+    // call out to AStar::Pathfind().
+    std::unordered_map<FGridLocation, FGridLocation> CameFrom;
+    std::unordered_map<FGridLocation, double> CostSoFar;
+    std::function<double(FGridLocation, FGridLocation)> FunctionObject = &AStar::ManhattanDistanceHeuristic;
+    AStar::Pathfind<FGridLocation>(
+        LevelInstance,
+        ActorGridLocation,
+        ScatterDestination,
+        CameFrom,
+        CostSoFar,
+        FunctionObject);
+
+    // Debug the results of running A*.
+    DebugAStar(CameFrom);
+
+    // Reconstruct and save the path.
+    auto Path = AStar::ReconstructPath(_ScatterOrigin, _ScatterDestination, CameFrom);
+    check(Path.size() >= 2);
+    CurrentPath.Initialize(Path);
+
+    // Finally, initialize moving on the path.
+    auto Current = Path[0];
+    auto Next = Path[1];
+    StartMovingFrom(Current, Next);
+}
+
+void AGhostAIController::Chase()
+{
 }

@@ -15,6 +15,7 @@ struct Path
 
 	void Initialize(const std::vector<FGridLocation>& NewLocations)
 	{
+		CurrentIndex = 0;
 		Locations = NewLocations;
 	}
 };
@@ -56,6 +57,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation Destination;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FGridLocation ScatterOrigin;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FGridLocation ScatterDestination;
+
 	/**
 	 * Callbacks.
 	 */
@@ -72,4 +79,14 @@ private:
 	void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
 	void Move(float DeltaTime);
 	void DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
+
+	/**
+	 * Hard-coded implementation for now. Later, we could move this implementation into a Behavior Tree (BT) task.
+	 */
+	void Scatter(FGridLocation _ScatterOrigin, FGridLocation _ScatterDestination);
+
+	/**
+	 * Hard-coded implementation for now. Later, we could move this implementation into a Behavior Tree (BT) task.
+	 */
+	void Chase();
 };
