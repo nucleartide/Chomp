@@ -73,14 +73,14 @@ template void AStar::Pathfind(IGraph *Graph,
                               std::unordered_map<FGridLocation, double> &CostSoFar,
                               const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
-template <typename Location>
-std::vector<Location> AStar::ReconstructPath(
-    Location Start,
-    Location Goal,
-    std::unordered_map<Location, Location> &CameFrom)
+std::vector<FGridLocation> AStar::ReconstructPath(
+    FVector2D CurrentWorldPosition,
+    FGridLocation Start,
+    FGridLocation Goal,
+    std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
 {
-    std::vector<Location> Path;
-    Location Current = Goal;
+    std::vector<FGridLocation> Path;
+    FGridLocation Current = Goal;
 
     // If Goal is not found,
     if (CameFrom.find(Goal) == CameFrom.end())
@@ -95,13 +95,37 @@ std::vector<Location> AStar::ReconstructPath(
         Path.push_back(Current);
         Current = CameFrom[Current];
     }
+
+    auto SecondToLast = Path[Path.size() - 1];
+    auto Last = Current;
     Path.push_back(Current);
+
+    if (SecondToLast.Y == Last.Y)
+    {
+        // Ensure horizontal alignment (align on the Y).
+        // TODO: Compute a current offset direction using SnapToGridDirection.
+        // TODO: Test out this A* implementation with this new starting node at the beginning.
+        // TODO: You may need to move this behavior into StartMovingFrom instead, move it out of A*
+        auto CurrentOffsetDirection = blah;
+        FGridLocation AlignmentNode{Last.X, Last.Y + CurrentOffsetDirection};
+        Path.push_back(AlignmentNode);
+    }
+    else if (SecondToLast.X == Last.X)
+    {
+        // Ensure vertical alignment (align on the X).
+        auto CurrentOffsetDirection = blah;
+        FGridLocation AlignmentNode{Last.X + CurrentOffsetDirection, Last.Y};
+        Path.push_back(AlignmentNode);
+    }
 
     // Return the reversed path.
     std::reverse(Path.begin(), Path.end());
     return Path;
 }
 
-template std::vector<FGridLocation> AStar::ReconstructPath(FGridLocation Start,
+/*
+template std::vector<FGridLocation> AStar::ReconstructPath(FVector2D CurrentWorldPosition,
+                                                           FGridLocation Start,
                                                            FGridLocation Goal,
                                                            std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
+*/
