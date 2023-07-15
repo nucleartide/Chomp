@@ -1,7 +1,6 @@
 #include "ChompGameState.h"
 #include "Utils/Debug.h"
 
-// Meant for debugging current wave:
 AChompGameState::AChompGameState()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -35,19 +34,36 @@ void AChompGameState::UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining)
     }
 }
 
-void AChompGameState::NotifyPlayerDeath()
+void AChompGameState::LoseGame()
 {
     TransitionTo(EChompGameState::GameOverLose);
+}
+
+void AChompGameState::StartGame()
+{
+    TransitionTo(EChompGameState::Playing);
+    GameStartTime = GetWorld()->GetTimeSeconds();
 }
 
 void AChompGameState::TransitionTo(EChompGameState NewState)
 {
     auto OldState = GameState;
     check(OldState != NewState);
+
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
     OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);
     DEBUG_LOG(TEXT("Transitioned from %d to %d"), OldState, NewState);
+
+    if (GameState != EChompGameState::Playing)
+    {
+        auto OldGamePlayingState = LastKnownGamePlayingState;
+        auto NewGamePlayingState = EChompGamePlayingState::None;
+        check(OldGamePlayingState != NewGamePlayingState);
+
+        LastKnownGamePlayingState = NewGamePlayingState;
+        OnGamePlayingStateChangedDelegate.Broadcast(OldGamePlayingState, NewGamePlayingState);
+    }
 }
 
 EChompGameState AChompGameState::GetEnum()
@@ -62,7 +78,7 @@ int AChompGameState::GetScore()
 
 EChompGamePlayingState AChompGameState::GetCurrentWave()
 {
-    auto TimeSinceStart = GetWorld()->GetTimeSeconds();
+    auto TimeSinceStart = GetTimeSinceStart();
     auto DurationCounter = 0.0;
 
     for (auto &Wave : Waves)
@@ -88,22 +104,37 @@ EChompGamePlayingState AChompGameState::GetCurrentWave()
     return EChompGamePlayingState::None;
 }
 
+void AChompGameState::BeginPlay()
+{
+    Super::BeginPlay();
+    StartGame();
+}
+
 void AChompGameState::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Meant for debugging current wave:
-    DEBUG_LOG(TEXT("%f %d"), GetWorld()->GetTimeSeconds(), GetCurrentWave());
-
-    // Compute the last known game playing state.
-    auto CurrentWave = GetCurrentWave();
-
-    // If there was a change in the last known game playing state, broadcast the event.
-    if (LastKnownGamePlayingState != CurrentWave)
+    if (GameState == EChompGameState::Playing)
     {
-        OnGamePlayingStateChangedDelegate.Broadcast(LastKnownGamePlayingState, CurrentWave);
-    }
+        // Meant for debugging current wave:
+        DEBUG_LOG(TEXT("%f %d"), GetTimeSinceStart(), GetCurrentWave());
 
-    // Afterward, save the new game playing state.
-    LastKnownGamePlayingState = CurrentWave;
+        // Compute the last known game playing state.
+        auto CurrentWave = GetCurrentWave();
+
+        // If there was a change in the last known game playing state, broadcast the event.
+        if (LastKnownGamePlayingState != CurrentWave)
+        {
+            OnGamePlayingStateChangedDelegate.Broadcast(LastKnownGamePlayingState, CurrentWave);
+        }
+
+        // Afterward, save the new game playing state.
+        LastKnownGamePlayingState = CurrentWave;
+    }
+}
+
+float AChompGameState::GetTimeSinceStart()
+{
+    auto World = GetWorld();
+    return World->GetTimeSeconds() - GameStartTime;
 }

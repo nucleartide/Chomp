@@ -60,7 +60,7 @@ void AUIManager::HandleRestartGameClicked()
 {
 	// Perform game state transition.
 	DEBUG_LOG(TEXT("Handling game restarted in UIManager..."))
-	GetWorld()->GetGameState<AChompGameState>()->TransitionTo(EChompGameState::Playing);
+	GetWorld()->GetGameState<AChompGameState>()->StartGame();
 
 	// Hide the widget.
 	GameOverWidgetInstance->RemoveFromParent();

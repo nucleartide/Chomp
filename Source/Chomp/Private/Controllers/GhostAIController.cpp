@@ -21,17 +21,6 @@ void AGhostAIController::BeginPlay()
 
     if (!IsTestOriginAndDestinationEnabled)
     {
-        // on reset,
-        // reset the starting position
-        // ensure A* gets called again
-
-        // Set the starting position.
-        auto LevelInstance = ULevelLoader::GetInstance(Level);
-        auto StartingPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
-        auto StartingWorldPosition = LevelInstance->GridToWorld(StartingPosition);
-        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-        GetPawn()->SetActorLocation(StartingWorldPos);
-
 #if false
         // Then invoke our Scatter() behavior.
         // This could be made to a conditional (state could be Scatter or Chase),
@@ -155,6 +144,17 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 {
     // Preconditions.
     check(OldState != NewState);
+
+    // TODO: This will need to be changed once ghosts can be consumed, but for now this works.
+    if (NewState == EChompGameState::Playing)
+    {
+        // Set the starting position.
+        auto LevelInstance = ULevelLoader::GetInstance(Level);
+        auto StartingPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
+        auto StartingWorldPosition = LevelInstance->GridToWorld(StartingPosition);
+        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
+        GetPawn()->SetActorLocation(StartingWorldPos);
+    }
 }
 
 void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState)

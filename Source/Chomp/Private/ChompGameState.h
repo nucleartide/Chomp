@@ -58,13 +58,23 @@ public:
 	 */
 
 	AChompGameState();
+
 	void ResetDots(int NumberOfDots);
 	void ConsumeDot();
-	void NotifyPlayerDeath();
-	void TransitionTo(EChompGameState NewState);
+
 	EChompGameState GetEnum();
 	int GetScore();
 	EChompGamePlayingState GetCurrentWave();
+
+	/**
+	 * Convenience wrapper around TransitionTo().
+	 */
+	void LoseGame();
+
+	/**
+	 * Convenience wrapper around TransitionTo().
+	 */
+	void StartGame();
 
 public:
 
@@ -99,6 +109,7 @@ public:
 	FOnGamePlayingStateChangedSignature OnGamePlayingStateChangedDelegate;
 
 protected:
+	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 private:
@@ -122,8 +133,13 @@ private:
 
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
-	EChompGameState GameState = EChompGameState::Playing;
+	EChompGameState GameState = EChompGameState::None;
 	EChompGamePlayingState LastKnownGamePlayingState = EChompGamePlayingState::None;
+
+	/**
+	 * The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
+	 */
+	float GameStartTime = 0.0f;
 
 	/**
 	 * Behavior.
@@ -131,4 +147,6 @@ private:
 
 	void UpdateScore(int NewScore);
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
+	float GetTimeSinceStart();
+	void TransitionTo(EChompGameState NewState);
 };
