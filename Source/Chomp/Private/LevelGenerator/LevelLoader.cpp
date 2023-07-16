@@ -110,12 +110,22 @@ FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
     return GridPosition;
 }
 
-FGridLocation SnapToGridDirection(FVector2D WorldPosition)
+FGridLocation ULevelLoader::SnapToGridDirection(FVector2D WorldPosition)
 {
     FGridLocation GridDirection;
-    awfaef
-    GridDirection.X = 0;
-    GridDirection.Y = 0;
+
+    // Compute X direction.
+    if (fmod(WorldPosition.X, 1.0) < 0.5)
+        GridDirection.X = -1;
+    else
+        GridDirection.X = 1;
+
+    // Compute Y direction.
+    if (fmod(WorldPosition.Y, 1.0) < 0.5)
+        GridDirection.Y = -1;
+    else
+        GridDirection.Y = 1;
+
     return GridDirection;
 }
 

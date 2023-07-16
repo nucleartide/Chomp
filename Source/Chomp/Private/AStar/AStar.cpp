@@ -10,6 +10,7 @@
 
 #include "Utils/Debug.h"
 #include "Utils/PriorityQueue.h"
+#include "LevelGenerator/LevelLoader.h"
 
 double AStar::ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)
 {
@@ -95,26 +96,23 @@ std::vector<FGridLocation> AStar::ReconstructPath(
         Path.push_back(Current);
         Current = CameFrom[Current];
     }
-
-    auto SecondToLast = Path[Path.size() - 1];
-    auto Last = Current;
     Path.push_back(Current);
 
-    if (SecondToLast.Y == Last.Y)
+    // Compute some values so that we can snap movement to the grid before moving on the A*-computed path.
+    auto SecondNode = Path[CameFrom.size() - 2];
+    auto FirstNode = Current;
+    auto SnapDirection = ULevelLoader::SnapToGridDirection(CurrentWorldPosition);
+
+    if (SecondNode.Y == FirstNode.Y)
     {
         // Ensure horizontal alignment (align on the Y).
-        // TODO: Compute a current offset direction using SnapToGridDirection.
-        // TODO: Test out this A* implementation with this new starting node at the beginning.
-        // TODO: You may need to move this behavior into StartMovingFrom instead, move it out of A*
-        auto CurrentOffsetDirection = blah;
-        FGridLocation AlignmentNode{Last.X, Last.Y + CurrentOffsetDirection};
+        FGridLocation AlignmentNode{FirstNode.X, FirstNode.Y - SnapDirection.Y};
         Path.push_back(AlignmentNode);
     }
-    else if (SecondToLast.X == Last.X)
+    else if (SecondNode.X == FirstNode.X)
     {
         // Ensure vertical alignment (align on the X).
-        auto CurrentOffsetDirection = blah;
-        FGridLocation AlignmentNode{Last.X + CurrentOffsetDirection, Last.Y};
+        FGridLocation AlignmentNode{FirstNode.X - SnapDirection.X, FirstNode.Y};
         Path.push_back(AlignmentNode);
     }
 
@@ -122,10 +120,3 @@ std::vector<FGridLocation> AStar::ReconstructPath(
     std::reverse(Path.begin(), Path.end());
     return Path;
 }
-
-/*
-template std::vector<FGridLocation> AStar::ReconstructPath(FVector2D CurrentWorldPosition,
-                                                           FGridLocation Start,
-                                                           FGridLocation Goal,
-                                                           std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
-*/

@@ -64,7 +64,7 @@ public:
 
 	EChompGameState GetEnum();
 	int GetScore();
-	EChompGamePlayingState GetCurrentWave();
+	EChompGamePlayingState GetPlayingSubstate();
 
 	/**
 	 * Convenience wrapper around TransitionTo().

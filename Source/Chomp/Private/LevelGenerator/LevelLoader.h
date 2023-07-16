@@ -77,7 +77,7 @@ public:
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FGridLocation SnapToGridDirection(FVector2D WorldPosition);
+	static FGridLocation SnapToGridDirection(FVector2D WorldPosition);
 
 	/**
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
