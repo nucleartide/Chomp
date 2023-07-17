@@ -26,14 +26,14 @@ public:
 
 	template <typename Location>
 	static void Pathfind(IGraph *Graph,
-							Location Start,
-							Location Goal,
-							std::unordered_map<Location, Location> &CameFrom,
-							std::unordered_map<Location, double> &CostSoFar,
-							const std::function<double(Location, Location)> &Heuristic);
+						 Location Start,
+						 Location Goal,
+						 std::unordered_map<Location, Location> &CameFrom,
+						 std::unordered_map<Location, double> &CostSoFar,
+						 const std::function<double(Location, Location)> &Heuristic);
 
-	template <typename Location>
-	static std::vector<Location> ReconstructPath(Location Start,
-												 Location Goal,
-												 std::unordered_map<Location, Location> &CameFrom);
+	static std::vector<FGridLocation> ReconstructPath(FVector2D CurrentWorldPosition,
+													  FGridLocation Start,
+													  FGridLocation Goal,
+													  std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
 };

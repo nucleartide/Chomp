@@ -46,7 +46,7 @@ void AChompPawn::NotifyActorBeginOverlap(AActor *Other)
 	else if (Cast<AGhostPawn>(Other))
 	{
 		DEBUG_LOG(TEXT("Overlapped with ghost pawn. Pawn name: %s"), *Other->GetHumanReadableName());
-		GetWorld()->GetGameState<AChompGameState>()->NotifyPlayerDeath();
+		GetWorld()->GetGameState<AChompGameState>()->LoseGame();
 		Destroy();
 	}
 }

@@ -14,66 +14,15 @@
 void AGhostAIController::BeginPlay()
 {
     Super::BeginPlay();
-
-    // Attach event handlers.
     GetWorld()->GetGameState<AChompGameState>()->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGamePlayingStateChanged);
     GetWorld()->GetGameState<AChompGameState>()->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
-
-    if (!IsTestOriginAndDestinationEnabled)
-    {
-        // Set the starting position.
-        auto LevelInstance = ULevelLoader::GetInstance(Level);
-        auto StartingPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
-        auto StartingWorldPosition = LevelInstance->GridToWorld(StartingPosition);
-        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-        GetPawn()->SetActorLocation(StartingWorldPos);
-
-#if false
-        // Then invoke our Scatter() behavior.
-        // This could be made to a conditional (state could be Scatter or Chase),
-        // but for now let's say that our config always has Scatter as the first mode.
-        Scatter(StartingPosition, ScatterDestination);
-#endif
-
-        // Early return to avoid the logic below.
-        return;
-    }
-
-    // Initialize pawn to configured origin.
-    auto LevelInstance = ULevelLoader::GetInstance(Level);
-    auto OriginWorldPosition = LevelInstance->GridToWorld(Origin);
-    FVector OriginWorldPos(OriginWorldPosition.X, OriginWorldPosition.Y, 0.0f);
-    GetPawn()->SetActorLocation(OriginWorldPos);
-
-    // Call out to Pathfind().
-    std::unordered_map<FGridLocation, FGridLocation> CameFrom;
-    std::unordered_map<FGridLocation, double> CostSoFar;
-    std::function<double(FGridLocation, FGridLocation)> FunctionObject = &AStar::ManhattanDistanceHeuristic;
-    AStar::Pathfind<FGridLocation>(
-        LevelInstance,
-        Origin,
-        Destination,
-        CameFrom,
-        CostSoFar,
-        FunctionObject);
-
-    // Debug.
-    DebugAStar(CameFrom);
-
-    // Reconstruct path, and save.
-    auto Path = AStar::ReconstructPath(Origin, Destination, CameFrom);
-    check(Path.size() >= 2);
-    CurrentPath.Initialize(Path);
-
-    // Initialize movement.
-    auto Current = Path[0];
-    auto Next = Path[1];
-    StartMovingFrom(Current, Next);
 }
 
 void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
 {
-    return;
+    if (!Debug)
+        return;
+
     auto LevelInstance = ULevelLoader::GetInstance(Level);
     for (int X = LevelInstance->GetLevelHeight() - 1; X >= 0; X--)
     {
@@ -104,66 +53,125 @@ void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocat
     }
 }
 
+void AGhostAIController::MoveTowardDestination(float DeltaTime)
+{
+    if (IsAtDestination)
+        return;
+
+    // Compute the movement direction.
+    FVector2D MovementDirection(CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y);
+
+    // Scale the movement direction by the movement speed multiplied by delta time.
+    auto ScaledMovementDirection = MovementDirection.GetSafeNormal() * DeltaTime * MovementSpeed;
+
+    // Move the ghost pawn.
+    GetPawn<AGhostPawn>()->MoveVector(ScaledMovementDirection, DeltaTime);
+
+    // Grab some values we'll need below.
+    auto ActorLocation = GetPawn()->GetActorLocation();
+    auto DestLocation = ULevelLoader::GetInstance(Level)->GridToWorld(CurrentDestinationGridPos);
+
+    // Determine whether pawn has reached its destination.
+    IsAtDestination = false;
+    if (MovementDirection.Y < 0)
+        IsAtDestination = ActorLocation.Y <= DestLocation.Y;
+    else if (MovementDirection.Y > 0)
+        IsAtDestination = ActorLocation.Y >= DestLocation.Y;
+    else if (MovementDirection.X < 0)
+        IsAtDestination = ActorLocation.X <= DestLocation.X;
+    else if (MovementDirection.X > 0)
+        IsAtDestination = ActorLocation.X >= DestLocation.X;
+}
+
 void AGhostAIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    // Early return if not playing.
     auto CurrentGameState = GetWorld()->GetGameState<AChompGameState>()->GetEnum();
     if (CurrentGameState != EChompGameState::Playing)
         return;
 
-    // Move the Ghost, given the currently saved Source and Destination.
-    Move(DeltaTime);
+    // Move the pawn.
+    MoveTowardDestination(DeltaTime);
+    if (!IsAtDestination)
+        return;
 
-    auto CurrentWave = GetWorld()->GetGameState<AChompGameState>()->GetCurrentWave();
-    if (IsAtDestination && CurrentWave == EChompGamePlayingState::Scatter)
+    // Once we are at our destination, do different things depending on the current "Game Playing" substate.
+    auto PlayingSubstate = GetWorld()->GetGameState<AChompGameState>()->GetPlayingSubstate();
+    if (PlayingSubstate == EChompGamePlayingState::Scatter)
+        HandleScatterNodeReached();
+    else if (PlayingSubstate == EChompGamePlayingState::Chase)
+        HandleChaseNodeReached();
+}
+
+void AGhostAIController::HandleScatterNodeReached()
+{
+    // Then bump our index.
+    CurrentPath.CurrentIndex++;
+
+    // If CurrentIndex is not at the last index,
+    if (CurrentPath.CurrentIndex < CurrentPath.Locations.size() - 1)
     {
-        // Then bump our index.
-        CurrentPath.CurrentIndex++;
-
-        // If CurrentIndex is not at the last index,
-        if (CurrentPath.CurrentIndex < CurrentPath.Locations.size() - 1)
-        {
-            // Start moving on the next path segment.
-            auto Current = CurrentPath.Locations[CurrentPath.CurrentIndex];
-            auto Next = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
-            StartMovingFrom(Current, Next);
-        }
-        else // Otherwise,
-        {
-            // We've arrived. Swap the ScatterOrigin and ScatterDestination first.
-            FGridLocation Temp{ScatterOrigin.X, ScatterOrigin.Y};
-            ScatterOrigin = ScatterDestination;
-            ScatterDestination = Temp;
-
-            // Then invoke Scatter() once again.
-            Scatter(ScatterOrigin, ScatterDestination);
-        }
+        // Start moving on the next path segment.
+        auto Current = CurrentPath.Locations[CurrentPath.CurrentIndex];
+        auto Next = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
+        StartMovingFrom(Current, Next);
     }
-    else if (IsAtDestination && CurrentWave == EChompGamePlayingState::Chase)
+    else // Otherwise,
     {
-        // Re-evaluate A* after every grid-node visit.
+        // We've arrived. Swap the ScatterOrigin and ScatterDestination.
+        FGridLocation Temp{ScatterOrigin.X, ScatterOrigin.Y};
+        ScatterOrigin = ScatterDestination;
+        ScatterDestination = Temp;
+
+        // Then invoke Scatter() once again.
+        Scatter(ScatterOrigin, ScatterDestination);
+    }
+}
+
+void AGhostAIController::HandleChaseNodeReached()
+{
+    // Then bump our index.
+    CurrentPath.CurrentIndex++;
+
+    // If CurrentIndex is not at the second index,
+    if (CurrentPath.CurrentIndex < 1)
+    {
+        // Start moving on the next path segment.
+        auto Current = CurrentPath.Locations[CurrentPath.CurrentIndex];
+        auto Next = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
+        StartMovingFrom(Current, Next);
+    }
+    else // Otherwise,
+    {
+        // We've arrived. Invoke Chase() once again.
         Chase();
     }
 }
 
 void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
 {
-    // Preconditions.
     check(OldState != NewState);
+    if (NewState == EChompGameState::Playing)
+    {
+        // Set the starting position of the pawn.
+        auto StartingGridPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
+        auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
+        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
+        GetPawn()->SetActorLocation(StartingWorldPos);
+    }
 }
 
 void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState)
 {
     check(OldState != NewState);
-
     if (NewState == EChompGamePlayingState::Scatter)
     {
-        // Set the starting position.
-        auto LevelInstance = ULevelLoader::GetInstance(Level);
+        // Compute the starting grid position.
         auto ActorLocation = GetPawn<AGhostPawn>()->GetActorLocation();
         FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-        auto ActorGridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+        auto ActorGridLocation = ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
 
         // Then invoke our Scatter() behavior.
         Scatter(ActorGridLocation, ScatterDestination);
@@ -183,44 +191,6 @@ void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _D
 
     // Reset some internal bookkeeping.
     IsAtDestination = false;
-}
-
-void AGhostAIController::Move(float DeltaTime)
-{
-    if (IsAtDestination)
-        return;
-
-    // Compute the movement direction.
-    FVector2D MovementDirection(CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y);
-
-    // Magnify the movement direction by the movement speed and delta time.
-    auto ScaledMovementDirection = MovementDirection.GetSafeNormal() * DeltaTime * MovementSpeed;
-
-    // Grab a reference to the ghost pawn.
-    auto GhostPawn = Cast<AGhostPawn>(GetPawn());
-    check(GhostPawn);
-
-    // Move the ghost pawn.
-    GhostPawn->MoveVector(ScaledMovementDirection, DeltaTime);
-
-    // Pawn has exceeded destination if...
-    auto ActorLocation = GetPawn()->GetActorLocation();
-    bool ExceededDestination = false;
-    auto Dest = ULevelLoader::GetInstance(Level)->GridToWorld(CurrentDestinationGridPos);
-    if (MovementDirection.Y < 0)
-        ExceededDestination = ActorLocation.Y <= Dest.Y;
-    else if (MovementDirection.Y > 0)
-        ExceededDestination = ActorLocation.Y >= Dest.Y;
-    else if (MovementDirection.X < 0)
-        ExceededDestination = ActorLocation.X <= Dest.X;
-    else if (MovementDirection.X > 0)
-        ExceededDestination = ActorLocation.X >= Dest.X;
-
-    // If the pawn has exceeded the destination, update internal bookkeeping.
-    if (ExceededDestination)
-    {
-        IsAtDestination = true;
-    }
 }
 
 void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _ScatterDestination)
@@ -249,7 +219,7 @@ void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _Sc
     DebugAStar(CameFrom);
 
     // Reconstruct and save the path.
-    auto Path = AStar::ReconstructPath(ActorGridLocation, _ScatterDestination, CameFrom);
+    auto Path = AStar::ReconstructPath(ActorLocation2D, ActorGridLocation, _ScatterDestination, CameFrom);
     check(Path.size() >= 2);
     CurrentPath.Initialize(Path);
 
@@ -294,10 +264,12 @@ void AGhostAIController::Chase()
         FunctionObject);
 
     // Debug the results of running A*.
-    // DebugAStar(CameFrom);
+    DebugAStar(CameFrom);
 
     // Reconstruct and save the path.
-    auto Path = AStar::ReconstructPath(ActorGridLocation, PlayerGridLocation, CameFrom);
+    auto ActorLocation = GetPawn()->GetActorLocation();
+    FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+    auto Path = AStar::ReconstructPath(ActorLocation2D, ActorGridLocation, PlayerGridLocation, CameFrom);
     check(Path.size() >= 2);
     CurrentPath.Initialize(Path);
 

@@ -64,6 +64,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation ScatterDestination;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	bool Debug = false;
+
 	/**
 	 * Callbacks.
 	 */
@@ -78,8 +81,10 @@ protected:
 
 private:
 	void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
-	void Move(float DeltaTime);
+	void MoveTowardDestination(float DeltaTime);
 	void DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
+	void HandleScatterNodeReached();
+	void HandleChaseNodeReached();
 
 	/**
 	 * Hard-coded implementation for now. Later, we could move this implementation into a Behavior Tree (BT) task.

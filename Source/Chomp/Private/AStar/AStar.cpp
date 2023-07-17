@@ -10,6 +10,7 @@
 
 #include "Utils/Debug.h"
 #include "Utils/PriorityQueue.h"
+#include "LevelGenerator/LevelLoader.h"
 
 double AStar::ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)
 {
@@ -73,14 +74,14 @@ template void AStar::Pathfind(IGraph *Graph,
                               std::unordered_map<FGridLocation, double> &CostSoFar,
                               const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
-template <typename Location>
-std::vector<Location> AStar::ReconstructPath(
-    Location Start,
-    Location Goal,
-    std::unordered_map<Location, Location> &CameFrom)
+std::vector<FGridLocation> AStar::ReconstructPath(
+    FVector2D CurrentWorldPosition,
+    FGridLocation Start,
+    FGridLocation Goal,
+    std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
 {
-    std::vector<Location> Path;
-    Location Current = Goal;
+    std::vector<FGridLocation> Path;
+    FGridLocation Current = Goal;
 
     // If Goal is not found,
     if (CameFrom.find(Goal) == CameFrom.end())
@@ -97,11 +98,25 @@ std::vector<Location> AStar::ReconstructPath(
     }
     Path.push_back(Current);
 
+    // Compute some values so that we can snap movement to the grid before moving on the A*-computed path.
+    auto SecondNode = Path[CameFrom.size() - 2];
+    auto FirstNode = Current;
+    auto SnapDirection = ULevelLoader::SnapToGridDirection(CurrentWorldPosition);
+
+    if (SecondNode.Y == FirstNode.Y)
+    {
+        // Ensure horizontal alignment (align on the Y).
+        FGridLocation AlignmentNode{FirstNode.X, FirstNode.Y - SnapDirection.Y};
+        Path.push_back(AlignmentNode);
+    }
+    else if (SecondNode.X == FirstNode.X)
+    {
+        // Ensure vertical alignment (align on the X).
+        FGridLocation AlignmentNode{FirstNode.X - SnapDirection.X, FirstNode.Y};
+        Path.push_back(AlignmentNode);
+    }
+
     // Return the reversed path.
     std::reverse(Path.begin(), Path.end());
     return Path;
 }
-
-template std::vector<FGridLocation> AStar::ReconstructPath(FGridLocation Start,
-                                                           FGridLocation Goal,
-                                                           std::unordered_map<FGridLocation, FGridLocation> &CameFrom);

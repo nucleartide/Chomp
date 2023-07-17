@@ -73,6 +73,13 @@ public:
 	FGridLocation WorldToGrid(FVector2D WorldPosition);
 
 	/**
+	 * Given world coordinates, compute the direction required to snap the world coordinates to the closest grid position.
+	 *
+	 * Note that the grid origin (0,0) is at the bottom-left of the map.
+	 */
+	static FGridLocation SnapToGridDirection(FVector2D WorldPosition);
+
+	/**
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
 	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
