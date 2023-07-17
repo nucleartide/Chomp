@@ -40,7 +40,11 @@ Take a look at the list of topics below to study the coding problems that are re
 
 ### AI and Behavior Tree (BT) implementation
 
-...
+Behavior Trees are a way to visually compose priority-based behavior. Their main benefit is in their visual construction, which makes it easy to delegate behavior tree authoring from programmers to designers.
+
+You can hear about more benefits from ChatGPT: `what are the benefits of behavior trees versus a hard-coded AI implementation`
+
+While I created a dummy behavior tree that runs in a Blueprint subclass of `AGhostAIController`, I rely on a hard-coded implementation for my game's AI for the sake of time constraints. With more time, I might explore how refactoring my AI implementation into a behavior tree would benefit AI exploration and iteration.
 
 ### Chasing the core game loop
 
