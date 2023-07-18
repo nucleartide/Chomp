@@ -61,7 +61,7 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
     OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);
-    DEBUG_LOG(TEXT("Transitioned from %d to %d"), OldState, NewState);
+    // DEBUG_LOG(TEXT("Transitioned from %d to %d"), OldState, NewState);
 
     if (GameState != EChompGameState::Playing)
     {
@@ -125,7 +125,7 @@ void AChompGameState::Tick(float DeltaTime)
     if (GameState == EChompGameState::Playing)
     {
         // Meant for debugging current wave:
-        DEBUG_LOG(TEXT("%f %d"), GetTimeSinceStart(), GetPlayingSubstate());
+        // DEBUG_LOG(TEXT("%f %d"), GetTimeSinceStart(), GetPlayingSubstate());
 
         // Compute the last known game playing state.
         auto CurrentWave = GetPlayingSubstate();

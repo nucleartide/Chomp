@@ -3,6 +3,7 @@
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Constants/GameplayTag.h"
+#include "Utils/Debug.h"
 
 AMovablePawn::AMovablePawn()
 {
@@ -78,16 +79,14 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 		FVector EndLocation = GetActorLocation() + DeltaX;
 
 		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ObjectsToCollideWith, SphereShape);
+		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
 
 		for (auto HitResult : HitResults)
 		{
-			if (HitResult.bBlockingHit)
+			if (GameplayTag::ActorHasOneOf(HitResult.GetActor(), TagsToCollideWith))
 			{
-				if (HitResult.GetActor()->ActorHasTag(GameplayTag::LevelGeometry))
-				{
-					DeltaLocation.X = 0;
-				}
+				DEBUG_LOG(TEXT("%s"), *(HitResult.GetActor())->GetName());
+				DeltaLocation.X = 0;
 			}
 		}
 	}
@@ -100,16 +99,13 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 		FVector EndLocation = GetActorLocation() + DeltaY;
 
 		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ObjectsToCollideWith, SphereShape);
+		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
 
 		for (auto HitResult : HitResults)
 		{
-			if (HitResult.bBlockingHit)
+			if (GameplayTag::ActorHasOneOf(HitResult.GetActor(), TagsToCollideWith))
 			{
-				if (HitResult.GetActor()->ActorHasTag(GameplayTag::LevelGeometry))
-				{
-					DeltaLocation.Y = 0;
-				}
+				DeltaLocation.Y = 0;
 			}
 		}
 	}
@@ -123,22 +119,15 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 	{
 		// Perform overlap check.
 		TArray<FOverlapResult> HitResults;
-		GetWorld()->OverlapMultiByChannel(HitResults, GetActorLocation(), FQuat::Identity, ObjectsToCollideWith, SphereShape);
+		GetWorld()->OverlapMultiByChannel(HitResults, GetActorLocation(), FQuat::Identity, ECC_Visibility, SphereShape);
 
 		for (auto HitResult : HitResults)
 		{
-			// If there was an overlap,
-			if (HitResult.bBlockingHit)
+			// If the Actor is a wall,
+			if (GameplayTag::ActorHasOneOf(HitResult.GetActor(), TagsToCollideWith))
 			{
-				// Then check the Actor.
-				auto HitActor = HitResult.GetActor();
-
-				// If the Actor is a wall,
-				if (HitActor->ActorHasTag(GameplayTag::LevelGeometry))
-				{
-					// Then undo the application of the movement offset.
-					SetActorLocation(OldActorLocation);
-				}
+				// Then undo the application of the movement offset.
+				SetActorLocation(OldActorLocation);
 			}
 		}
 	}

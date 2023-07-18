@@ -48,9 +48,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float RotationInterpSpeed = 1.0f;
 
-	/**
-	 * Collision channel that determines which objects this pawn collides with. Defaults to all visible objects.
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TEnumAsByte<ECollisionChannel> ObjectsToCollideWith = ECC_Visibility;
+	UPROPERTY(EditDefaultsOnly)
+	TArray<FName> TagsToCollideWith;
 };
