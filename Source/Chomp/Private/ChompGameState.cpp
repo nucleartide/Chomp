@@ -10,12 +10,14 @@ void AChompGameState::ResetDots(int NumberOfDots)
 {
     UpdateScore(0);
     UpdateNumberOfDotsRemaining(NumberOfDots);
+    UpdateNumberOfDotsConsumed(0);
 }
 
 void AChompGameState::ConsumeDot()
 {
     UpdateScore(Score + ScoreMultiplier);
     UpdateNumberOfDotsRemaining(NumberOfDotsRemaining - 1);
+    UpdateNumberOfDotsConsumed(NumberOfDotsConsumed + 1);
 }
 
 void AChompGameState::UpdateScore(int NewScore)
@@ -32,6 +34,12 @@ void AChompGameState::UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining)
         OnDotsClearedDelegate.Broadcast();
         TransitionTo(EChompGameState::GameOverWin);
     }
+}
+
+void AChompGameState::UpdateNumberOfDotsConsumed(int NewNumberOfDotsConsumed)
+{
+    NumberOfDotsConsumed = NewNumberOfDotsConsumed;
+    OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
 void AChompGameState::LoseGame()

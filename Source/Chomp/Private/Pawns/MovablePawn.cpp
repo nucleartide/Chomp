@@ -78,7 +78,7 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 		FVector EndLocation = GetActorLocation() + DeltaX;
 
 		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
+		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ObjectsToCollideWith, SphereShape);
 
 		for (auto HitResult : HitResults)
 		{
@@ -100,7 +100,7 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 		FVector EndLocation = GetActorLocation() + DeltaY;
 
 		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
+		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ObjectsToCollideWith, SphereShape);
 
 		for (auto HitResult : HitResults)
 		{
@@ -123,7 +123,7 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 	{
 		// Perform overlap check.
 		TArray<FOverlapResult> HitResults;
-		GetWorld()->OverlapMultiByChannel(HitResults, GetActorLocation(), FQuat::Identity, ECC_Visibility, SphereShape);
+		GetWorld()->OverlapMultiByChannel(HitResults, GetActorLocation(), FQuat::Identity, ObjectsToCollideWith, SphereShape);
 
 		for (auto HitResult : HitResults)
 		{

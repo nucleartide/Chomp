@@ -37,6 +37,11 @@ private:
 	bool IsAtDestination = false;
 
 	/**
+	 * Indicates whether a ghost has started moving, or is currently idle in the ghosthouse.
+	 */
+	bool DidStartMoving = false;
+
+	/**
 	 * Properties.
 	 */
 
@@ -85,15 +90,7 @@ private:
 	void DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
 	void HandleScatterNodeReached();
 	void HandleChaseNodeReached();
-
-	/**
-	 * Hard-coded implementation for now. Later, we could move this implementation into a Behavior Tree (BT) task.
-	 */
-	void Scatter(FGridLocation _ScatterOrigin, FGridLocation _ScatterDestination);
-
-	/**
-	 * Hard-coded implementation for now. Later, we could move this implementation into a Behavior Tree (BT) task.
-	 */
+	void Scatter();
 	void Chase();
 
 	UFUNCTION()
@@ -101,4 +98,7 @@ private:
 
 	UFUNCTION()
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+
+	UFUNCTION()
+	void HandleDotsConsumedChanged(int NumberOfDotsConsumed);
 };

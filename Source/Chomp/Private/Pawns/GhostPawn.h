@@ -15,6 +15,7 @@ class AGhostPawn : public AMovablePawn
 public:
 	AGhostPawn();
 	FGridLocation GetStartingPosition();
+	int GetDotsConsumedMovementThreshold();
 
 protected:
 	virtual void BeginPlay() override;
@@ -27,4 +28,7 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	FGridLocation StartingPosition;
+
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	int DotsConsumedMovementThreshold = 0;
 };

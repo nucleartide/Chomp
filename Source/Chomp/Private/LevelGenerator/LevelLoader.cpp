@@ -137,6 +137,12 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return false;
     }
 
+    // Special case for a 1-unit border around the level, so that ghosts can pathfind to the wrap-around points in the level.
+    if (ToNode.X == -1 || ToNode.X == GetLevelHeight() || ToNode.Y == -1 || ToNode.Y == GetLevelWidth())
+    {
+        return true;
+    }
+
     if (Walls.find(ToNode) != Walls.end())
         return false;
     else if (OnlyGoUpTiles.find(ToNode) != OnlyGoUpTiles.end())
@@ -148,7 +154,8 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
 
 bool ULevelLoader::InBounds(FGridLocation Id) const
 {
-    return 0 <= Id.X && Id.X < GetLevelHeight() && 0 <= Id.Y && Id.Y < GetLevelWidth();
+    // Add a 1-unit border around the level because of the wrap-around points in the level.
+    return -1 <= Id.X && Id.X <= GetLevelHeight() && -1 <= Id.Y && Id.Y <= GetLevelWidth();
 }
 
 std::array<FGridLocation, 4> ULevelLoader::CARDINAL_DIRECTIONS = {

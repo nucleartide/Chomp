@@ -28,6 +28,7 @@ enum class EChompGamePlayingState : uint8
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdatedSignature, int, NewDotsConsumed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, EChompGameState, OldState, EChompGameState, NewState);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature, EChompGamePlayingState, OldSubstate, EChompGamePlayingState, NewSubstate);
 
@@ -89,6 +90,9 @@ public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnDotsClearedSignature OnDotsClearedDelegate;
 
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnDotsConsumedUpdatedSignature OnDotsConsumedUpdatedDelegate;
+
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGameStateChangedSignature OnGameStateChangedDelegate;
 
@@ -133,6 +137,7 @@ private:
 
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
+	int NumberOfDotsConsumed = 0;
 	EChompGameState GameState = EChompGameState::None;
 	EChompGamePlayingState LastKnownGamePlayingState = EChompGamePlayingState::None;
 
@@ -147,6 +152,7 @@ private:
 
 	void UpdateScore(int NewScore);
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
+	void UpdateNumberOfDotsConsumed(int NewNumberOfDotsConsumed);
 	float GetTimeSinceStart();
 	void TransitionTo(EChompGameState NewState);
 };
