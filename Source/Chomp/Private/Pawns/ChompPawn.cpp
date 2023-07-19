@@ -23,12 +23,12 @@ void AChompPawn::Tick(float DeltaTime)
 	WrapAroundWorld();
 }
 
-void AChompPawn::MoveVector(FVector2D Value, float DeltaTime)
+void AChompPawn::MoveTowards(FGridLocation Direction, float DeltaTime)
 {
 	if (GetWorld()->GetGameState<AChompGameState>()->GetEnum() != EChompGameState::Playing)
 		return;
 
-	Super::MoveVector(Value, DeltaTime);
+	Super::MoveTowards(Direction, DeltaTime);
 }
 
 void AChompPawn::NotifyActorBeginOverlap(AActor *Other)

@@ -110,6 +110,36 @@ FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
     return GridPosition;
 }
 
+FGridLocation ULevelLoader::WorldToTargetGrid(FVector2D WorldPosition, FGridLocation MovementDirection)
+{
+    // Can't move diagonally in this game.
+	check((MovementDirection.X == 0 && MovementDirection.Y == 0) ||
+		  (MovementDirection.X != MovementDirection.Y));
+
+    FGridLocation GridPosition;
+
+    // Round X.
+    if (MovementDirection.X == -1)
+        GridPosition.X = FMath::Floor(WorldPosition.X * .01f);
+    else if (MovementDirection.X == 0)
+        GridPosition.X = FMath::RoundToFloat(WorldPosition.X * .01f);
+    else if (MovementDirection.X == 1)
+        GridPosition.X = ceil(WorldPosition.X * .01f);
+
+    // Round Y.
+    if (MovementDirection.Y == -1)
+        GridPosition.Y = FMath::Floor(WorldPosition.Y * .01f);
+    else if (MovementDirection.Y == 0)
+        GridPosition.Y = FMath::RoundToFloat(WorldPosition.Y * .01f);
+    else if (MovementDirection.Y == 1)
+        GridPosition.Y = ceil(WorldPosition.Y * .01f);
+
+    GridPosition.X += .5f * GetLevelHeight();
+    GridPosition.Y += .5f * GetLevelWidth();
+
+    return GridPosition;
+}
+
 FGridLocation ULevelLoader::SnapToGridDirection(FVector2D WorldPosition)
 {
     FGridLocation GridDirection;
@@ -150,6 +180,27 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return FromNode.X == (ToNode.X - 1);
     else
         return true;
+}
+
+bool ULevelLoader::IsPassable(FGridLocation Location, BlockingEntity ExcludedEntities) const
+{
+    auto IsWall = Walls.find(Location) != Walls.end();
+    if (ExcludedEntities == BlockingEntity::WallsOnly)
+    {
+        return !IsWall;
+    }
+    else if (ExcludedEntities == BlockingEntity::WallsAndGates)
+    {
+        auto IsGateTile = OnlyGoUpTiles.find(Location) != OnlyGoUpTiles.end();
+        return !IsWall && !IsGateTile;
+    }
+    else
+    {
+        // Must have added a new enum value! Gotta fix that.
+        check(false);
+    }
+
+    return false;
 }
 
 bool ULevelLoader::InBounds(FGridLocation Id) const

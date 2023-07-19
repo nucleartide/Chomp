@@ -1,6 +1,7 @@
 #include "Controllers/ChompPlayerController.h"
 #include "Pawns/ChompPawn.h"
 #include "Utils/Debug.h"
+#include "GenericPlatform/GenericPlatformMath.h"
 
 AChompPlayerController::AChompPlayerController()
 {
@@ -9,12 +10,14 @@ AChompPlayerController::AChompPlayerController()
 
 void AChompPlayerController::OnMoveVertical(float Delta)
 {
+    HorizontalAxisDelta = 0;
     VerticalAxisDelta = Delta;
 }
 
 void AChompPlayerController::OnMoveHorizontal(float Delta)
 {
     HorizontalAxisDelta = Delta;
+    VerticalAxisDelta = 0;
 }
 
 void AChompPlayerController::Tick(float DeltaTime)
@@ -22,23 +25,16 @@ void AChompPlayerController::Tick(float DeltaTime)
     Super::Tick(DeltaTime);
 
     // Check if pawn is alive.
-    auto Pawn = GetPawn();
+    auto Pawn = GetPawn<AChompPawn>();
     if (!Pawn)
     {
         // Then pawn is most likely dead. Early return.
         return;
     }
 
-    // Compute delta movement.
-    FVector2D MovementVector(VerticalAxisDelta, HorizontalAxisDelta); // Note that HorizontalAxisDelta / VerticalAxisDelta are either 0 or 1.
-    auto Delta = this->MovementSpeed * MovementVector.GetSafeNormal() * DeltaTime;
-
-    // Cast to ChompPawn.
-    auto ChompPawn = Cast<AChompPawn>(Pawn);
-    check(ChompPawn);
-
-    // Move the pawn using our computed delta.
-    ChompPawn->MoveVector(Delta, DeltaTime);
+    // Move the pawn using our MovementDirection.
+    FGridLocation MovementDir{FGenericPlatformMath::RoundToInt(VerticalAxisDelta), (int)FGenericPlatformMath::RoundToInt(HorizontalAxisDelta)}; // Note that HorizontalAxisDelta / VerticalAxisDelta are either 0 or 1.
+    Pawn->MoveTowards(MovementDir, DeltaTime);
 }
 
 void AChompPlayerController::BeginPlay()

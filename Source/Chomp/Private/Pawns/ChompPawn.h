@@ -28,7 +28,7 @@ public:
 	virtual void Tick(float DeltaTime) override;
 
 	/**
-	 *  Move this pawn around by Value.
+	 * Move this pawn around by Value.
 	 */
-	virtual void MoveVector(FVector2D Value, float DeltaTime) override;
+	virtual void MoveTowards(FGridLocation Value, float DeltaTime) override;
 };

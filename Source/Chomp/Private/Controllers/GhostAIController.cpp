@@ -61,13 +61,10 @@ void AGhostAIController::MoveTowardDestination(float DeltaTime)
         return;
 
     // Compute the movement direction.
-    FVector2D MovementDirection(CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y);
-
-    // Scale the movement direction by the movement speed multiplied by delta time.
-    auto ScaledMovementDirection = MovementDirection.GetSafeNormal() * DeltaTime * MovementSpeed;
+    FGridLocation MovementDirection{CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y};
 
     // Move the ghost pawn.
-    GetPawn<AGhostPawn>()->MoveVector(ScaledMovementDirection, DeltaTime);
+    GetPawn<AGhostPawn>()->MoveTowards(MovementDirection, DeltaTime);
 
     // Grab some values we'll need below.
     auto ActorLocation = GetPawn()->GetActorLocation();

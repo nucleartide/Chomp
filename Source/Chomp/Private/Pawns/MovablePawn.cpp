@@ -4,25 +4,11 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Constants/GameplayTag.h"
 #include "Utils/Debug.h"
+#include "Utils/Actor.h"
 
 AMovablePawn::AMovablePawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
-}
-
-void AMovablePawn::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void AMovablePawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void AMovablePawn::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
 }
 
 void AMovablePawn::WrapAroundWorld()
@@ -62,8 +48,54 @@ void AMovablePawn::WrapAroundWorld()
 	SetActorLocation(Location);
 }
 
-void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
+void AMovablePawn::MoveTowards(FGridLocation MovementDirection, float DeltaTime)
 {
+	// Can't move diagonally in this game.
+	check((MovementDirection.X == 0 && MovementDirection.Y == 0) ||
+		  (MovementDirection.X != MovementDirection.Y));
+
+	// Keep a reference to the level instance.
+	auto LevelInstance = ULevelLoader::GetInstance(Level);
+
+	// Get target grid position.
+	FGridLocation TargetGridPosition;
+	{
+		auto ActorLocation = GetActorLocation();
+		FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+		TargetGridPosition = LevelInstance->WorldToTargetGrid(ActorLocation2D, MovementDirection);
+	}
+
+	// If target grid position is not reachable, early return.
+	if (!LevelInstance->IsPassable(TargetGridPosition, ExcludedEntities))
+		return;
+
+	// Otherwise, move in the specified MovementDirection.
+	FVector DeltaLocation{MovementDirection.X, MovementDirection.Y, 0.0f};
+	DeltaLocation *= MovementSpeed * DeltaTime;
+	AddActorWorldOffset(DeltaLocation, false);
+
+	// If we moved past the target AND the next node in MovementDirection isn't passable,
+	bool MovedPastTarget = false;
+	auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
+	{
+		auto ActorLocation2D = GetActorLocation2D(this);
+		FVector2D MovementDirectionVec{MovementDirection.X, MovementDirection.Y};
+		auto MovementDotProduct = FVector2D::DotProduct(MovementDirectionVec, (TargetWorldPosition - ActorLocation2D).GetSafeNormal());
+		MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
+	}
+	bool IsNextTargetPassable = false;
+	{
+		FGridLocation NextTargetGridPosition{TargetGridPosition.X + MovementDirection.X, TargetGridPosition.Y + MovementDirection.Y};
+		IsNextTargetPassable = LevelInstance->IsPassable(NextTargetGridPosition, ExcludedEntities);
+	}
+	if (MovedPastTarget && !IsNextTargetPassable)
+	{
+		// Move actor back to TargetGridPosition (converted to world coords, of course).
+		FVector TargetWorldPos{TargetWorldPosition.X, TargetWorldPosition.Y, 0.0f};
+		SetActorLocation(TargetWorldPos);
+	}
+
+#if false
 	// Declare some variables.
 	FVector DeltaLocation(Value.X, Value.Y, 0.0f);
 	auto ActorScale = GetActorScale3D();
@@ -131,15 +163,16 @@ void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
 			}
 		}
 	}
+#endif
 
-	if (Value.X != 0 || Value.Y != 0)
+	if (MovementDirection.X != 0 || MovementDirection.Y != 0)
 	{
 		// Get current rotation.
 		auto ActorRotation = GetActorRotation();
 
 		// Get target rotation.
 		auto ActorLocation = GetActorLocation();
-		FVector DeltaLocation2(Value.X, Value.Y, 0.0f);
+		FVector DeltaLocation2(MovementDirection.X, MovementDirection.Y, 0.0f);
 		auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(ActorLocation, ActorLocation + DeltaLocation2);
 
 		// Lerp to target rotation.
