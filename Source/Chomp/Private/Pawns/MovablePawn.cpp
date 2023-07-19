@@ -50,6 +50,9 @@ void AMovablePawn::WrapAroundWorld()
 
 void AMovablePawn::MoveTowards(FGridLocation MovementDirection, float DeltaTime)
 {
+	if (MovementDirection.X == 0 && MovementDirection.Y == 0)
+		return;
+
 	// Can't move diagonally in this game.
 	check((MovementDirection.X == 0 && MovementDirection.Y == 0) ||
 		  (MovementDirection.X != MovementDirection.Y));

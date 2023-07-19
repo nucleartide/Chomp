@@ -10,14 +10,16 @@ AChompPlayerController::AChompPlayerController()
 
 void AChompPlayerController::OnMoveVertical(float Delta)
 {
-    HorizontalAxisDelta = 0;
     VerticalAxisDelta = Delta;
+    if (Delta != 0)
+        LastAxisToBecomeNonZero = Axis::Vertical;
 }
 
 void AChompPlayerController::OnMoveHorizontal(float Delta)
 {
     HorizontalAxisDelta = Delta;
-    VerticalAxisDelta = 0;
+    if (Delta != 0)
+        LastAxisToBecomeNonZero = Axis::Horizontal;
 }
 
 void AChompPlayerController::Tick(float DeltaTime)
@@ -33,7 +35,11 @@ void AChompPlayerController::Tick(float DeltaTime)
     }
 
     // Move the pawn using our MovementDirection.
-    FGridLocation MovementDir{FGenericPlatformMath::RoundToInt(VerticalAxisDelta), (int)FGenericPlatformMath::RoundToInt(HorizontalAxisDelta)}; // Note that HorizontalAxisDelta / VerticalAxisDelta are either 0 or 1.
+    FGridLocation MovementDir;
+    if (LastAxisToBecomeNonZero == Axis::Vertical) // This is needed because we can't move diagonally.
+        MovementDir.X = FGenericPlatformMath::RoundToInt(VerticalAxisDelta);
+    else if (LastAxisToBecomeNonZero == Axis::Horizontal)
+        MovementDir.Y = FGenericPlatformMath::RoundToInt(HorizontalAxisDelta);
     Pawn->MoveTowards(MovementDir, DeltaTime);
 }
 

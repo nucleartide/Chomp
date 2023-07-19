@@ -19,6 +19,15 @@ public:
 	float VerticalAxisDelta;
 	float HorizontalAxisDelta;
 
+	enum class Axis : uint8
+	{
+		None,
+		Vertical,
+		Horizontal,
+	};
+
+	Axis LastAxisToBecomeNonZero = Axis::None;
+
 	UPROPERTY(EditAnywhere, Category = "Player Controller Customization")
 	float MovementSpeed = 3.0f;
 };
