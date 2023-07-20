@@ -15,8 +15,8 @@ private:
 	TSubclassOf<class ULevelLoader> Level;
 
 private:
-	float VerticalAxisInput;
-	float HorizontalAxisInput;
+	FGridLocation IntendedMoveDirection;
+	FGridLocation CurrentMoveDirection;
 	FGridLocation TargetTile{0, 0};
 
 	/**

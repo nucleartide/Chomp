@@ -20,48 +20,8 @@ bool AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, float Delt
 {
 	return false;
 
-#if false
-	if (!IsTargetTileSet)
-	{
-	}
-
-	// revisit algorithm
-	//
-	// current direction is a member var
-	// intended direction is a member var
-	// target is a member var
-	//
-	// MoveTowardsPoint(float DeltaTime)
-	//
-	// update method
-	// // Detect user input and set direction
-
-// If there's no target and we can move in the chosen direction, set new target to be the next tile
-determine intended direction // moved into controller
-
-if (_target == null) // this should be moved into ai
-    if (CanMoveInDirection(_position, _direction)) // this should be satisfied by levelloader
-        _target = _position + _direction * 32; // this should be moved into ai
-
-// If there's a target, then move pacman towards that location, and clear target when destination is reached
-if (_target != null)
-    if (MoveTowardsPoint(_target.Value, (float) gameTime.ElapsedGameTime.TotalSeconds)) // let's implement this
-        _target = null;
-	//
-	// - [ ] Store the current move direction and the latest intended move
-	// direction separately. User input goes directly to the intended move, but
-	// current move direction is what applies to the player character. Any time
-	// the player crosses a grid center, check if the latest intended move would
-	// be legal.
-	// - [ ] If the intended move direction checks out, the player is re-aligned
-	// to the grid and the current move direction is updated. If you go for a
-	// certain amount of time without putting in any input (and the intended
-	// move did not succeed), it clears.
-	// upon reaching a point, if there is no intended move, the current direction will clear
-	// also be able to wrap around for any pawn
-	// virtual void MoveTowards(FGridLocation Direction, float DeltaTime);
+	// Something to think about.
 	// void WrapAroundWorld();
-#endif
 
 	// Old implementation.
 #if false
