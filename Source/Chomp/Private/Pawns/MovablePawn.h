@@ -12,7 +12,7 @@ class AMovablePawn : public APawn
 {
 	GENERATED_BODY()
 
-public:
+private:
 	/**
 	 * Extend collision raycasts by this factor for the sake of more robust collision checks.
 	 */
@@ -40,10 +40,8 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	BlockingEntity ExcludedEntities = BlockingEntity::WallsOnly;
 
+public:
 	AMovablePawn();
-
-	virtual void MoveTowards(FGridLocation Direction, float DeltaTime);
-
-protected:
-	void WrapAroundWorld();
+	BlockingEntity GetExcludedEntities();
+	bool MoveTowardsPoint(FGridLocation TargetGridPosition, float DeltaTime);
 };

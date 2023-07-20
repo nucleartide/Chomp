@@ -64,7 +64,7 @@ void AGhostAIController::MoveTowardDestination(float DeltaTime)
     FGridLocation MovementDirection{CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y};
 
     // Move the ghost pawn.
-    GetPawn<AGhostPawn>()->MoveTowards(MovementDirection, DeltaTime);
+    // GetPawn<AGhostPawn>()->MoveTowards(MovementDirection, DeltaTime);
 
     // Grab some values we'll need below.
     auto ActorLocation = GetPawn()->GetActorLocation();

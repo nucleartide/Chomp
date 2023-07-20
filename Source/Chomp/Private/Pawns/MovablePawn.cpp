@@ -11,45 +11,60 @@ AMovablePawn::AMovablePawn()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void AMovablePawn::WrapAroundWorld()
+BlockingEntity AMovablePawn::GetExcludedEntities()
 {
-	// Grab references to stuff.
-	auto LevelHeight = ULevelLoader::GetInstance(Level)->GetLevelHeight();
-	auto LevelWidth = ULevelLoader::GetInstance(Level)->GetLevelWidth();
-	auto Location = GetActorLocation();
-
-	// Update X component of Location if needed.
-	auto HalfHeight = LevelHeight * 0.5f * 100.0f;
-	if (Location.X < -HalfHeight)
-	{
-		auto Diff = -HalfHeight - Location.X;
-		Location.X = HalfHeight - Diff;
-	}
-	else if (Location.X > HalfHeight)
-	{
-		auto Diff = Location.X - HalfHeight;
-		Location.X = -HalfHeight + Diff;
-	}
-
-	// Update Y component of Location if needed.
-	auto HalfWidth = LevelWidth * 0.5f * 100.0f;
-	if (Location.Y < -HalfWidth)
-	{
-		auto Diff = -HalfWidth - Location.Y;
-		Location.Y = HalfWidth - Diff;
-	}
-	else if (Location.Y > HalfWidth)
-	{
-		auto Diff = Location.Y - HalfWidth;
-		Location.Y = -HalfWidth + Diff;
-	}
-
-	// Update actor location.
-	SetActorLocation(Location);
+	return ExcludedEntities;
 }
 
-void AMovablePawn::MoveTowards(FGridLocation MovementDirection, float DeltaTime)
+bool AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, float DeltaTime)
 {
+	return false;
+
+#if false
+	if (!IsTargetTileSet)
+	{
+	}
+
+	// revisit algorithm
+	//
+	// current direction is a member var
+	// intended direction is a member var
+	// target is a member var
+	//
+	// MoveTowardsPoint(float DeltaTime)
+	//
+	// update method
+	// // Detect user input and set direction
+
+// If there's no target and we can move in the chosen direction, set new target to be the next tile
+determine intended direction // moved into controller
+
+if (_target == null) // this should be moved into ai
+    if (CanMoveInDirection(_position, _direction)) // this should be satisfied by levelloader
+        _target = _position + _direction * 32; // this should be moved into ai
+
+// If there's a target, then move pacman towards that location, and clear target when destination is reached
+if (_target != null)
+    if (MoveTowardsPoint(_target.Value, (float) gameTime.ElapsedGameTime.TotalSeconds)) // let's implement this
+        _target = null;
+	//
+	// - [ ] Store the current move direction and the latest intended move
+	// direction separately. User input goes directly to the intended move, but
+	// current move direction is what applies to the player character. Any time
+	// the player crosses a grid center, check if the latest intended move would
+	// be legal.
+	// - [ ] If the intended move direction checks out, the player is re-aligned
+	// to the grid and the current move direction is updated. If you go for a
+	// certain amount of time without putting in any input (and the intended
+	// move did not succeed), it clears.
+	// upon reaching a point, if there is no intended move, the current direction will clear
+	// also be able to wrap around for any pawn
+	// virtual void MoveTowards(FGridLocation Direction, float DeltaTime);
+	// void WrapAroundWorld();
+#endif
+
+	// Old implementation.
+#if false
 	if (MovementDirection.X == 0 && MovementDirection.Y == 0)
 		return;
 
@@ -97,77 +112,10 @@ void AMovablePawn::MoveTowards(FGridLocation MovementDirection, float DeltaTime)
 		FVector TargetWorldPos{TargetWorldPosition.X, TargetWorldPosition.Y, 0.0f};
 		SetActorLocation(TargetWorldPos);
 	}
-
-#if false
-	// Declare some variables.
-	FVector DeltaLocation(Value.X, Value.Y, 0.0f);
-	auto ActorScale = GetActorScale3D();
-	float SphereDiameter = 100.0f * ActorScale.X;
-	float SphereRadius = SphereDiameter * 0.5f * 0.5f; // Halve the radius a second time for a smaller collision sphere.
-	FCollisionShape SphereShape = FCollisionShape::MakeSphere(SphereRadius);
-
-	// Slide along horizontal walls
-	if (DeltaLocation.X != 0.0f)
-	{
-		FVector StartLocation = GetActorLocation();
-		FVector DeltaX = {DeltaLocation.X * Tolerance, 0.0f, 0.0f};
-		FVector EndLocation = GetActorLocation() + DeltaX;
-
-		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
-
-		for (auto HitResult : HitResults)
-		{
-			if (GameplayTag::ActorHasOneOf(HitResult.GetActor(), TagsToCollideWith))
-			{
-				DEBUG_LOG(TEXT("%s"), *(HitResult.GetActor())->GetName());
-				DeltaLocation.X = 0;
-			}
-		}
-	}
-
-	// Slide along vertical walls
-	if (DeltaLocation.Y != 0.0f)
-	{
-		FVector StartLocation = GetActorLocation();
-		FVector DeltaY = {0.0f, DeltaLocation.Y * Tolerance, 0.0f};
-		FVector EndLocation = GetActorLocation() + DeltaY;
-
-		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
-
-		for (auto HitResult : HitResults)
-		{
-			if (GameplayTag::ActorHasOneOf(HitResult.GetActor(), TagsToCollideWith))
-			{
-				DeltaLocation.Y = 0;
-			}
-		}
-	}
-
-	// Let's apply the offset first.
-	auto OldActorLocation = GetActorLocation();
-	AddActorWorldOffset(DeltaLocation, false);
-
-	// However, in the case where we're overlapping with a wall after applying the offset,
-	if (DeltaLocation.X != 0.0f || DeltaLocation.Y != 0.0f)
-	{
-		// Perform overlap check.
-		TArray<FOverlapResult> HitResults;
-		GetWorld()->OverlapMultiByChannel(HitResults, GetActorLocation(), FQuat::Identity, ECC_Visibility, SphereShape);
-
-		for (auto HitResult : HitResults)
-		{
-			// If the Actor is a wall,
-			if (GameplayTag::ActorHasOneOf(HitResult.GetActor(), TagsToCollideWith))
-			{
-				// Then undo the application of the movement offset.
-				SetActorLocation(OldActorLocation);
-			}
-		}
-	}
 #endif
 
+	// Rotation.
+#if false
 	if (MovementDirection.X != 0 || MovementDirection.Y != 0)
 	{
 		// Get current rotation.
@@ -184,4 +132,45 @@ void AMovablePawn::MoveTowards(FGridLocation MovementDirection, float DeltaTime)
 		// Set rotation to interpolated rotation value.
 		SetActorRotation(NewRotation);
 	}
+#endif
+
+	// Wrapping mechanic.
+#if false
+void AMovablePawn::WrapAroundWorld()
+{
+	// Grab references to stuff.
+	auto LevelHeight = ULevelLoader::GetInstance(Level)->GetLevelHeight();
+	auto LevelWidth = ULevelLoader::GetInstance(Level)->GetLevelWidth();
+	auto Location = GetActorLocation();
+
+	// Update X component of Location if needed.
+	auto HalfHeight = LevelHeight * 0.5f * 100.0f;
+	if (Location.X < -HalfHeight)
+	{
+		auto Diff = -HalfHeight - Location.X;
+		Location.X = HalfHeight - Diff;
+	}
+	else if (Location.X > HalfHeight)
+	{
+		auto Diff = Location.X - HalfHeight;
+		Location.X = -HalfHeight + Diff;
+	}
+
+	// Update Y component of Location if needed.
+	auto HalfWidth = LevelWidth * 0.5f * 100.0f;
+	if (Location.Y < -HalfWidth)
+	{
+		auto Diff = -HalfWidth - Location.Y;
+		Location.Y = HalfWidth - Diff;
+	}
+	else if (Location.Y > HalfWidth)
+	{
+		auto Diff = Location.Y - HalfWidth;
+		Location.Y = -HalfWidth + Diff;
+	}
+
+	// Update actor location.
+	SetActorLocation(Location);
+}
+#endif
 }

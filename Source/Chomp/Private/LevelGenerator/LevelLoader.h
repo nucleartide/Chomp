@@ -98,12 +98,7 @@ public:
 	 */
 	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
 
-	/**
-	 * Check whether a location on the game grid can be traveled to.
-	 *
-	 * Different from Passable() in that it doesn't consider where you came from. It is a simple lookup.
-	 */
-	bool IsPassable(FGridLocation Location, BlockingEntity ExcludedEntities) const;
+	bool ComputeTargetTile(FVector Position, FGridLocation Direction, BlockingEntity ExcludedEntities, const FGridLocation &TargetTile) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.

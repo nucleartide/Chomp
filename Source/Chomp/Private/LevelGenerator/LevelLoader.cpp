@@ -182,6 +182,10 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return true;
 }
 
+bool ULevelLoader::ComputeTargetTile(FVector Position, FGridLocation Direction, BlockingEntity ExcludedEntities, const FGridLocation &TargetTile) const
+{
+    return false;
+    #if false
 bool ULevelLoader::IsPassable(FGridLocation Location, BlockingEntity ExcludedEntities) const
 {
     auto IsWall = Walls.find(Location) != Walls.end();
@@ -201,6 +205,8 @@ bool ULevelLoader::IsPassable(FGridLocation Location, BlockingEntity ExcludedEnt
     }
 
     return false;
+}
+    #endif
 }
 
 bool ULevelLoader::InBounds(FGridLocation Id) const
