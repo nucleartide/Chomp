@@ -62,11 +62,11 @@ FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition,
 		SetActorRotation(NewRotation);
 	}
 
-	return Result;
+	WrapAroundWorld();
 
-	// TODO: add this back.
-	// Wrapping mechanic.
-#if false
+	return Result;
+}
+
 void AMovablePawn::WrapAroundWorld()
 {
 	// Grab references to stuff.
@@ -74,34 +74,42 @@ void AMovablePawn::WrapAroundWorld()
 	auto LevelWidth = ULevelLoader::GetInstance(Level)->GetLevelWidth();
 	auto Location = GetActorLocation();
 
+	// Get bottom-left corner tile.
+	FGridLocation BottomLeft{0, 0};
+	auto BottomLeftWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(BottomLeft);
+	auto BottomBound = BottomLeftWorldPos.X - 50.0f;
+	auto LeftBound = BottomLeftWorldPos.Y - 50.0f;
+
+	// Get top-right corner tile.
+	FGridLocation TopRight{LevelHeight - 1, LevelWidth - 1};
+	auto TopRightWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(TopRight);
+	auto TopBound = TopRightWorldPos.X + 50.0f;
+	auto RightBound = TopRightWorldPos.Y + 50.0f;
+
 	// Update X component of Location if needed.
-	auto HalfHeight = LevelHeight * 0.5f * 100.0f;
-	if (Location.X < -HalfHeight)
+	if (Location.X < BottomBound)
 	{
-		auto Diff = -HalfHeight - Location.X;
-		Location.X = HalfHeight - Diff;
+		auto Diff = BottomBound - Location.X;
+		Location.X = TopBound - Diff;
 	}
-	else if (Location.X > HalfHeight)
+	else if (Location.X > TopBound)
 	{
-		auto Diff = Location.X - HalfHeight;
-		Location.X = -HalfHeight + Diff;
+		auto Diff = Location.X - TopBound;
+		Location.X = BottomBound + Diff;
 	}
 
 	// Update Y component of Location if needed.
-	auto HalfWidth = LevelWidth * 0.5f * 100.0f;
-	if (Location.Y < -HalfWidth)
+	if (Location.Y < LeftBound)
 	{
-		auto Diff = -HalfWidth - Location.Y;
-		Location.Y = HalfWidth - Diff;
+		auto Diff = LeftBound - Location.Y;
+		Location.Y = RightBound - Diff;
 	}
-	else if (Location.Y > HalfWidth)
+	else if (Location.Y > RightBound)
 	{
-		auto Diff = Location.Y - HalfWidth;
-		Location.Y = -HalfWidth + Diff;
+		auto Diff = Location.Y - RightBound;
+		Location.Y = LeftBound + Diff;
 	}
 
 	// Update actor location.
 	SetActorLocation(Location);
-}
-#endif
 }

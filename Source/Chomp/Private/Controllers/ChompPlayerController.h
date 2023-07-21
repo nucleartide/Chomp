@@ -14,6 +14,9 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
+	UPROPERTY(EditDefaultsOnly, Category = "CustomSettings")
+	float TimeForIntendedDirectionToLast = 0.5f;
+
 private:
 	float HorizontalAxis = 0.0f;
 	float VerticalAxis = 0.0f;

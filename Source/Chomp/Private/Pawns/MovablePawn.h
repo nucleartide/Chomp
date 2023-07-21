@@ -54,4 +54,7 @@ public:
 	BlockingEntity GetExcludedEntities();
 	TArray<FName> GetTagsToCollideWith();
 	FMovementResult MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
+
+private:
+	void WrapAroundWorld();
 };

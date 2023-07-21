@@ -40,7 +40,7 @@ void AChompPlayerController::Tick(float DeltaTime)
         IntendedMoveDirection.Y = FGenericPlatformMath::RoundToInt(HorizontalAxis);
         TimeOfLastIntendedDirUpdate = World->GetRealTimeSeconds();
     }
-    else if (World->GetRealTimeSeconds() > TimeOfLastIntendedDirUpdate + 1.0f) // Clear input after 1s.
+    else if (World->GetRealTimeSeconds() > TimeOfLastIntendedDirUpdate + TimeForIntendedDirectionToLast) // Clear input after 1s.
     {
         IntendedMoveDirection.X = 0;
         IntendedMoveDirection.Y = 0;
