@@ -18,13 +18,13 @@ private:
 	float TimeForIntendedDirectionToLast = 0.5f;
 
 private:
-	float HorizontalAxis = 0.0f;
 	float VerticalAxis = 0.0f;
-	FGridLocation IntendedMoveDirection;
+	float HorizontalAxis = 0.0f;
 	float TimeOfLastIntendedDirUpdate = 0.0f;
-	FGridLocation CurrentMoveDirection{0, 1};
+
 	FGridLocation InitialMoveDirection{0, 1};
-	FGridLocation TargetTile{0, 0};
+	FGridLocation CurrentMoveDirection{0, 1};
+	FGridLocation IntendedMoveDirection;
 
 	/**
 	 * A flag to denote whether TargetTile is currently set.
@@ -32,6 +32,7 @@ private:
 	 * This is necessary because FGridLocation is a struct, and thus there is no "null" value.
 	 */
 	bool IsTargetTileSet = false;
+	FGridLocation TargetTile{0, 0};
 
 public:
 	AChompPlayerController();
