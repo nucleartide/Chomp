@@ -16,7 +16,7 @@ private:
 
 private:
 	FGridLocation IntendedMoveDirection;
-	FGridLocation CurrentMoveDirection;
+	FGridLocation CurrentMoveDirection{1, 0};
 	FGridLocation TargetTile{0, 0};
 
 	/**

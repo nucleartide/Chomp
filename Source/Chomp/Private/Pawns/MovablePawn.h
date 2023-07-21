@@ -43,5 +43,6 @@ private:
 public:
 	AMovablePawn();
 	BlockingEntity GetExcludedEntities();
-	bool MoveTowardsPoint(FGridLocation TargetGridPosition, float DeltaTime);
+	TArray<FName> GetTagsToCollideWith();
+	bool MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
 };

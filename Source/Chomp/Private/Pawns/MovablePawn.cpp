@@ -16,41 +16,29 @@ BlockingEntity AMovablePawn::GetExcludedEntities()
 	return ExcludedEntities;
 }
 
-bool AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, float DeltaTime)
+TArray<FName> AMovablePawn::GetTagsToCollideWith()
 {
-	return false;
+	return TagsToCollideWith;
+}
 
-	// Something to think about.
-	// void WrapAroundWorld();
-
-	// Old implementation.
-#if false
-	if (MovementDirection.X == 0 && MovementDirection.Y == 0)
-		return;
-
-	// Can't move diagonally in this game.
-	check((MovementDirection.X == 0 && MovementDirection.Y == 0) ||
-		  (MovementDirection.X != MovementDirection.Y));
-
+bool AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime)
+{
 	// Keep a reference to the level instance.
 	auto LevelInstance = ULevelLoader::GetInstance(Level);
 
-	// Get target grid position.
-	FGridLocation TargetGridPosition;
-	{
-		auto ActorLocation = GetActorLocation();
-		FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-		TargetGridPosition = LevelInstance->WorldToTargetGrid(ActorLocation2D, MovementDirection);
-	}
-
-	// If target grid position is not reachable, early return.
-	if (!LevelInstance->IsPassable(TargetGridPosition, ExcludedEntities))
-		return;
-
-	// Otherwise, move in the specified MovementDirection.
-	FVector DeltaLocation{MovementDirection.X, MovementDirection.Y, 0.0f};
+	// Then, move in the TargetDirection.
+	FVector DeltaLocation{TargetDirection.X, TargetDirection.Y, 0.0f};
 	DeltaLocation *= MovementSpeed * DeltaTime;
 	AddActorWorldOffset(DeltaLocation, false);
+
+	return false;
+
+	// Old implementation.
+#if false
+	// Compute the MovementDirection.
+	auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
+	auto ActorLocation = GetActorLocation();
+	FVector DeltaLocation{TargetWorldPosition.X - ActorLocation.X, TargetWorldPosition.Y - ActorLocation.Y, 0.0f};
 
 	// If we moved past the target AND the next node in MovementDirection isn't passable,
 	bool MovedPastTarget = false;

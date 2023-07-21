@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
 #include "UObject/WeakObjectPtrTemplates.h"
+#include "AStar/GridLocation.h"
 #include "ChompPawnManager.generated.h"
 
 /**
@@ -14,16 +15,26 @@ class AChompPawnManager : public AActor
 {
 	GENERATED_BODY()
 
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<class AChompPawn> ChompPawn;
+
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	TSubclassOf<class ULevelLoader> Level;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FGridLocation SpawnGridPosition;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FRotator SpawnRotation;
+
+private:
+	TWeakObjectPtr<class AChompPawn> ChompPawnInstance;
+
 protected:
 	virtual void BeginPlay() override;
 
 private:
-	UPROPERTY(EditAnywhere)
-	TWeakObjectPtr<class AChompPawn> ChompPawnInstance;
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<class AChompPawn> ChompPawn;
-
 	UFUNCTION()
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 };

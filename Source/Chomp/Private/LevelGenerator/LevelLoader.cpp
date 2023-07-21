@@ -5,7 +5,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Algo/Reverse.h"
 
+#include "Constants/GameplayTag.h"
 #include "Utils/Debug.h"
+#include "Engine/World.h"
 
 ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass)
 {
@@ -91,7 +93,7 @@ int ULevelLoader::GetLevelHeight() const
     return NumberOfRows;
 }
 
-FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition)
+FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition) const
 {
     FVector2D WorldPosition;
     WorldPosition.X = ((float)GridPosition.X - .5f * GetLevelHeight()) * 100.0f;
@@ -99,7 +101,7 @@ FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition)
     return WorldPosition;
 }
 
-FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
+FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition) const
 {
     // Note: this is the inverse operation of GridToWorld().
     FGridLocation GridPosition;
@@ -182,31 +184,36 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return true;
 }
 
-bool ULevelLoader::ComputeTargetTile(FVector Position, FGridLocation Direction, BlockingEntity ExcludedEntities, const FGridLocation &TargetTile) const
+bool ULevelLoader::ComputeTargetTile(UWorld *World, AActor *SomeActor, FGridLocation Direction, TArray<FName> CollidingTags, FGridLocation &TargetTile) const
 {
-    return false;
-    #if false
-bool ULevelLoader::IsPassable(FGridLocation Location, BlockingEntity ExcludedEntities) const
-{
-    auto IsWall = Walls.find(Location) != Walls.end();
-    if (ExcludedEntities == BlockingEntity::WallsOnly)
+    // Compute the actor's collision sphere.
+	auto ActorScale = SomeActor->GetActorScale3D();
+	auto ActorDiameter = ActorScale.X * 100.0f - 1.0f; // Needs to be slightly less than 100.0f to avoid overlapping.
+    auto ActorRadius =  ActorDiameter * 0.5f;
+	auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
+
+    // Given the current Position and Direction, compute the target position, but do not set the TargetTile reference just yet.
+    FVector StartPos = SomeActor->GetActorLocation();
+    FVector TargetPos = SomeActor->GetActorLocation();
+    TargetPos.X += Direction.X * 100.0f;
+    TargetPos.Y += Direction.Y * 100.0f;
+
+    // Perform an overlap check at the target position.
+    TArray<FHitResult> HitResults;
+    World->SweepMultiByChannel(HitResults, StartPos, TargetPos, FQuat::Identity, ECC_Visibility, ActorSphere);
+    for (auto HitResult : HitResults)
     {
-        return !IsWall;
-    }
-    else if (ExcludedEntities == BlockingEntity::WallsAndGates)
-    {
-        auto IsGateTile = OnlyGoUpTiles.find(Location) != OnlyGoUpTiles.end();
-        return !IsWall && !IsGateTile;
-    }
-    else
-    {
-        // Must have added a new enum value! Gotta fix that.
-        check(false);
+        // If we overlapped with a collider, then we can't travel to target position. Return false.
+        auto HitActor = HitResult.GetActor();
+        if (GameplayTag::ActorHasOneOf(HitActor, CollidingTags))
+            return false;
     }
 
-    return false;
-}
-    #endif
+    // Otherwise, set the TargetTile (from TargetPos) and return true.
+    FVector2D TargetPos2D{TargetPos.X, TargetPos.Y};
+    TargetTile = WorldToGrid(TargetPos2D);
+
+    return true;
 }
 
 bool ULevelLoader::InBounds(FGridLocation Id) const

@@ -70,14 +70,14 @@ public:
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FVector2D GridToWorld(FGridLocation GridPosition);
+	FVector2D GridToWorld(FGridLocation GridPosition) const;
 
 	/**
 	 * Given world coordinates, convert them to grid coordinates.
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FGridLocation WorldToGrid(FVector2D WorldPosition);
+	FGridLocation WorldToGrid(FVector2D WorldPosition) const;
 
 	/**
 	 * Given world coordinates and a direction, find the grid coordinates of the target position.
@@ -98,7 +98,7 @@ public:
 	 */
 	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
 
-	bool ComputeTargetTile(FVector Position, FGridLocation Direction, BlockingEntity ExcludedEntities, const FGridLocation &TargetTile) const;
+	bool ComputeTargetTile(UWorld *World, AActor *SomeActor, FGridLocation Direction, TArray<FName> TagsToCollideWith, FGridLocation &TargetTile) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.

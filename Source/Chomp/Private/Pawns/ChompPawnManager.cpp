@@ -15,21 +15,22 @@ void AChompPawnManager::HandleGameRestarted(EChompGameState OldState, EChompGame
 {
 	if (NewState == EChompGameState::Playing)
 	{
+		auto LevelInstance = ULevelLoader::GetInstance(Level);
+		auto SpawnWorldPosition2D = LevelInstance->GridToWorld(SpawnGridPosition);
+		FVector SpawnWorldPosition{SpawnWorldPosition2D.X, SpawnWorldPosition2D.Y, 0.0f};
+
 		if (ChompPawnInstance.IsValid())
 		{
-			ChompPawnInstance->SetActorLocation(GetActorLocation());
-			ChompPawnInstance->SetActorRotation(GetActorRotation());
+			ChompPawnInstance->SetActorLocation(SpawnWorldPosition);
+			ChompPawnInstance->SetActorRotation(SpawnRotation);
 		}
 		else
 		{
-			auto SpawnLocation = GetActorLocation();
-			auto SpawnRotation = GetActorRotation();
-
 			FActorSpawnParameters SpawnParams;
 			SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 			// Spawn actor.
-			auto Actor = GetWorld()->SpawnActor<AChompPawn>(ChompPawn, SpawnLocation, SpawnRotation, SpawnParams);
+			auto Actor = GetWorld()->SpawnActor<AChompPawn>(ChompPawn, SpawnWorldPosition, SpawnRotation, SpawnParams);
 			check(Actor);
 
 			// Save reference.

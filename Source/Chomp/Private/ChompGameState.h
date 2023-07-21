@@ -66,6 +66,10 @@ public:
 	EChompGameState GetEnum();
 	int GetScore();
 	EChompGamePlayingState GetPlayingSubstate();
+	bool WasLevelGenerated();
+
+	UFUNCTION(BlueprintCallable)
+	void NotifyLevelGenerated();
 
 	/**
 	 * Convenience wrapper around TransitionTo().
@@ -145,6 +149,11 @@ private:
 	 * The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
 	 */
 	float GameStartTime = 0.0f;
+
+	/**
+	 * Whether the level has finished generating.
+	 */
+	bool LevelGenerated = false;
 
 	/**
 	 * Behavior.

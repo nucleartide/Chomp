@@ -5,7 +5,6 @@
 #include "UI/GameOverWidget.h"
 #include "ChompGameMode.h"
 #include "ChompGameState.h"
-#include "Pawns/ChompPawn.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 AUIManager::AUIManager()

@@ -146,3 +146,13 @@ float AChompGameState::GetTimeSinceStart()
     auto World = GetWorld();
     return World->GetTimeSeconds() - GameStartTime;
 }
+
+bool AChompGameState::WasLevelGenerated()
+{
+    return LevelGenerated;
+}
+
+void AChompGameState::NotifyLevelGenerated()
+{
+    LevelGenerated = true;
+}
