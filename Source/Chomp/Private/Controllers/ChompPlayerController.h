@@ -15,8 +15,12 @@ private:
 	TSubclassOf<class ULevelLoader> Level;
 
 private:
+	float HorizontalAxis = 0.0f;
+	float VerticalAxis = 0.0f;
 	FGridLocation IntendedMoveDirection;
-	FGridLocation CurrentMoveDirection{1, 0};
+	float TimeOfLastIntendedDirUpdate = 0.0f;
+	FGridLocation CurrentMoveDirection{0, 1};
+	FGridLocation InitialMoveDirection{0, 1};
 	FGridLocation TargetTile{0, 0};
 
 	/**
@@ -36,4 +40,7 @@ protected:
 private:
 	void OnMoveHorizontal(float Delta);
 	void OnMoveVertical(float Delta);
+
+	UFUNCTION()
+	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 };

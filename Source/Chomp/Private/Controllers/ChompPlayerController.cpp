@@ -16,25 +16,40 @@ AChompPlayerController::AChompPlayerController()
 
 void AChompPlayerController::OnMoveVertical(float Input)
 {
-    IntendedMoveDirection.X = FGenericPlatformMath::RoundToInt(Input);
+    VerticalAxis = Input;
 }
 
 void AChompPlayerController::OnMoveHorizontal(float Input)
 {
-    IntendedMoveDirection.Y = FGenericPlatformMath::RoundToInt(Input);
+    HorizontalAxis = Input;
 }
+
+// intended key should only update if new intended key is non-zero
+// else, it clears after 1s
 
 void AChompPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
+    auto World = GetWorld();
+    check(World);
+    if (VerticalAxis != 0.0f || HorizontalAxis != 0.0f)
+    {
+        // Update intended move direction using raw input.
+        IntendedMoveDirection.X = FGenericPlatformMath::RoundToInt(VerticalAxis);
+        IntendedMoveDirection.Y = FGenericPlatformMath::RoundToInt(HorizontalAxis);
+        TimeOfLastIntendedDirUpdate = World->GetRealTimeSeconds();
+    }
+    else if (World->GetRealTimeSeconds() > TimeOfLastIntendedDirUpdate + 1.0f) // Clear input after 1s.
+    {
+        IntendedMoveDirection.X = 0;
+        IntendedMoveDirection.Y = 0;
+    }
+
     // Get reference to pawn.
     auto MovablePawn = GetPawn<AMovablePawn>();
     if (!MovablePawn)
         return;
-
-    auto World = GetWorld();
-    check(World);
 
     // Check whether game is playing.
     auto IsGamePlaying = World->GetGameState<AChompGameState>()->GetEnum() == EChompGameState::Playing;
@@ -66,6 +81,15 @@ void AChompPlayerController::Tick(float DeltaTime)
         else if (IntendedMoveDirection.IsNonZero())
             CurrentMoveDirection = IntendedMoveDirection;
     }
+    else if (IsTargetTileSet && IntendedMoveDirection.IsNonZero() && IntendedMoveDirection != CurrentMoveDirection)
+    {
+        auto LevelInstance = ULevelLoader::GetInstance(Level);
+        auto ActorLocation = MovablePawn->GetActorLocation();
+        auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
+        auto IsPassable = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith, TargetTile);
+        if (IsPassable)
+            CurrentMoveDirection = IntendedMoveDirection;
+    }
 
     // If there is a target tile,
     if (IsTargetTileSet)
@@ -81,9 +105,8 @@ void AChompPlayerController::Tick(float DeltaTime)
             auto TargetWorldPos = LevelInstance->GridToWorld(TargetTile);
             FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
             auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
-            if (IntendedMoveDirection.IsNonZero())
-                CurrentMoveDirection = IntendedMoveDirection;
-            auto IsPassable = LevelInstance->ComputeTargetTile(World, TargetWorldVec, CurrentMoveDirection, TagsToCollideWith, TargetTile);
+            auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
+            auto IsPassable = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith, TargetTile);
             if (IsPassable)
             {
                 // Set the actor's position to the TargetWorldPos + IntendedMoveDirection * MovementResult.AmountMovedPast.
@@ -92,6 +115,8 @@ void AChompPlayerController::Tick(float DeltaTime)
                     TargetWorldPos.Y + IntendedMoveDirection.Y * MovementResult.AmountMovedPast,
                     0.0f};
                 MovablePawn->SetActorLocation(NewLocation);
+                if (IntendedMoveDirection.IsNonZero())
+                    CurrentMoveDirection = IntendedMoveDirection;
             }
             else
             {
@@ -113,4 +138,21 @@ void AChompPlayerController::BeginPlay()
     // Bind input axes.
     InputComponent->BindAxis("Move Forward / Backward", this, &AChompPlayerController::OnMoveVertical);
     InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
+
+    auto World = GetWorld();
+    check(World);
+
+    World->GetGameState<AChompGameState>()->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
+}
+
+void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
+{
+    check(OldState != NewState);
+    if (NewState == EChompGameState::Playing)
+    {
+        IsTargetTileSet = false;
+        // reset this to original value
+        CurrentMoveDirection.X = InitialMoveDirection.X;
+        CurrentMoveDirection.Y = InitialMoveDirection.Y;
+    }
 }
