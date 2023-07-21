@@ -47,4 +47,6 @@ private:
 
 	UFUNCTION()
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
+
+	void UpdateIntendedMoveDirection();
 };
