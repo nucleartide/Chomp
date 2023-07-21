@@ -13,13 +13,6 @@
 
 #include "LevelLoader.generated.h"
 
-UENUM(BlueprintType)
-enum class BlockingEntity : uint8
-{
-	WallsOnly,
-	WallsAndGates,
-};
-
 /**
  * ULevelLoader loads the contents of a level file (.txt file extension) into memory,
  * then also serves as an instance of the loaded level afterward.
@@ -78,13 +71,6 @@ public:
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
 	FGridLocation WorldToGrid(FVector2D WorldPosition) const;
-
-	/**
-	 * Given world coordinates and a direction, find the grid coordinates of the target position.
-	 *
-	 * Note that the grid origin (0,0) is at the bottom-left of the map.
-	 */
-	FGridLocation WorldToTargetGrid(FVector2D WorldPosition, FGridLocation MovementDirection);
 
 	/**
 	 * Given world coordinates, compute the direction required to snap the world coordinates to the closest grid position.
