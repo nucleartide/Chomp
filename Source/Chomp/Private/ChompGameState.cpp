@@ -123,17 +123,12 @@ void AChompGameState::Tick(float DeltaTime)
 
     if (GameState == EChompGameState::Playing)
     {
-        // Meant for debugging current wave:
-        // DEBUG_LOG(TEXT("%f %d"), GetTimeSinceStart(), GetPlayingSubstate());
-
         // Compute the last known game playing state.
         auto CurrentWave = GetPlayingSubstate();
 
         // If there was a change in the last known game playing state, broadcast the event.
         if (LastKnownGamePlayingState != CurrentWave)
-        {
             OnGamePlayingStateChangedDelegate.Broadcast(LastKnownGamePlayingState, CurrentWave);
-        }
 
         // Afterward, save the new game playing state.
         LastKnownGamePlayingState = CurrentWave;
