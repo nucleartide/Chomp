@@ -61,7 +61,6 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
     OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);
-    // DEBUG_LOG(TEXT("Transitioned from %d to %d"), OldState, NewState);
 
     if (GameState != EChompGameState::Playing)
     {
@@ -145,14 +144,4 @@ float AChompGameState::GetTimeSinceStart()
 {
     auto World = GetWorld();
     return World->GetTimeSeconds() - GameStartTime;
-}
-
-bool AChompGameState::WasLevelGenerated()
-{
-    return LevelGenerated;
-}
-
-void AChompGameState::NotifyLevelGenerated()
-{
-    LevelGenerated = true;
 }
