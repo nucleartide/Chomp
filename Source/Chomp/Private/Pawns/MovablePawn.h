@@ -7,6 +7,15 @@
 #include "LevelGenerator/LevelLoader.h"
 #include "MovablePawn.generated.h"
 
+USTRUCT()
+struct FMovementResult
+{
+	GENERATED_BODY()
+
+	bool MovedPastTarget = false;
+	float AmountMovedPast = 0.0f;
+};
+
 UCLASS()
 class AMovablePawn : public APawn
 {
@@ -44,5 +53,5 @@ public:
 	AMovablePawn();
 	BlockingEntity GetExcludedEntities();
 	TArray<FName> GetTagsToCollideWith();
-	bool MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
+	FMovementResult MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
 };

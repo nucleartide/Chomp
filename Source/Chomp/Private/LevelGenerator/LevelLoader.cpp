@@ -184,17 +184,16 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return true;
 }
 
-bool ULevelLoader::ComputeTargetTile(UWorld *World, AActor *SomeActor, FGridLocation Direction, TArray<FName> CollidingTags, FGridLocation &TargetTile) const
+bool ULevelLoader::ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> CollidingTags, FGridLocation &TargetTile) const
 {
     // Compute the actor's collision sphere.
-	auto ActorScale = SomeActor->GetActorScale3D();
-	auto ActorDiameter = ActorScale.X * 100.0f - 1.0f; // Needs to be slightly less than 100.0f to avoid overlapping.
+	auto ActorDiameter = 100.0f - 1.0f; // Needs to be slightly less than 100.0f to avoid overlapping.
     auto ActorRadius =  ActorDiameter * 0.5f;
 	auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
 
     // Given the current Position and Direction, compute the target position, but do not set the TargetTile reference just yet.
-    FVector StartPos = SomeActor->GetActorLocation();
-    FVector TargetPos = SomeActor->GetActorLocation();
+    FVector StartPos = Location;
+    FVector TargetPos = Location;
     TargetPos.X += Direction.X * 100.0f;
     TargetPos.Y += Direction.Y * 100.0f;
 

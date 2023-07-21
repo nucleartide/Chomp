@@ -21,46 +21,31 @@ TArray<FName> AMovablePawn::GetTagsToCollideWith()
 	return TagsToCollideWith;
 }
 
-bool AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime)
+FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime)
 {
 	// Keep a reference to the level instance.
 	auto LevelInstance = ULevelLoader::GetInstance(Level);
 
 	// Then, move in the TargetDirection.
-	FVector DeltaLocation{TargetDirection.X, TargetDirection.Y, 0.0f};
-	DeltaLocation *= MovementSpeed * DeltaTime;
-	AddActorWorldOffset(DeltaLocation, false);
-
-	return false;
-
-	// Old implementation.
-#if false
-	// Compute the MovementDirection.
-	auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
-	auto ActorLocation = GetActorLocation();
-	FVector DeltaLocation{TargetWorldPosition.X - ActorLocation.X, TargetWorldPosition.Y - ActorLocation.Y, 0.0f};
-
-	// If we moved past the target AND the next node in MovementDirection isn't passable,
-	bool MovedPastTarget = false;
-	auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
 	{
+		FVector DeltaLocation{TargetDirection.X, TargetDirection.Y, 0.0f};
+		DeltaLocation *= MovementSpeed * DeltaTime;
+		AddActorWorldOffset(DeltaLocation, false);
+	}
+
+	// Check if we moved past the target.
+	FMovementResult Result;
+	{
+		auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
 		auto ActorLocation2D = GetActorLocation2D(this);
-		FVector2D MovementDirectionVec{MovementDirection.X, MovementDirection.Y};
-		auto MovementDotProduct = FVector2D::DotProduct(MovementDirectionVec, (TargetWorldPosition - ActorLocation2D).GetSafeNormal());
-		MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
+		FVector2D TargetDirectionVec{TargetDirection.X, TargetDirection.Y};
+		auto MovementDotProduct = FVector2D::DotProduct(TargetDirectionVec, (TargetWorldPosition - ActorLocation2D).GetSafeNormal());
+		auto AmountDotProduct = FVector2D::DotProduct(TargetDirectionVec, TargetWorldPosition - ActorLocation2D);
+		Result.MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
+		Result.AmountMovedPast = FMath::Abs(AmountDotProduct);
 	}
-	bool IsNextTargetPassable = false;
-	{
-		FGridLocation NextTargetGridPosition{TargetGridPosition.X + MovementDirection.X, TargetGridPosition.Y + MovementDirection.Y};
-		IsNextTargetPassable = LevelInstance->IsPassable(NextTargetGridPosition, ExcludedEntities);
-	}
-	if (MovedPastTarget && !IsNextTargetPassable)
-	{
-		// Move actor back to TargetGridPosition (converted to world coords, of course).
-		FVector TargetWorldPos{TargetWorldPosition.X, TargetWorldPosition.Y, 0.0f};
-		SetActorLocation(TargetWorldPos);
-	}
-#endif
+
+	return Result;
 
 	// Rotation.
 #if false

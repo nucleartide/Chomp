@@ -98,7 +98,7 @@ public:
 	 */
 	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
 
-	bool ComputeTargetTile(UWorld *World, AActor *SomeActor, FGridLocation Direction, TArray<FName> TagsToCollideWith, FGridLocation &TargetTile) const;
+	bool ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> TagsToCollideWith, FGridLocation &TargetTile) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.

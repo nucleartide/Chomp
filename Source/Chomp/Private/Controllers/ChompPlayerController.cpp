@@ -60,11 +60,10 @@ void AChompPlayerController::Tick(float DeltaTime)
         auto LevelInstance = ULevelLoader::GetInstance(Level);
         auto ActorLocation = MovablePawn->GetActorLocation();
         auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
-        auto IsPassable = LevelInstance->ComputeTargetTile(World, MovablePawn, CurrentMoveDirection, TagsToCollideWith, TargetTile);
+        auto IsPassable = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith, TargetTile);
         if (IsPassable)
             IsTargetTileSet = true;
-        else if (IntendedMoveDirection.IsNonZero() && IntendedMoveDirection != CurrentMoveDirection)
-            // Then try again with intended direction.
+        else if (IntendedMoveDirection.IsNonZero())
             CurrentMoveDirection = IntendedMoveDirection;
     }
 
@@ -72,34 +71,39 @@ void AChompPlayerController::Tick(float DeltaTime)
     if (IsTargetTileSet)
     {
         // Then move toward the target tile.
-        if (MovablePawn->MoveTowardsPoint(TargetTile, CurrentMoveDirection, DeltaTime))
+        auto MovementResult = MovablePawn->MoveTowardsPoint(TargetTile, CurrentMoveDirection, DeltaTime);
+        if (MovementResult.MovedPastTarget)
         {
             DEBUG_LOG(TEXT("Exceeded destination point."));
-        }
-    }
 
-#if false
-            // Then, check if the latest intended move from the target grid position would be legal.
-            if (true)
+            // Check if the latest intended move from the target grid position would be legal.
+            auto LevelInstance = ULevelLoader::GetInstance(Level);
+            auto TargetWorldPos = LevelInstance->GridToWorld(TargetTile);
+            FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+            auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
+            if (IntendedMoveDirection.IsNonZero())
+                CurrentMoveDirection = IntendedMoveDirection;
+            auto IsPassable = LevelInstance->ComputeTargetTile(World, TargetWorldVec, CurrentMoveDirection, TagsToCollideWith, TargetTile);
+            if (IsPassable)
             {
-                // If so, re-align player to the target grid position + intended dir * delta.
-                // ...
+                // Set the actor's position to the TargetWorldPos + IntendedMoveDirection * MovementResult.AmountMovedPast.
+                FVector NewLocation{
+                    TargetWorldPos.X + IntendedMoveDirection.X * MovementResult.AmountMovedPast,
+                    TargetWorldPos.Y + IntendedMoveDirection.Y * MovementResult.AmountMovedPast,
+                    0.0f};
+                MovablePawn->SetActorLocation(NewLocation);
             }
             else
             {
-                // Re-align player to the target grid position.
-                // ...
+                // Re-align player to target grid position.
+                FVector Pos{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+                MovablePawn->SetActorLocation(Pos);
+
+                // And unset the target tile, since we've reached it.
+                IsTargetTileSet = false;
             }
-
-            // Finally, update current move direction from the intended.
-            // Note that CurrentMoveDirection is always moving.
-            // ...
-
-            // And unset the target tile, since we've reached it.
-            IsTargetTileSet = false;
         }
     }
-#endif
 }
 
 void AChompPlayerController::BeginPlay()
