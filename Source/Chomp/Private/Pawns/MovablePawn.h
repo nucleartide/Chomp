@@ -23,11 +23,8 @@ class AMovablePawn : public APawn
 
 private:
 	/**
-	 * Extend collision raycasts by this factor for the sake of more robust collision checks.
+	 * The collision tags that this pawn collides with.
 	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	float Tolerance = 2.0f;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TArray<FName> TagsToCollideWith;
 
@@ -43,15 +40,14 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
+	/**
+	 * Movement speed scaling factor.
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float MovementSpeed = 5.0f;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	BlockingEntity ExcludedEntities = BlockingEntity::WallsOnly;
-
 public:
 	AMovablePawn();
-	BlockingEntity GetExcludedEntities();
 	TArray<FName> GetTagsToCollideWith();
 	FMovementResult MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
 

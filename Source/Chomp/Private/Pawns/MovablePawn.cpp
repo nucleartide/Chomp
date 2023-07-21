@@ -11,11 +11,6 @@ AMovablePawn::AMovablePawn()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-BlockingEntity AMovablePawn::GetExcludedEntities()
-{
-	return ExcludedEntities;
-}
-
 TArray<FName> AMovablePawn::GetTagsToCollideWith()
 {
 	return TagsToCollideWith;
