@@ -45,19 +45,14 @@ FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition,
 		Result.AmountMovedPast = FMath::Abs(AmountDotProduct);
 	}
 
-	return Result;
-
-	// TODO: add this back.
-	// Rotation.
-#if false
-	if (MovementDirection.X != 0 || MovementDirection.Y != 0)
+	// Rotate toward target.
 	{
 		// Get current rotation.
 		auto ActorRotation = GetActorRotation();
 
 		// Get target rotation.
 		auto ActorLocation = GetActorLocation();
-		FVector DeltaLocation2(MovementDirection.X, MovementDirection.Y, 0.0f);
+		FVector DeltaLocation2(TargetDirection.X, TargetDirection.Y, 0.0f);
 		auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(ActorLocation, ActorLocation + DeltaLocation2);
 
 		// Lerp to target rotation.
@@ -66,7 +61,8 @@ FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition,
 		// Set rotation to interpolated rotation value.
 		SetActorRotation(NewRotation);
 	}
-#endif
+
+	return Result;
 
 	// TODO: add this back.
 	// Wrapping mechanic.
