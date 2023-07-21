@@ -47,6 +47,7 @@ FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition,
 
 	return Result;
 
+	// TODO: add this back.
 	// Rotation.
 #if false
 	if (MovementDirection.X != 0 || MovementDirection.Y != 0)
@@ -67,6 +68,7 @@ FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition,
 	}
 #endif
 
+	// TODO: add this back.
 	// Wrapping mechanic.
 #if false
 void AMovablePawn::WrapAroundWorld()
