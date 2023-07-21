@@ -63,14 +63,14 @@ public:
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FVector2D GridToWorld(FGridLocation GridPosition);
+	FVector2D GridToWorld(FGridLocation GridPosition) const;
 
 	/**
 	 * Given world coordinates, convert them to grid coordinates.
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FGridLocation WorldToGrid(FVector2D WorldPosition);
+	FGridLocation WorldToGrid(FVector2D WorldPosition) const;
 
 	/**
 	 * Given world coordinates, compute the direction required to snap the world coordinates to the closest grid position.
@@ -83,6 +83,8 @@ public:
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
 	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
+
+	bool ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> TagsToCollideWith, FGridLocation &TargetTile) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.

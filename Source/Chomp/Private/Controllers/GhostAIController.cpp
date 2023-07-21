@@ -14,8 +14,10 @@
 void AGhostAIController::BeginPlay()
 {
     Super::BeginPlay();
-    GetWorld()->GetGameState<AChompGameState>()->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGamePlayingStateChanged);
-    GetWorld()->GetGameState<AChompGameState>()->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+    auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
+    ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGamePlayingStateChanged);
+    ChompGameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+    ChompGameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleDotsConsumedChanged);
 }
 
 void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
@@ -59,13 +61,10 @@ void AGhostAIController::MoveTowardDestination(float DeltaTime)
         return;
 
     // Compute the movement direction.
-    FVector2D MovementDirection(CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y);
-
-    // Scale the movement direction by the movement speed multiplied by delta time.
-    auto ScaledMovementDirection = MovementDirection.GetSafeNormal() * DeltaTime * MovementSpeed;
+    FGridLocation MovementDirection{CurrentDestinationGridPos.X - CurrentOriginGridPos.X, CurrentDestinationGridPos.Y - CurrentOriginGridPos.Y};
 
     // Move the ghost pawn.
-    GetPawn<AGhostPawn>()->MoveVector(ScaledMovementDirection, DeltaTime);
+    // GetPawn<AGhostPawn>()->MoveTowards(MovementDirection, DeltaTime);
 
     // Grab some values we'll need below.
     auto ActorLocation = GetPawn()->GetActorLocation();
@@ -90,6 +89,8 @@ void AGhostAIController::Tick(float DeltaTime)
     // Early return if not playing.
     auto CurrentGameState = GetWorld()->GetGameState<AChompGameState>()->GetEnum();
     if (CurrentGameState != EChompGameState::Playing)
+        return;
+    if (!DidStartMoving)
         return;
 
     // Move the pawn.
@@ -126,7 +127,7 @@ void AGhostAIController::HandleScatterNodeReached()
         ScatterDestination = Temp;
 
         // Then invoke Scatter() once again.
-        Scatter(ScatterOrigin, ScatterDestination);
+        Scatter();
     }
 }
 
@@ -167,20 +168,9 @@ void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState Ol
 {
     check(OldState != NewState);
     if (NewState == EChompGamePlayingState::Scatter)
-    {
-        // Compute the starting grid position.
-        auto ActorLocation = GetPawn<AGhostPawn>()->GetActorLocation();
-        FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-        auto ActorGridLocation = ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
-
-        // Then invoke our Scatter() behavior.
-        Scatter(ActorGridLocation, ScatterDestination);
-    }
+        Scatter();
     else if (NewState == EChompGamePlayingState::Chase)
-    {
-        // Then invoke our Chase() behavior.
         Chase();
-    }
 }
 
 void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _Destination)
@@ -193,7 +183,7 @@ void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _D
     IsAtDestination = false;
 }
 
-void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _ScatterDestination)
+void AGhostAIController::Scatter()
 {
     // Compute the current grid position of the pawn.
     auto ActorLocation = GetPawn()->GetActorLocation();
@@ -219,7 +209,7 @@ void AGhostAIController::Scatter(FGridLocation _ScatterOrigin, FGridLocation _Sc
     DebugAStar(CameFrom);
 
     // Reconstruct and save the path.
-    auto Path = AStar::ReconstructPath(ActorLocation2D, ActorGridLocation, _ScatterDestination, CameFrom);
+    auto Path = AStar::ReconstructPath(ActorLocation2D, ActorGridLocation, ScatterDestination, CameFrom);
     check(Path.size() >= 2);
     CurrentPath.Initialize(Path);
 
@@ -277,4 +267,18 @@ void AGhostAIController::Chase()
     auto Current = Path[0];
     auto Next = Path[1];
     StartMovingFrom(Current, Next);
+}
+
+void AGhostAIController::HandleDotsConsumedChanged(int NumberOfDotsConsumed)
+{
+    DEBUG_LOG(TEXT("new dots consumed: %d"), NumberOfDotsConsumed);
+
+    auto GhostPawn = GetPawn<AGhostPawn>();
+    check(GhostPawn);
+
+    auto Threshold = GhostPawn->GetDotsConsumedMovementThreshold();
+    if (NumberOfDotsConsumed >= Threshold)
+    {
+        DidStartMoving = true;
+    }
 }

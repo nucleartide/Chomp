@@ -3,25 +3,63 @@
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Constants/GameplayTag.h"
+#include "Utils/Debug.h"
+#include "Utils/Actor.h"
 
 AMovablePawn::AMovablePawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void AMovablePawn::BeginPlay()
+TArray<FName> AMovablePawn::GetTagsToCollideWith()
 {
-	Super::BeginPlay();
+	return TagsToCollideWith;
 }
 
-void AMovablePawn::Tick(float DeltaTime)
+FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime)
 {
-	Super::Tick(DeltaTime);
-}
+	// Keep a reference to the level instance.
+	auto LevelInstance = ULevelLoader::GetInstance(Level);
 
-void AMovablePawn::SetupPlayerInputComponent(UInputComponent *PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	// Then, move in the TargetDirection.
+	{
+		FVector DeltaLocation{TargetDirection.X, TargetDirection.Y, 0.0f};
+		DeltaLocation *= MovementSpeed * DeltaTime;
+		AddActorWorldOffset(DeltaLocation, false);
+	}
+
+	// Check if we moved past the target.
+	FMovementResult Result;
+	{
+		auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
+		auto ActorLocation2D = GetActorLocation2D(this);
+		FVector2D TargetDirectionVec{TargetDirection.X, TargetDirection.Y};
+		auto MovementDotProduct = FVector2D::DotProduct(TargetDirectionVec, (TargetWorldPosition - ActorLocation2D).GetSafeNormal());
+		auto AmountDotProduct = FVector2D::DotProduct(TargetDirectionVec, TargetWorldPosition - ActorLocation2D);
+		Result.MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
+		Result.AmountMovedPast = FMath::Abs(AmountDotProduct);
+	}
+
+	// Rotate toward target.
+	{
+		// Get current rotation.
+		auto ActorRotation = GetActorRotation();
+
+		// Get target rotation.
+		auto ActorLocation = GetActorLocation();
+		FVector DeltaLocation2(TargetDirection.X, TargetDirection.Y, 0.0f);
+		auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(ActorLocation, ActorLocation + DeltaLocation2);
+
+		// Lerp to target rotation.
+		auto NewRotation = FMath::RInterpTo(ActorRotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
+
+		// Set rotation to interpolated rotation value.
+		SetActorRotation(NewRotation);
+	}
+
+	WrapAroundWorld();
+
+	return Result;
 }
 
 void AMovablePawn::WrapAroundWorld()
@@ -31,132 +69,42 @@ void AMovablePawn::WrapAroundWorld()
 	auto LevelWidth = ULevelLoader::GetInstance(Level)->GetLevelWidth();
 	auto Location = GetActorLocation();
 
+	// Get bottom-left corner tile.
+	FGridLocation BottomLeft{0, 0};
+	auto BottomLeftWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(BottomLeft);
+	auto BottomBound = BottomLeftWorldPos.X - 50.0f;
+	auto LeftBound = BottomLeftWorldPos.Y - 50.0f;
+
+	// Get top-right corner tile.
+	FGridLocation TopRight{LevelHeight - 1, LevelWidth - 1};
+	auto TopRightWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(TopRight);
+	auto TopBound = TopRightWorldPos.X + 50.0f;
+	auto RightBound = TopRightWorldPos.Y + 50.0f;
+
 	// Update X component of Location if needed.
-	auto HalfHeight = LevelHeight * 0.5f * 100.0f;
-	if (Location.X < -HalfHeight)
+	if (Location.X < BottomBound)
 	{
-		auto Diff = -HalfHeight - Location.X;
-		Location.X = HalfHeight - Diff;
+		auto Diff = BottomBound - Location.X;
+		Location.X = TopBound - Diff;
 	}
-	else if (Location.X > HalfHeight)
+	else if (Location.X > TopBound)
 	{
-		auto Diff = Location.X - HalfHeight;
-		Location.X = -HalfHeight + Diff;
+		auto Diff = Location.X - TopBound;
+		Location.X = BottomBound + Diff;
 	}
 
 	// Update Y component of Location if needed.
-	auto HalfWidth = LevelWidth * 0.5f * 100.0f;
-	if (Location.Y < -HalfWidth)
+	if (Location.Y < LeftBound)
 	{
-		auto Diff = -HalfWidth - Location.Y;
-		Location.Y = HalfWidth - Diff;
+		auto Diff = LeftBound - Location.Y;
+		Location.Y = RightBound - Diff;
 	}
-	else if (Location.Y > HalfWidth)
+	else if (Location.Y > RightBound)
 	{
-		auto Diff = Location.Y - HalfWidth;
-		Location.Y = -HalfWidth + Diff;
+		auto Diff = Location.Y - RightBound;
+		Location.Y = LeftBound + Diff;
 	}
 
 	// Update actor location.
 	SetActorLocation(Location);
-}
-
-void AMovablePawn::MoveVector(FVector2D Value, float DeltaTime)
-{
-	// Declare some variables.
-	FVector DeltaLocation(Value.X, Value.Y, 0.0f);
-	auto ActorScale = GetActorScale3D();
-	float SphereDiameter = 100.0f * ActorScale.X;
-	float SphereRadius = SphereDiameter * 0.5f * 0.5f; // Halve the radius a second time for a smaller collision sphere.
-	FCollisionShape SphereShape = FCollisionShape::MakeSphere(SphereRadius);
-
-	// Slide along horizontal walls
-	if (DeltaLocation.X != 0.0f)
-	{
-		FVector StartLocation = GetActorLocation();
-		FVector DeltaX = {DeltaLocation.X * Tolerance, 0.0f, 0.0f};
-		FVector EndLocation = GetActorLocation() + DeltaX;
-
-		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
-
-		for (auto HitResult : HitResults)
-		{
-			if (HitResult.bBlockingHit)
-			{
-				if (HitResult.GetActor()->ActorHasTag(GameplayTag::LevelGeometry))
-				{
-					DeltaLocation.X = 0;
-				}
-			}
-		}
-	}
-
-	// Slide along vertical walls
-	if (DeltaLocation.Y != 0.0f)
-	{
-		FVector StartLocation = GetActorLocation();
-		FVector DeltaY = {0.0f, DeltaLocation.Y * Tolerance, 0.0f};
-		FVector EndLocation = GetActorLocation() + DeltaY;
-
-		TArray<FHitResult> HitResults;
-		GetWorld()->SweepMultiByChannel(HitResults, StartLocation, EndLocation, FQuat::Identity, ECC_Visibility, SphereShape);
-
-		for (auto HitResult : HitResults)
-		{
-			if (HitResult.bBlockingHit)
-			{
-				if (HitResult.GetActor()->ActorHasTag(GameplayTag::LevelGeometry))
-				{
-					DeltaLocation.Y = 0;
-				}
-			}
-		}
-	}
-
-	// Let's apply the offset first.
-	auto OldActorLocation = GetActorLocation();
-	AddActorWorldOffset(DeltaLocation, false);
-
-	// However, in the case where we're overlapping with a wall after applying the offset,
-	if (DeltaLocation.X != 0.0f || DeltaLocation.Y != 0.0f)
-	{
-		// Perform overlap check.
-		TArray<FOverlapResult> HitResults;
-		GetWorld()->OverlapMultiByChannel(HitResults, GetActorLocation(), FQuat::Identity, ECC_Visibility, SphereShape);
-
-		for (auto HitResult : HitResults)
-		{
-			// If there was an overlap,
-			if (HitResult.bBlockingHit)
-			{
-				// Then check the Actor.
-				auto HitActor = HitResult.GetActor();
-
-				// If the Actor is a wall,
-				if (HitActor->ActorHasTag(GameplayTag::LevelGeometry))
-				{
-					// Then undo the application of the movement offset.
-					SetActorLocation(OldActorLocation);
-				}
-			}
-		}
-	}
-
-	if (Value.X != 0 || Value.Y != 0)
-	{
-		// Get current rotation.
-		auto ActorRotation = GetActorRotation();
-
-		// Get target rotation.
-		auto ActorLocation = GetActorLocation();
-		FVector DeltaLocation2(Value.X, Value.Y, 0.0f);
-		auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(ActorLocation, ActorLocation + DeltaLocation2);
-
-		// Lerp to target rotation.
-		auto NewRotation = FMath::RInterpTo(ActorRotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
-
-		// Set rotation to interpolated rotation value.
-		SetActorRotation(NewRotation);
-	}
 }

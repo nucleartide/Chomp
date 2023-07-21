@@ -10,12 +10,14 @@ void AChompGameState::ResetDots(int NumberOfDots)
 {
     UpdateScore(0);
     UpdateNumberOfDotsRemaining(NumberOfDots);
+    UpdateNumberOfDotsConsumed(0);
 }
 
 void AChompGameState::ConsumeDot()
 {
     UpdateScore(Score + ScoreMultiplier);
     UpdateNumberOfDotsRemaining(NumberOfDotsRemaining - 1);
+    UpdateNumberOfDotsConsumed(NumberOfDotsConsumed + 1);
 }
 
 void AChompGameState::UpdateScore(int NewScore)
@@ -32,6 +34,12 @@ void AChompGameState::UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining)
         OnDotsClearedDelegate.Broadcast();
         TransitionTo(EChompGameState::GameOverWin);
     }
+}
+
+void AChompGameState::UpdateNumberOfDotsConsumed(int NewNumberOfDotsConsumed)
+{
+    NumberOfDotsConsumed = NewNumberOfDotsConsumed;
+    OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
 void AChompGameState::LoseGame()
@@ -53,7 +61,6 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
     OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);
-    DEBUG_LOG(TEXT("Transitioned from %d to %d"), OldState, NewState);
 
     if (GameState != EChompGameState::Playing)
     {
@@ -116,17 +123,12 @@ void AChompGameState::Tick(float DeltaTime)
 
     if (GameState == EChompGameState::Playing)
     {
-        // Meant for debugging current wave:
-        DEBUG_LOG(TEXT("%f %d"), GetTimeSinceStart(), GetPlayingSubstate());
-
         // Compute the last known game playing state.
         auto CurrentWave = GetPlayingSubstate();
 
         // If there was a change in the last known game playing state, broadcast the event.
         if (LastKnownGamePlayingState != CurrentWave)
-        {
             OnGamePlayingStateChangedDelegate.Broadcast(LastKnownGamePlayingState, CurrentWave);
-        }
 
         // Afterward, save the new game playing state.
         LastKnownGamePlayingState = CurrentWave;

@@ -4,47 +4,53 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "MovablePawn.generated.h"
+
+USTRUCT()
+struct FMovementResult
+{
+	GENERATED_BODY()
+
+	bool MovedPastTarget = false;
+	float AmountMovedPast = 0.0f;
+};
 
 UCLASS()
 class AMovablePawn : public APawn
 {
 	GENERATED_BODY()
 
-public:
-	// Sets default values for this pawn's properties
-	AMovablePawn();
-
-protected:
-	// Called when the game starts or when spawned
-	virtual void BeginPlay() override;
-
-public:
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
-
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent *PlayerInputComponent) override;
-
-	//
-	// Custom fields/methods below:
-	//
-
-	// Pacman should wrap around when exceeding world bounds.
-	void WrapAroundWorld();
-
-	// Move this pawn around by Value.
-	virtual void MoveVector(FVector2D Value, float DeltaTime);
-
-	// Extend collision raycasts by this factor for the sake of more robust collision checks.
+private:
+	/**
+	 * The collision tags that this pawn collides with.
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	float Tolerance = 2.0f;
+	TArray<FName> TagsToCollideWith;
 
-	// Reference to the ULevelLoader. Needed for bounds checks.
+	/**
+	 * Scaling factor that is fed to RInterpTo.
+	 */
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	float RotationInterpSpeed = 1.0f;
+
+	/**
+	 * Reference to the ULevelLoader. Needed for bounds checks.
+	 */
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
-	// Scaling factor that is fed to RInterpTo.
+	/**
+	 * Movement speed scaling factor.
+	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	float RotationInterpSpeed = 1.0f;
+	float MovementSpeed = 5.0f;
+
+public:
+	AMovablePawn();
+	TArray<FName> GetTagsToCollideWith();
+	FMovementResult MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
+
+private:
+	void WrapAroundWorld();
 };

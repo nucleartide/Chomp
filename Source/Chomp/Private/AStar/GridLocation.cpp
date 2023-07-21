@@ -19,3 +19,8 @@ FString FGridLocation::ToString() const
 {
     return FString::Printf(TEXT("(%d, %d)"), X, Y);
 }
+
+bool FGridLocation::IsNonZero() const
+{
+    return X != 0 || Y != 0;
+}

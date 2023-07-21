@@ -22,12 +22,6 @@ public:
 	ALevelGenerationActor* LevelGenerator;
 
 	/**
-	 * A reference to the player pawn, so that we can listen for player death events.
-	 */
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
-	class AChompPawn* ChompPawn;
-
-	/**
 	 * The UI to display when the player wins the game.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")

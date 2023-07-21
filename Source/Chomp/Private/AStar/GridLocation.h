@@ -16,6 +16,8 @@ struct FGridLocation
 
     FString ToString() const;
 
+    bool IsNonZero() const;
+
     // Copy assignment operator.
     FGridLocation& operator=(const FGridLocation& other) {
         X = other.X;

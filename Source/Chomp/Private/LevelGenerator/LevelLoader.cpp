@@ -5,7 +5,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Algo/Reverse.h"
 
+#include "Constants/GameplayTag.h"
 #include "Utils/Debug.h"
+#include "Engine/World.h"
 
 ULevelLoader *ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass)
 {
@@ -91,7 +93,7 @@ int ULevelLoader::GetLevelHeight() const
     return NumberOfRows;
 }
 
-FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition)
+FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition) const
 {
     FVector2D WorldPosition;
     WorldPosition.X = ((float)GridPosition.X - .5f * GetLevelHeight()) * 100.0f;
@@ -99,7 +101,7 @@ FVector2D ULevelLoader::GridToWorld(FGridLocation GridPosition)
     return WorldPosition;
 }
 
-FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition)
+FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition) const
 {
     // Note: this is the inverse operation of GridToWorld().
     FGridLocation GridPosition;
@@ -137,6 +139,12 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return false;
     }
 
+    // Special case for a 1-unit border around the level, so that ghosts can pathfind to the wrap-around points in the level.
+    if (ToNode.X == -1 || ToNode.X == GetLevelHeight() || ToNode.Y == -1 || ToNode.Y == GetLevelWidth())
+    {
+        return true;
+    }
+
     if (Walls.find(ToNode) != Walls.end())
         return false;
     else if (OnlyGoUpTiles.find(ToNode) != OnlyGoUpTiles.end())
@@ -146,9 +154,41 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return true;
 }
 
+bool ULevelLoader::ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> CollidingTags, FGridLocation &TargetTile) const
+{
+    // Compute the actor's collision sphere.
+	auto ActorDiameter = 100.0f - 1.0f; // Needs to be slightly less than 100.0f to avoid overlapping.
+    auto ActorRadius =  ActorDiameter * 0.5f;
+	auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
+
+    // Given the current Position and Direction, compute the target position, but do not set the TargetTile reference just yet.
+    FVector StartPos = Location;
+    FVector TargetPos = Location;
+    TargetPos.X += Direction.X * 100.0f;
+    TargetPos.Y += Direction.Y * 100.0f;
+
+    // Perform an overlap check at the target position.
+    TArray<FHitResult> HitResults;
+    World->SweepMultiByChannel(HitResults, StartPos, TargetPos, FQuat::Identity, ECC_Visibility, ActorSphere);
+    for (auto HitResult : HitResults)
+    {
+        // If we overlapped with a collider, then we can't travel to target position. Return false.
+        auto HitActor = HitResult.GetActor();
+        if (GameplayTag::ActorHasOneOf(HitActor, CollidingTags))
+            return false;
+    }
+
+    // Otherwise, set the TargetTile (from TargetPos) and return true.
+    FVector2D TargetPos2D{TargetPos.X, TargetPos.Y};
+    TargetTile = WorldToGrid(TargetPos2D);
+
+    return true;
+}
+
 bool ULevelLoader::InBounds(FGridLocation Id) const
 {
-    return 0 <= Id.X && Id.X < GetLevelHeight() && 0 <= Id.Y && Id.Y < GetLevelWidth();
+    // Add a 1-unit border around the level because of the wrap-around points in the level.
+    return -1 <= Id.X && Id.X <= GetLevelHeight() && -1 <= Id.Y && Id.Y <= GetLevelWidth();
 }
 
 std::array<FGridLocation, 4> ULevelLoader::CARDINAL_DIRECTIONS = {
