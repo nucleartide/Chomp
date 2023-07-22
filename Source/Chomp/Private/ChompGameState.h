@@ -70,6 +70,8 @@ public:
 
 	EChompGamePlayingState GetPlayingSubstate();
 
+	int GetNumberOfDotsConsumed();
+
 	/**
 	 * Convenience wrapper around TransitionTo().
 	 */

@@ -1,28 +1,199 @@
 #include "Controllers/GhostAIController.h"
 
+#include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Math/UnrealMathUtility.h"
 #include "VectorTypes.h"
-#include "Kismet/KismetMathLibrary.h"
-#include "Kismet/GameplayStatics.h"
 
-#include "Pawns/GhostPawn.h"
-#include "Utils/Debug.h"
-#include "LevelGenerator/LevelLoader.h"
 #include "AStar/AStar.h"
 #include "ChompGameState.h"
+#include "LevelGenerator/LevelLoader.h"
+#include "Pawns/GhostPawn.h"
+#include "Utils/Debug.h"
 
 void AGhostAIController::BeginPlay()
 {
     Super::BeginPlay();
-    auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
+
+    auto World = GetWorld();
+    check(World);
+
+    auto ChompGameState = World->GetGameState<AChompGameState>();
     ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGamePlayingStateChanged);
     ChompGameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
-    ChompGameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleDotsConsumedChanged);
 }
 
-void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
+void AGhostAIController::Tick(float DeltaTime)
 {
-    if (!Debug)
+    Super::Tick(DeltaTime);
+
+    // Early return if not playing.
+    auto World = GetWorld();
+    check(World);
+    auto ChompGameState = World->GetGameState<AChompGameState>();
+    check(ChompGameState);
+    if (ChompGameState->GetEnum() != EChompGameState::Playing)
+        return;
+
+    // Early return if ghost can't move yet.
+    if (!CanStartMoving())
+        return;
+
+#if false
+
+    // Move the pawn.
+    MoveTowardDestination(DeltaTime);
+    if (!IsAtDestination)
+        return;
+
+    // Once we are at our destination, do different things depending on the current "Game Playing" substate.
+    auto PlayingSubstate = GetWorld()->GetGameState<AChompGameState>()->GetPlayingSubstate();
+    if (PlayingSubstate == EChompGamePlayingState::Scatter)
+        HandleScatterNodeReached();
+    else if (PlayingSubstate == EChompGamePlayingState::Chase)
+        HandleChaseNodeReached();
+#endif
+
+#if false
+    // Pseudocode:
+    //
+    // Process input and update intended direction (path).
+    // If the target tile hasn't been set,
+    //     Attempt to set the target tile using the current direction
+    //     If the attempt fails (and it will on first tick b/c the current direction is zero), set the current direction from the path
+    // If the target tile has been set,
+    //     Move toward the target tile
+    // .   If we've moved past the target tile,
+    // .       Update the path
+    // .       update the actor's position along this path
+    // .       Unset the target tile. We'll compute this again on next loop
+
+    // Process input.
+    UpdateIntendedMoveDirection();
+
+    // Some values we need for later.
+    auto LevelInstance = ULevelLoader::GetInstance(Level);
+    auto ActorLocation = MovablePawn->GetActorLocation();
+    auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
+
+    // If target tile isn't set,
+    if (!IsTargetTileSet)
+    {
+        // Then attempt to set the target tile.
+        IsTargetTileSet = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith, TargetTile);
+        if (!IsTargetTileSet && IntendedMoveDirection.IsNonZero()) CurrentMoveDirection = IntendedMoveDirection;
+    }
+    // If the intended move direction is non-zero and different,
+    else if (IntendedMoveDirection.IsNonZero() && IntendedMoveDirection != CurrentMoveDirection)
+    {
+        // Then attempt to set the target tile.
+        auto IsPassable = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith, TargetTile);
+
+        // If successful, update the current movement direction.
+        if (IsPassable)
+            CurrentMoveDirection = IntendedMoveDirection;
+    }
+
+    // If there is a target tile,
+    if (IsTargetTileSet)
+    {
+        // Then move toward the target tile.
+        auto MovementResult = MovablePawn->MoveTowardsPoint(TargetTile, CurrentMoveDirection, DeltaTime);
+        if (MovementResult.MovedPastTarget)
+        {
+            // Check if next move from the target grid position is legal.
+            auto TargetWorldPos = LevelInstance->GridToWorld(TargetTile);
+            FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+            auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
+            IsTargetTileSet = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith, TargetTile);
+            // TODO: this seems buggy. why not just set the CurrentMoveDirection first?
+            // TODO: simplify the logic in ChompPlayerController and test to ensure it works.
+
+            // Depending on whether the next move is legal, update the actor's position accordingly.
+            if (IsTargetTileSet)
+            {
+                // Set the actor's position to the TargetWorldPos + IntendedMoveDirection * MovementResult.AmountMovedPast.
+                FVector NewLocation{
+                    TargetWorldPos.X + IntendedMoveDirection.X * MovementResult.AmountMovedPast,
+                    TargetWorldPos.Y + IntendedMoveDirection.Y * MovementResult.AmountMovedPast,
+                    0.0f};
+                MovablePawn->SetActorLocation(NewLocation);
+
+                // Update the current move direction if the intended direction is non-zero.
+                if (IntendedMoveDirection.IsNonZero()) CurrentMoveDirection = IntendedMoveDirection;
+            }
+            else
+            {
+                // Re-align player to target grid position.
+                FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+                MovablePawn->SetActorLocation(NewLocation);
+            }
+        }
+    }
+#endif
+}
+
+/**
+ * Sync the GhostAIController with the playing substate of the game.
+ */
+void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState)
+{
+    check(OldState != NewState);
+    if (NewState == EChompGamePlayingState::Scatter)
+        Scatter();
+    else if (NewState == EChompGamePlayingState::Chase)
+        Chase();
+}
+
+/**
+ * When the game starts playing, reset the position of the pawn.
+ */
+void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
+{
+    check(OldState != NewState);
+    if (NewState == EChompGameState::Playing)
+    {
+        // Set the starting position of the pawn.
+        auto GhostPawn = GetPawn<AGhostPawn>();
+        check(GhostPawn);
+        auto StartingGridPosition = GhostPawn->GetStartingPosition();
+        auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
+        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
+        GetPawn()->SetActorLocation(StartingWorldPos);
+    }
+}
+
+void AGhostAIController::Scatter()
+{
+}
+
+void AGhostAIController::Chase()
+{
+}
+
+bool AGhostAIController::CanStartMoving()
+{
+    int Threshold = -1;
+    {
+        auto GhostPawn = GetPawn<AGhostPawn>();
+        check(GhostPawn);
+        Threshold = GhostPawn->GetDotsConsumedMovementThreshold();
+    }
+
+    int NumberOfDotsConsumed = -1;
+    {
+        auto World = GetWorld();
+        check(World);
+        auto ChompGameState = World->GetGameState<AChompGameState>();
+        NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
+    }
+
+    return Threshold >= 0 && NumberOfDotsConsumed >=0 && NumberOfDotsConsumed >= Threshold;
+}
+
+void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
+{
+    if (!DebugAStarMap)
         return;
 
     auto LevelInstance = ULevelLoader::GetInstance(Level);
@@ -37,7 +208,7 @@ void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocat
             }
             else
             {
-                auto From = CameFrom[FGridLocation{X, Y}];
+                auto From = CameFrom.at(FGridLocation{X, Y});
                 auto To = FGridLocation{X, Y};
                 if (From.X < X)
                     Line += TEXT("v");
@@ -55,6 +226,7 @@ void AGhostAIController::DebugAStar(std::unordered_map<FGridLocation, FGridLocat
     }
 }
 
+#if false
 void AGhostAIController::MoveTowardDestination(float DeltaTime)
 {
     if (IsAtDestination)
@@ -65,45 +237,12 @@ void AGhostAIController::MoveTowardDestination(float DeltaTime)
 
     // Move the ghost pawn.
     // GetPawn<AGhostPawn>()->MoveTowards(MovementDirection, DeltaTime);
-
-    // Grab some values we'll need below.
-    auto ActorLocation = GetPawn()->GetActorLocation();
-    auto DestLocation = ULevelLoader::GetInstance(Level)->GridToWorld(CurrentDestinationGridPos);
-
-    // Determine whether pawn has reached its destination.
-    IsAtDestination = false;
-    if (MovementDirection.Y < 0)
-        IsAtDestination = ActorLocation.Y <= DestLocation.Y;
-    else if (MovementDirection.Y > 0)
-        IsAtDestination = ActorLocation.Y >= DestLocation.Y;
-    else if (MovementDirection.X < 0)
-        IsAtDestination = ActorLocation.X <= DestLocation.X;
-    else if (MovementDirection.X > 0)
-        IsAtDestination = ActorLocation.X >= DestLocation.X;
 }
 
 void AGhostAIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Early return if not playing.
-    auto CurrentGameState = GetWorld()->GetGameState<AChompGameState>()->GetEnum();
-    if (CurrentGameState != EChompGameState::Playing)
-        return;
-    if (!DidStartMoving)
-        return;
-
-    // Move the pawn.
-    MoveTowardDestination(DeltaTime);
-    if (!IsAtDestination)
-        return;
-
-    // Once we are at our destination, do different things depending on the current "Game Playing" substate.
-    auto PlayingSubstate = GetWorld()->GetGameState<AChompGameState>()->GetPlayingSubstate();
-    if (PlayingSubstate == EChompGamePlayingState::Scatter)
-        HandleScatterNodeReached();
-    else if (PlayingSubstate == EChompGamePlayingState::Chase)
-        HandleChaseNodeReached();
 }
 
 void AGhostAIController::HandleScatterNodeReached()
@@ -149,28 +288,6 @@ void AGhostAIController::HandleChaseNodeReached()
         // We've arrived. Invoke Chase() once again.
         Chase();
     }
-}
-
-void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
-{
-    check(OldState != NewState);
-    if (NewState == EChompGameState::Playing)
-    {
-        // Set the starting position of the pawn.
-        auto StartingGridPosition = GetPawn<AGhostPawn>()->GetStartingPosition();
-        auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
-        FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-        GetPawn()->SetActorLocation(StartingWorldPos);
-    }
-}
-
-void AGhostAIController::HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState)
-{
-    check(OldState != NewState);
-    if (NewState == EChompGamePlayingState::Scatter)
-        Scatter();
-    else if (NewState == EChompGamePlayingState::Chase)
-        Chase();
 }
 
 void AGhostAIController::StartMovingFrom(FGridLocation _Origin, FGridLocation _Destination)
@@ -268,17 +385,4 @@ void AGhostAIController::Chase()
     auto Next = Path[1];
     StartMovingFrom(Current, Next);
 }
-
-void AGhostAIController::HandleDotsConsumedChanged(int NumberOfDotsConsumed)
-{
-    DEBUG_LOG(TEXT("new dots consumed: %d"), NumberOfDotsConsumed);
-
-    auto GhostPawn = GetPawn<AGhostPawn>();
-    check(GhostPawn);
-
-    auto Threshold = GhostPawn->GetDotsConsumedMovementThreshold();
-    if (NumberOfDotsConsumed >= Threshold)
-    {
-        DidStartMoving = true;
-    }
-}
+#endif

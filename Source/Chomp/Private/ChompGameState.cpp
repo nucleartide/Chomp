@@ -140,3 +140,8 @@ float AChompGameState::GetTimeSinceStart()
     auto World = GetWorld();
     return World->GetTimeSeconds() - GameStartTime;
 }
+
+int AChompGameState::GetNumberOfDotsConsumed()
+{
+    return NumberOfDotsConsumed;
+}

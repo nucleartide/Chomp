@@ -11,13 +11,25 @@
 
 struct Path
 {
-	int CurrentIndex = 0;
+private:
+	int CurrentLocation = 0;
 	std::vector<FGridLocation> Locations;
 
+public:
 	void Initialize(const std::vector<FGridLocation>& NewLocations)
 	{
-		CurrentIndex = 0;
+		CurrentLocation = 0;
 		Locations = NewLocations;
+	}
+
+	FGridLocation GetCurrentLocation()
+	{
+		return Locations.at(CurrentLocation);
+	}
+
+	FGridLocation GetTargetLocation()
+	{
+		return Locations.at(CurrentLocation + 1);
 	}
 };
 
@@ -26,42 +38,18 @@ class AGhostAIController : public AAIController
 {
 	GENERATED_BODY()
 
-	/**
-	 * Fields.
-	 */
-
 private:
-	Path CurrentPath;
-	FGridLocation CurrentOriginGridPos;
-	FGridLocation CurrentDestinationGridPos;
-	bool IsAtDestination = false;
-
-	/**
-	 * Indicates whether a ghost has started moving, or is currently idle in the ghosthouse.
-	 */
-	bool DidStartMoving = false;
-
-	/**
-	 * Properties.
-	 */
-
-private:
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	float MovementSpeed = 1.0f;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	bool IsTestOriginAndDestinationEnabled = false;
-
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<class ULevelLoader> Level;
 
-	// Note: this is only used for testing.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation Origin;
+	bool UseTestOriginAndDestination = false;
 
-	// Note: this is only used for testing.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation Destination;
+	FGridLocation TestOrigin;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	FGridLocation TestDestination;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation ScatterOrigin;
@@ -70,35 +58,36 @@ private:
 	FGridLocation ScatterDestination;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	bool Debug = false;
+	bool DebugAStarMap = false;
 
-	/**
-	 * Callbacks.
-	 */
+private:
+	// Similar to AChompPlayerController, we store a notion of a TargetTile.
+	// However, the concepts of "CurrentMoveDirection" and "IntendedMoveDirection" are encapsulated into the AI's computed movement path.
+	bool IsTargetTileSet = false;
+	FGridLocation TargetTile{0, 0};
+	Path MovementPath;
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
-	/**
-	 * Behavior.
-	 */
-
 private:
-	void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
-	void MoveTowardDestination(float DeltaTime);
-	void DebugAStar(std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
-	void HandleScatterNodeReached();
-	void HandleChaseNodeReached();
-	void Scatter();
-	void Chase();
-
 	UFUNCTION()
 	void HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState);
 
 	UFUNCTION()
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
-	UFUNCTION()
-	void HandleDotsConsumedChanged(int NumberOfDotsConsumed);
+private:
+	void Scatter();
+	void Chase();
+	bool CanStartMoving();
+	void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
+
+#if false
+	// void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
+	// void MoveTowardDestination(float DeltaTime);
+	// void HandleScatterNodeReached();
+	// void HandleChaseNodeReached();
+#endif
 };
