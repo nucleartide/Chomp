@@ -76,22 +76,21 @@ void AGhostAIController::Tick(float DeltaTime)
     auto ActorLocation = MovablePawn->GetActorLocation();
     auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
 
-    // If target tile isn't set,
-    if (!IsTargetTileSet)
+    // If target tile hasn't been set, attempt to set the target tile.
+    if (!Target.IsValid)
     {
-        // Then attempt to set the target tile.
-        IsTargetTileSet = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith, TargetTile);
-        if (!IsTargetTileSet && IntendedMoveDirection.IsNonZero()) CurrentMoveDirection = IntendedMoveDirection;
+        Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith);
     }
-    // If the intended move direction is non-zero and different,
-    else if (IntendedMoveDirection.IsNonZero() && IntendedMoveDirection != CurrentMoveDirection)
-    {
-        // Then attempt to set the target tile.
-        auto IsPassable = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith, TargetTile);
 
-        // If successful, update the current movement direction.
-        if (IsPassable)
+    // If intended move direction is non-zero and different, also attempt to set the target tile.
+    if (Target.IsValid && IntendedMoveDirection.IsNonZero() && CurrentMoveDirection != IntendedMoveDirection)
+    {
+        auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith);
+        if (Result.IsValid)
+        {
+            Target.Tile = Result.Tile;
             CurrentMoveDirection = IntendedMoveDirection;
+        }
     }
 
     // If there is a target tile,

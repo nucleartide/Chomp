@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "GameFramework/PlayerController.h"
 #include "AStar/GridLocation.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "ChompPlayerController.generated.h"
 
 UCLASS()
@@ -25,14 +26,7 @@ private:
 	FGridLocation InitialMoveDirection{0, 1};
 	FGridLocation CurrentMoveDirection{0, 1};
 	FGridLocation IntendedMoveDirection;
-
-	/**
-	 * A flag to denote whether TargetTile is currently set.
-	 *
-	 * This is necessary because FGridLocation is a struct, and thus there is no "null" value.
-	 */
-	bool IsTargetTileSet = false;
-	FGridLocation TargetTile{0, 0};
+	FComputeTargetTileResult Target;
 
 public:
 	AChompPlayerController();

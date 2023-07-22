@@ -154,7 +154,7 @@ bool ULevelLoader::Passable(FGridLocation FromNode, FGridLocation ToNode) const
         return true;
 }
 
-bool ULevelLoader::ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> CollidingTags, FGridLocation &TargetTile) const
+FComputeTargetTileResult ULevelLoader::ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> CollidingTags) const
 {
     // Compute the actor's collision sphere.
 	auto ActorDiameter = 100.0f - 1.0f; // Needs to be slightly less than 100.0f to avoid overlapping.
@@ -167,6 +167,8 @@ bool ULevelLoader::ComputeTargetTile(UWorld *World, FVector Location, FGridLocat
     TargetPos.X += Direction.X * 100.0f;
     TargetPos.Y += Direction.Y * 100.0f;
 
+    FComputeTargetTileResult Result;
+
     // Perform an overlap check at the target position.
     TArray<FHitResult> HitResults;
     World->SweepMultiByChannel(HitResults, StartPos, TargetPos, FQuat::Identity, ECC_Visibility, ActorSphere);
@@ -175,14 +177,17 @@ bool ULevelLoader::ComputeTargetTile(UWorld *World, FVector Location, FGridLocat
         // If we overlapped with a collider, then we can't travel to target position. Return false.
         auto HitActor = HitResult.GetActor();
         if (GameplayTag::ActorHasOneOf(HitActor, CollidingTags))
-            return false;
+        {
+            Result.IsValid = false;
+            return Result;
+        }
     }
 
     // Otherwise, set the TargetTile (from TargetPos) and return true.
     FVector2D TargetPos2D{TargetPos.X, TargetPos.Y};
-    TargetTile = WorldToGrid(TargetPos2D);
-
-    return true;
+    Result.IsValid = true;
+    Result.Tile = WorldToGrid(TargetPos2D);
+    return Result;
 }
 
 bool ULevelLoader::InBounds(FGridLocation Id) const

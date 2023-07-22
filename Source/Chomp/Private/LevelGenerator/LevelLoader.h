@@ -13,6 +13,15 @@
 
 #include "LevelLoader.generated.h"
 
+USTRUCT()
+struct FComputeTargetTileResult
+{
+	GENERATED_BODY()
+
+	bool IsValid;
+	FGridLocation Tile;
+};
+
 /**
  * ULevelLoader loads the contents of a level file (.txt file extension) into memory,
  * then also serves as an instance of the loaded level afterward.
@@ -84,7 +93,7 @@ public:
 	 */
 	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
 
-	bool ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> TagsToCollideWith, FGridLocation &TargetTile) const;
+	FComputeTargetTileResult ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> TagsToCollideWith) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.

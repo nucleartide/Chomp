@@ -70,56 +70,56 @@ void AChompPlayerController::Tick(float DeltaTime)
     auto ActorLocation = MovablePawn->GetActorLocation();
     auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
 
-    // If target tile isn't set,
-    if (!IsTargetTileSet)
-    {
-        // Then attempt to set the target tile.
-        IsTargetTileSet = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith, TargetTile);
-        if (!IsTargetTileSet && IntendedMoveDirection.IsNonZero()) CurrentMoveDirection = IntendedMoveDirection;
-    }
-    // If the intended move direction is non-zero and different,
-    else if (IntendedMoveDirection.IsNonZero() && IntendedMoveDirection != CurrentMoveDirection)
-    {
-        // Then attempt to set the target tile.
-        auto IsPassable = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith, TargetTile);
+    //
+    // In the code below, I am chiefly concerned with managing 2 pieces of state: the Target, and the CurrentMoveDirection.
+    //
 
-        // If successful, update the current movement direction.
-        if (IsPassable)
+    if (!Target.IsValid)
+    {
+        Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith);
+        // CurrentMoveDirection remains the same.
+    }
+
+    if (IntendedMoveDirection.IsNonZero() && (!Target.IsValid || CurrentMoveDirection != IntendedMoveDirection))
+    {
+        auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith);
+        if (Result.IsValid)
+        {
+            Target = Result;
             CurrentMoveDirection = IntendedMoveDirection;
+        }
     }
 
-    // If there is a target tile,
-    if (IsTargetTileSet)
+    if (Target.IsValid)
     {
-        // Then move toward the target tile.
-        auto MovementResult = MovablePawn->MoveTowardsPoint(TargetTile, CurrentMoveDirection, DeltaTime);
+        DEBUG_LOG(TEXT("%s"), *CurrentMoveDirection.ToString());
+        auto MovementResult = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime);
         if (MovementResult.MovedPastTarget)
         {
-            // Check if next move from the target grid position is legal.
-            auto TargetWorldPos = LevelInstance->GridToWorld(TargetTile);
+            // Check if next move from target is valid.
+            auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
             FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
             auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
-            IsTargetTileSet = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith, TargetTile);
+            auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith);
 
-            // Depending on whether the next move is legal, update the actor's position accordingly.
-            if (IsTargetTileSet)
+            // Update our actor's position depending on the result.
+            if (Result.IsValid)
             {
-                // Set the actor's position to the TargetWorldPos + IntendedMoveDirection * MovementResult.AmountMovedPast.
                 FVector NewLocation{
-                    TargetWorldPos.X + IntendedMoveDirection.X * MovementResult.AmountMovedPast,
-                    TargetWorldPos.Y + IntendedMoveDirection.Y * MovementResult.AmountMovedPast,
+                    TargetWorldPos.X + Dir.X * MovementResult.AmountMovedPast,
+                    TargetWorldPos.Y + Dir.Y * MovementResult.AmountMovedPast,
                     0.0f};
                 MovablePawn->SetActorLocation(NewLocation);
-
-                // Update the current move direction if the intended direction is non-zero.
-                if (IntendedMoveDirection.IsNonZero()) CurrentMoveDirection = IntendedMoveDirection;
             }
             else
             {
-                // Re-align player to target grid position.
                 FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
                 MovablePawn->SetActorLocation(NewLocation);
             }
+
+            // And update our actor's state depending on the result.
+            Target = Result;
+            if (Result.IsValid) CurrentMoveDirection = Dir;
         }
     }
 }
@@ -144,7 +144,7 @@ void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChom
     if (NewState == EChompGameState::Playing)
     {
         // If we are restarting, reset some internal state around the selected target tile + move direction.
-        IsTargetTileSet = false;
+        Target.IsValid = false;
         CurrentMoveDirection.X = InitialMoveDirection.X;
         CurrentMoveDirection.Y = InitialMoveDirection.Y;
     }
