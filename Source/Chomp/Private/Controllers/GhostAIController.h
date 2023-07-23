@@ -6,6 +6,7 @@
 #include "AIController.h"
 #include "AStar/GridLocation.h"
 #include "ChompGameState.h"
+#include "LevelGenerator/LevelLoader.h"
 
 #include "GhostAIController.generated.h"
 
@@ -59,7 +60,7 @@ private:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
-
+	
 private:
 	// Similar to AChompPlayerController, we store a notion of a TargetTile.
 	FComputeTargetTileResult Target;
@@ -73,22 +74,20 @@ protected:
 
 private:
 	UFUNCTION()
-	void HandleGamePlayingStateChanged(EChompGamePlayingState OldState, EChompGamePlayingState NewState);
+	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
 
 	UFUNCTION()
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
 private:
-	void Scatter();
-	void Chase();
-	bool CanStartMoving();
-	void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
-	static void UpdateMovementPath(Path &MovementPath);
-
-#if false
-	// void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
-	// void MoveTowardDestination(float DeltaTime);
-	// void HandleScatterNodeReached();
-	// void HandleChaseNodeReached();
-#endif
+	static std::vector<FGridLocation> ComputePath(
+		ULevelLoader* LevelInstance,
+		FVector2D CurrentWorldPosition,
+		FGridLocation OriginGridPosition,
+		FGridLocation DestinationGridPosition,
+		bool DebugAStarMap);
+	bool CanStartMoving() const;
+	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation> &CameFrom, ULevelLoader *LevelInstance);
+	void ComputeScatterPath();
+	void ComputeChasePath();
 };

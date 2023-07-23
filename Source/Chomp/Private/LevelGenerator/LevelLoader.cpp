@@ -112,7 +112,7 @@ FGridLocation ULevelLoader::WorldToGrid(FVector2D WorldPosition) const
     return GridPosition;
 }
 
-FGridLocation ULevelLoader::SnapToGridDirection(FVector2D WorldPosition)
+FGridLocation ULevelLoader::SnapToGridDirection(const FVector2D WorldPosition)
 {
     FGridLocation GridDirection;
 
@@ -172,20 +172,10 @@ FComputeTargetTileResult ULevelLoader::ComputeTargetTile(UWorld *World, FVector 
     // Perform an overlap check at the target position.
     TArray<FHitResult> HitResults;
     World->SweepMultiByChannel(HitResults, StartPos, TargetPos, FQuat::Identity, ECC_Visibility, ActorSphere);
-    // DEBUG_LOG(TEXT("Colliding tags:"));
     for (auto HitResult : HitResults)
     {
         // If we overlapped with a collider, then we can't travel to target position. Return false.
         auto HitActor = HitResult.GetActor();
-        #if false
-        auto Tags = HitActor->Tags;
-        for (auto Tag : Tags)
-        {
-            FString TestString;
-            Tag.ToString(TestString);
-            DEBUG_LOG(TEXT("%s"), *TestString);
-        }
-        #endif
         if (GameplayTag::ActorHasOneOf(HitActor, CollidingTags))
         {
             Result.IsValid = false;

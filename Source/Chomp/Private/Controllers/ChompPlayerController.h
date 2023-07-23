@@ -48,9 +48,9 @@ private:
 	static void UpdateCurrentMoveDirectionAndTarget(
 		FGridLocation &CurrentMoveDirection,
 		FComputeTargetTileResult &Target,
-		FGridLocation IntendedMoveDirection,
+		const FGridLocation& IntendedMoveDirection,
 		UWorld *World,
 		AMovablePawn *MovablePawn,
-		ULevelLoader *LevelInstance,
+		const ULevelLoader *LevelInstance,
 		float DeltaTime);
 };

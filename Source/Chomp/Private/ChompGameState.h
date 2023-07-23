@@ -18,7 +18,7 @@ enum class EChompGameState : uint8
  * When in the EChompGameState::Playing state, these would be the sub-states.
  */
 UENUM()
-enum class EChompGamePlayingState : uint8
+enum class EChompGamePlayingSubstate : uint8
 {
 	None,
 	Scatter,
@@ -30,10 +30,10 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdatedSignature, int, NewDotsConsumed);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, EChompGameState, OldState, EChompGameState, NewState);
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature, EChompGamePlayingState, OldSubstate, EChompGamePlayingState, NewSubstate);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature, EChompGamePlayingSubstate, OldSubstate, EChompGamePlayingSubstate, NewSubstate);
 
 /**
- * An FWave is a period of time during which a particular EChompGamePlayingState is active.
+ * An FWave is a period of time during which a particular EChompGamePlayingSubstate is active.
  */
 USTRUCT()
 struct FWave
@@ -41,7 +41,7 @@ struct FWave
     GENERATED_BODY()
 
     UPROPERTY(EditAnywhere)
-	EChompGamePlayingState PlayingState;
+	EChompGamePlayingSubstate PlayingState;
 
     UPROPERTY(EditAnywhere)
 	double Duration;
@@ -52,46 +52,14 @@ class AChompGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
-public:
+private:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	float ScoreMultiplier = 10;
 
-	/**
-	 * Public methods.
-	 */
-
-	AChompGameState();
-
-	void ResetDots(int NumberOfDots);
-
-	void ConsumeDot();
-
-	EChompGameState GetEnum();
-
-	int GetScore();
-
-	EChompGamePlayingState GetPlayingSubstate();
-
-	int GetNumberOfDotsConsumed();
-
-	/**
-	 * Convenience wrapper around TransitionTo().
-	 */
-	void LoseGame();
-
-	/**
-	 * Convenience wrapper around TransitionTo().
-	 */
-	void StartGame();
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TArray<FWave> Waves;
 
 public:
-
-	/**
-	 * Public delegates.
-	 *
-	 * Note that only ChompGameState should be invoking .Broadcast() on these delegates.
-	 *
-	 * If you want to call a delegate from outside ChompGameState, replace the call with a call to a public method instead.
-	 */
-
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnDotsClearedSignature OnDotsClearedDelegate;
 
@@ -101,13 +69,6 @@ public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGameStateChangedSignature OnGameStateChangedDelegate;
 
-	/**
-	 * Used for callbacks that you want executed after those assigned to OnGameStateChangedDelegate.
-	 *
-	 * Example:
-	 *   1. Reset the player's position in OnGameStateChangedDelegate
-	 *   2. Reset the level's dots in OnLateGameStateChangedDelegate
-	 */
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGameStateChangedSignature OnLateGameStateChangedDelegate;
 
@@ -117,47 +78,35 @@ public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGamePlayingStateChangedSignature OnGamePlayingStateChangedDelegate;
 
+public:	
+	AChompGameState();
+	void ResetDots(int NumberOfDots);
+	void ConsumeDot();
+	EChompGameState GetEnum() const;
+	int GetScore() const;
+	EChompGamePlayingSubstate GetPlayingSubstate() const;
+	int GetNumberOfDotsConsumed() const;
+	void LoseGame();
+	void StartGame();
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
-
+	
 private:
-
-	/**
-	 * Properties.
-	 */
-
-	/**
-	 * The score amount that should be awarded upon dot consumption.
-	 */
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	float ScoreMultiplier = 10;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TArray<FWave> Waves;
-
-	/**
-	 * Fields.
-	 */
-
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
 	int NumberOfDotsConsumed = 0;
 	EChompGameState GameState = EChompGameState::None;
-	EChompGamePlayingState LastKnownGamePlayingState = EChompGamePlayingState::None;
-
-	/**
-	 * The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
-	 */
+	EChompGamePlayingSubstate LastKnownGamePlayingSubstate = EChompGamePlayingSubstate::None;
+	
+	// The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
 	float GameStartTime = 0.0f;
 
-	/**
-	 * Behavior.
-	 */
-
+private:
 	void UpdateScore(int NewScore);
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 	void UpdateNumberOfDotsConsumed(int NewNumberOfDotsConsumed);
-	float GetTimeSinceStart();
+	float GetTimeSinceStart() const;
 	void TransitionTo(EChompGameState NewState);
 };

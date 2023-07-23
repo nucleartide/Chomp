@@ -62,6 +62,20 @@ FMovementResult AMovablePawn::MoveTowardsPoint(FGridLocation TargetGridPosition,
 	return Result;
 }
 
+FGridLocation AMovablePawn::GetGridLocation() const
+{
+	const auto ActorLocation = GetActorLocation();
+	const FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+	return ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
+}
+
+FVector2D AMovablePawn::GetActorLocation2D() const
+{
+	const auto Location = GetActorLocation();
+	const FVector2D Location2D{Location.X, Location.Y};
+	return Location2D;
+}
+
 void AMovablePawn::WrapAroundWorld()
 {
 	// Grab references to stuff.

@@ -83,6 +83,7 @@ FinalBuild/
 # Mac stuff.
 .DS_Store
 
-# VS Code stuff.
+# Editor stuff.
 .vscode/
 Chomp.code-workspace
+.idea/

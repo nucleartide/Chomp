@@ -1,12 +1,11 @@
 #include "Controllers/ChompPlayerController.h"
 #include "Pawns/ChompPawn.h"
 #include "Pawns/MovablePawn.h"
-#include "Utils/Debug.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "ChompGameState.h"
 #include "Engine/World.h"
 
-AChompPlayerController::AChompPlayerController()
+AChompPlayerController::AChompPlayerController(): APlayerController()
 {
     PrimaryActorTick.bCanEverTick = true;
 
@@ -80,14 +79,14 @@ void AChompPlayerController::Tick(float DeltaTime)
 void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
     FGridLocation &CurrentMoveDirection,
     FComputeTargetTileResult &Target,
-    FGridLocation IntendedMoveDirection,
+    const FGridLocation& IntendedMoveDirection,
     UWorld *World,
     AMovablePawn *MovablePawn,
-    ULevelLoader *LevelInstance,
-    float DeltaTime)
+    const ULevelLoader *LevelInstance,
+    const float DeltaTime)
 {
-    auto ActorLocation = MovablePawn->GetActorLocation();
-    auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
+    const auto ActorLocation = MovablePawn->GetActorLocation();
+    const auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
 
     if (!Target.IsValid)
     {
@@ -97,8 +96,7 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
 
     if (IntendedMoveDirection.IsNonZero() && (!Target.IsValid || CurrentMoveDirection != IntendedMoveDirection))
     {
-        auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith);
-        if (Result.IsValid)
+        if (const auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith); Result.IsValid)
         {
             Target = Result;
             CurrentMoveDirection = IntendedMoveDirection;
@@ -107,14 +105,13 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
 
     if (Target.IsValid)
     {
-        auto MovementResult = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime);
-        if (MovementResult.MovedPastTarget)
+        if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)
         {
             // Check if next move from target is valid.
-            auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
-            FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
-            auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
-            auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith);
+            const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
+            const FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+            const auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
+            const auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith);
 
             // Update our actor's state depending on the result.
             Target = Result;
@@ -123,15 +120,15 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
             // Finally, update our actor's position depending on the result.
             if (Result.IsValid)
             {
-                FVector NewLocation{
-                    TargetWorldPos.X + Dir.X * MovementResult.AmountMovedPast,
-                    TargetWorldPos.Y + Dir.Y * MovementResult.AmountMovedPast,
+                const FVector NewLocation{
+                    TargetWorldPos.X + Dir.X * AmountMovedPast,
+                    TargetWorldPos.Y + Dir.Y * AmountMovedPast,
                     0.0f};
                 MovablePawn->SetActorLocation(NewLocation);
             }
             else
             {
-                FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+                const FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
                 MovablePawn->SetActorLocation(NewLocation);
             }
         }
