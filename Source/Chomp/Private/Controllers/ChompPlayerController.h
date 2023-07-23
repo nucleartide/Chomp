@@ -4,6 +4,8 @@
 #include "GameFramework/PlayerController.h"
 #include "AStar/GridLocation.h"
 #include "LevelGenerator/LevelLoader.h"
+#include "Pawns/MovablePawn.h"
+
 #include "ChompPlayerController.generated.h"
 
 UCLASS()
@@ -43,4 +45,12 @@ private:
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
 	void UpdateIntendedMoveDirection();
+	static void UpdateCurrentMoveDirectionAndTarget(
+		FGridLocation &CurrentMoveDirection,
+		FComputeTargetTileResult &Target,
+		FGridLocation IntendedMoveDirection,
+		UWorld *World,
+		AMovablePawn *MovablePawn,
+		ULevelLoader *LevelInstance,
+		float DeltaTime);
 };

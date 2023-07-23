@@ -52,27 +52,40 @@ void AChompPlayerController::Tick(float DeltaTime)
     auto World = GetWorld();
     check(World);
 
-    // Early return if pawn is dead.
-    auto MovablePawn = GetPawn<AMovablePawn>();
-    if (!MovablePawn)
-        return;
-
     // Early return if game is not playing.
     auto IsGamePlaying = World->GetGameState<AChompGameState>()->GetEnum() == EChompGameState::Playing;
     if (!IsGamePlaying)
         return;
 
-    // Process input.
+    // Early return if pawn is dead.
+    auto MovablePawn = GetPawn<AMovablePawn>();
+    if (!MovablePawn)
+        return;
+
     UpdateIntendedMoveDirection();
 
-    // Some values we need for later.
     auto LevelInstance = ULevelLoader::GetInstance(Level);
+    UpdateCurrentMoveDirectionAndTarget(
+        CurrentMoveDirection,
+        Target,
+        IntendedMoveDirection,
+        World,
+        MovablePawn,
+        LevelInstance,
+        DeltaTime);
+}
+
+void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
+    FGridLocation &CurrentMoveDirection,
+    FComputeTargetTileResult &Target,
+    FGridLocation IntendedMoveDirection,
+    UWorld *World,
+    AMovablePawn *MovablePawn,
+    ULevelLoader *LevelInstance,
+    float DeltaTime)
+{
     auto ActorLocation = MovablePawn->GetActorLocation();
     auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
-
-    //
-    // In the code below, I am chiefly concerned with managing 2 pieces of state: the Target, and the CurrentMoveDirection.
-    //
 
     if (!Target.IsValid)
     {
@@ -92,7 +105,6 @@ void AChompPlayerController::Tick(float DeltaTime)
 
     if (Target.IsValid)
     {
-        DEBUG_LOG(TEXT("%s"), *CurrentMoveDirection.ToString());
         auto MovementResult = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime);
         if (MovementResult.MovedPastTarget)
         {
@@ -102,7 +114,11 @@ void AChompPlayerController::Tick(float DeltaTime)
             auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
             auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith);
 
-            // Update our actor's position depending on the result.
+            // Update our actor's state depending on the result.
+            Target = Result;
+            if (Result.IsValid) CurrentMoveDirection = Dir;
+
+            // Finally, update our actor's position depending on the result.
             if (Result.IsValid)
             {
                 FVector NewLocation{
@@ -116,10 +132,6 @@ void AChompPlayerController::Tick(float DeltaTime)
                 FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
                 MovablePawn->SetActorLocation(NewLocation);
             }
-
-            // And update our actor's state depending on the result.
-            Target = Result;
-            if (Result.IsValid) CurrentMoveDirection = Dir;
         }
     }
 }
