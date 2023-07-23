@@ -27,20 +27,24 @@ void AGhostAIController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Early return if not playing.
+    // Sanity check that World & GameState aren't null.
     auto World = GetWorld();
     check(World);
-    auto ChompGameState = World->GetGameState<AChompGameState>();
-    check(ChompGameState);
-    if (ChompGameState->GetEnum() != EChompGameState::Playing)
+    auto GameState = World->GetGameState<AChompGameState>();
+    check(GameState);
+
+    // Early return if game is not playing.
+    auto IsGamePlaying = GameState->GetEnum() == EChompGameState::Playing;
+    if (!IsGamePlaying)
         return;
 
     // Early return if ghost can't move yet.
     if (!CanStartMoving())
         return;
 
-#if false
+    UpdateIntendedMoveDirection();
 
+#if false
     // Move the pawn.
     MoveTowardDestination(DeltaTime);
     if (!IsAtDestination)
@@ -130,6 +134,11 @@ void AGhostAIController::Tick(float DeltaTime)
         }
     }
 #endif
+}
+
+void AGhostAIController::UpdateMovementPath(Path &MovementPath)
+{
+    // TODO.
 }
 
 /**

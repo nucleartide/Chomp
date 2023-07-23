@@ -48,12 +48,14 @@ void AChompPlayerController::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 
-    // Sanity check that world isn't null.
+    // Sanity check that World & GameState aren't null.
     auto World = GetWorld();
     check(World);
+    auto GameState = World->GetGameState<AChompGameState>();
+    check(GameState);
 
     // Early return if game is not playing.
-    auto IsGamePlaying = World->GetGameState<AChompGameState>()->GetEnum() == EChompGameState::Playing;
+    auto IsGamePlaying = GameState->GetEnum() == EChompGameState::Playing;
     if (!IsGamePlaying)
         return;
 

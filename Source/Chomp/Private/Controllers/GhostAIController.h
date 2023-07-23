@@ -62,9 +62,9 @@ private:
 
 private:
 	// Similar to AChompPlayerController, we store a notion of a TargetTile.
+	FComputeTargetTileResult Target;
+
 	// However, the concepts of "CurrentMoveDirection" and "IntendedMoveDirection" are encapsulated into the AI's computed movement path.
-	bool IsTargetTileSet = false;
-	FGridLocation TargetTile{0, 0};
 	Path MovementPath;
 
 protected:
@@ -83,6 +83,7 @@ private:
 	void Chase();
 	bool CanStartMoving();
 	void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
+	static void UpdateMovementPath(Path &MovementPath);
 
 #if false
 	// void StartMovingFrom(FGridLocation Origin, FGridLocation Destination);
