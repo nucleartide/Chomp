@@ -3,14 +3,10 @@
 #include <array>
 #include <unordered_set>
 #include <vector>
-
 #include "CoreMinimal.h"
-#include "UObject/NoExportTypes.h"
 #include "Math/IntPoint.h"
-
 #include "AStar/Graph.h"
 #include "AStar/GridLocation.h"
-
 #include "LevelLoader.generated.h"
 
 USTRUCT()
@@ -20,6 +16,13 @@ struct FComputeTargetTileResult
 
 	bool IsValid;
 	FGridLocation Tile;
+
+	static FComputeTargetTileResult Invalid()
+	{
+		constexpr FGridLocation Location{0, 0};
+		FComputeTargetTileResult Result{false, Location};
+		return Result;
+	}
 };
 
 /**
@@ -72,7 +75,7 @@ public:
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FVector2D GridToWorld(FGridLocation GridPosition) const;
+	FVector2D GridToWorld(const FGridLocation& GridPosition) const;
 
 	/**
 	 * Given world coordinates, convert them to grid coordinates.
@@ -91,24 +94,24 @@ public:
 	/**
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
-	bool Passable(FGridLocation FromLocation, FGridLocation ToLocation) const;
+	bool Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const;
 
-	FComputeTargetTileResult ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, TArray<FName> TagsToCollideWith) const;
+	FComputeTargetTileResult ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, const TArray<FName> &TagsToCollideWith, FString DebugLabel) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.
 	 */
-	bool InBounds(FGridLocation GridPosition) const;
+	bool InBounds(const FGridLocation& GridPosition) const;
 
 	/**
 	 * Get the passable neighbor nodes of a node.
 	 */
-	std::vector<FGridLocation> Neighbors(FGridLocation GridPosition) const override;
+	virtual std::vector<FGridLocation> Neighbors(FGridLocation GridPosition) const override;
 
 	/**
 	 * Return the unitless cost of going from FromNode to ToNode.
 	 */
-	double Cost(FGridLocation FromNode, FGridLocation ToNode) const override;
+	virtual double Cost(FGridLocation FromNode, FGridLocation ToNode) const override;
 
 	/**
 	 * A list of strings that describe the loaded level.
@@ -143,5 +146,5 @@ private:
 	/**
 	 * The cardinal directions.
 	 */
-	static std::array<FGridLocation, 4> CARDINAL_DIRECTIONS;
+	static std::array<FGridLocation, 4> CardinalDirections;
 };

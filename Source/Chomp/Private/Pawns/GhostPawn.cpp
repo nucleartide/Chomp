@@ -35,7 +35,7 @@ FGridLocation AGhostPawn::GetStartingPosition()
 	return StartingPosition;
 }
 
-int AGhostPawn::GetDotsConsumedMovementThreshold()
+int AGhostPawn::GetDotsConsumedMovementThreshold() const
 {
 	return DotsConsumedMovementThreshold;
 }

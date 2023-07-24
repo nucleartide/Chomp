@@ -2,10 +2,10 @@
 #include "Math/UnrealMathUtility.h"
 #include "AStar/AStar.h"
 #include "ChompGameState.h"
-#include "Kismet/GameplayStatics.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
+#include "Utils/SafeGet.h"
 
 void AGhostAIController::BeginPlay()
 {
@@ -24,67 +24,100 @@ void AGhostAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	// Sanity check that World & GameState aren't null.
 	auto World = GetWorld();
 	check(World);
+
 	auto GameState = World->GetGameState<AChompGameState>();
 	check(GameState);
 
-	// Early return if game is not playing.
-	auto IsGamePlaying = GameState->GetEnum() == EChompGameState::Playing;
-	if (!IsGamePlaying)
+	if (GameState->GetEnum() != EChompGameState::Playing)
 		return;
 
-	// Early return if ghost can't move yet.
 	if (!CanStartMoving())
 		return;
 
-	// Old code reference for when a target has been exceeded.
+	// Grab references to things.
+	auto PlayingSubstate = GameState->GetPlayingSubstate();
+	auto LevelInstance = ULevelLoader::GetInstance(Level);
+	auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
+	auto ActorLocation = MovablePawn->GetActorLocation();
+	FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+	auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
+	auto GridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+
+	//
+	// In the code below, you should reason about the code while keeping 2 pieces of state in mind:
+	// MovementPath, and Target
+	//
+	
+	auto CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
+	if (CurrentMoveDirection.IsZero())
+	{
+		MovementPath.Increment();
+		return;
+	}
+
+	// Compute a new target tile if needed.
+	if (!MovementPath.WasCompleted() && !Target.IsValid)
+	{
+		// Note that updates to our MovementPath are handled in GhostAIController callbacks.
+		Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith,
+		                                          TEXT("AI"));
+	}
+
+	// If there is no target tile, early return.
+	if (!Target.IsValid)
+		return;
+
+	// Else, move toward the target.
+	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(
+		Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)
+	{
+		// Fetch the target world position before clearing the target below.
+		const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
+
+		// Move onto the next node on the path, and invalidate the current target.
+		// We'll compute a new target on the next loop iteration.
+		MovementPath.Increment();
+		Target = FComputeTargetTileResult::Invalid();
+
+		// Align the position to the target.
+		const FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+		MovablePawn->SetActorLocation(NewLocation);
+	}
+
 #if false
-	void AGhostAIController::HandleScatterNodeReached()
-    {
-        // Then bump our index.
-        CurrentPath.CurrentIndex++;
-    
-        // If CurrentIndex is not at the last index,
-        if (CurrentPath.CurrentIndex < CurrentPath.Locations.size() - 1)
-        {
-            // Start moving on the next path segment.
-            auto Current = CurrentPath.Locations[CurrentPath.CurrentIndex];
-            auto Next = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
-            StartMovingFrom(Current, Next);
-        }
-        else // Otherwise,
-        {
-            // We've arrived. Swap the ScatterOrigin and ScatterDestination.
-            FGridLocation Temp{ScatterOrigin.X, ScatterOrigin.Y};
-            ScatterOrigin = ScatterDestination;
-            ScatterDestination = Temp;
-    
-            // Then invoke ComputePath() once again.
-            ComputePath();
-        }
-    }
-    
-    void AGhostAIController::HandleChaseNodeReached()
-    {
-        // Then bump our index.
-        CurrentPath.CurrentIndex++;
-    
-        // If CurrentIndex is not at the second index,
-        if (CurrentPath.CurrentIndex < 1)
-        {
-            // Start moving on the next path segment.
-            auto Current = CurrentPath.Locations[CurrentPath.CurrentIndex];
-            auto Next = CurrentPath.Locations[CurrentPath.CurrentIndex + 1];
-            StartMovingFrom(Current, Next);
-        }
-        else // Otherwise,
-        {
-            // We've arrived. Invoke ComputeChasePath() once again.
-            ComputeChasePath();
-        }
-    }
+
+			// If there is a next point,
+			const auto HasNextLocation = !MovementPath.WasCompleted();
+			if (HasNextLocation)
+			{
+				// Compute the move direction.
+				const auto [DirX, DirY] = MovementPath.GetCurrentMoveDirection();
+
+				// Align the pawn to the target position + any extra amount in the new move direction.
+				const FVector NewLocation{
+					TargetWorldPos.X, // + DirX * AmountMovedPast,
+					TargetWorldPos.Y, // + DirY * AmountMovedPast,
+					0.0f
+				};
+				MovablePawn->SetActorLocation(NewLocation);
+			}
+
+			// Recompute the movement path if needed.
+			if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && !HasNextLocation)
+			{
+				FGridLocation Swap{ScatterOrigin.X, ScatterOrigin.Y};
+				ScatterOrigin = ScatterDestination;
+				ScatterDestination = Swap;
+				ComputeScatterPath();
+			}
+			else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
+			{
+				ComputeChasePath();
+			}
+
+		}
 #endif
 }
 
@@ -112,8 +145,7 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 	if (NewState == EChompGameState::Playing)
 	{
 		// Set the starting position of the pawn.
-		auto GhostPawn = GetPawn<AGhostPawn>();
-		check(GhostPawn);
+		auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto StartingGridPosition = GhostPawn->GetStartingPosition();
 		auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
 		FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
@@ -124,33 +156,39 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 std::vector<FGridLocation> AGhostAIController::ComputePath(
 	ULevelLoader* LevelInstance,
 	FVector2D CurrentWorldPosition,
-	FGridLocation OriginGridPosition,
-	FGridLocation DestinationGridPosition,
-	bool DebugAStarMap = true)
+	FGridLocation StartGridPos,
+	FGridLocation EndGridPos,
+	bool Debug = true)
 {
-	// Compute the A* path anew.
+	// Compute A* path.
 	std::unordered_map<FGridLocation, FGridLocation> CameFrom;
 	std::unordered_map<FGridLocation, double> CostSoFar;
-	std::function FunctionObject = &AStar::ManhattanDistanceHeuristic;
+	const std::function FunctionObject = &AStar::ManhattanDistanceHeuristic;
 	AStar::Pathfind<FGridLocation>(
 		LevelInstance,
-		OriginGridPosition,
-		DestinationGridPosition,
+		StartGridPos,
+		EndGridPos,
 		CameFrom,
 		CostSoFar,
 		FunctionObject);
 
-	// Debug the results of running A*.
-	if (DebugAStarMap)
+	// Debug if enabled.
+	if (Debug)
 		DebugAStar(CameFrom, LevelInstance);
 
-	// Reconstruct and return the computed path.
+	// Reconstruct the path.
 	auto Path = AStar::ReconstructPath(
-		CurrentWorldPosition,
-		OriginGridPosition,
-		DestinationGridPosition,
+		StartGridPos,
+		EndGridPos,
 		CameFrom);
+	check(Path[0] == StartGridPos);
 	check(Path.size() >= 2);
+
+	// Assert that ghost is axis-aligned.
+	auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);
+	check(StartWorldPos.X == CurrentWorldPosition.X || StartWorldPos.Y == CurrentWorldPosition.Y);
+
+	// Return computed path.
 	return Path;
 }
 
@@ -171,7 +209,8 @@ bool AGhostAIController::CanStartMoving() const
 		NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
 	}
 
-	return Threshold >= 0 && NumberOfDotsConsumed >= 0 && NumberOfDotsConsumed >= Threshold;
+	return Threshold >= 0 && NumberOfDotsConsumed >= 0 && NumberOfDotsConsumed >= Threshold && !MovementPath.
+		WasCompleted();
 }
 
 void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
@@ -207,32 +246,29 @@ void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGri
 
 void AGhostAIController::ComputeScatterPath()
 {
-	auto Pawn = GetPawn<AMovablePawn>();
-	check(Pawn);
-	auto WorldLocation = Pawn->GetActorLocation2D();
-	auto GridLocation = Pawn->GetGridLocation();
+	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+	const auto WorldLocation = Pawn->GetActorLocation2D();
+	const auto GridLocation = Pawn->GetGridLocation();
+	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
+	                              DebugAStarMap);
 
-	auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
-	                        DebugAStarMap);
-	MovementPath.Initialize(Path);
+	MovementPath = FPath(Path);
+	MovementPath.DebugLog(TEXT("Scatter"));
+	Target = FComputeTargetTileResult::Invalid();
 }
 
 void AGhostAIController::ComputeChasePath()
 {
-	auto Pawn = GetPawn<AMovablePawn>();
-	check(Pawn);
-	auto WorldLocation = Pawn->GetActorLocation2D();
-	auto GridLocation = Pawn->GetGridLocation();
+	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+	const auto WorldLocation = Pawn->GetActorLocation2D();
+	const auto GridLocation = Pawn->GetGridLocation();
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = FSafeGet::Pawn<AMovablePawn>(PlayerController);
+	const auto PlayerGridLocation = PlayerPawn->GetGridLocation();
+	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
+	                              DebugAStarMap);
 
-	auto World = GetWorld();
-	check(World);
-	auto PlayerController = UGameplayStatics::GetPlayerController(World, 0);
-	check(PlayerController);
-	auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
-	check(PlayerPawn);
-	auto PlayerGridLocation = PlayerPawn->GetGridLocation();
-
-	auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
-	                        DebugAStarMap);
-	MovementPath.Initialize(Path);
+	MovementPath = FPath(Path);
+	MovementPath.DebugLog(TEXT("Chase"));
+	Target = FComputeTargetTileResult::Invalid();
 }

@@ -90,13 +90,13 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
 
     if (!Target.IsValid)
     {
-        Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith);
+        Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith, TEXT("Player"));
         // CurrentMoveDirection remains the same.
     }
 
     if (IntendedMoveDirection.IsNonZero() && (!Target.IsValid || CurrentMoveDirection != IntendedMoveDirection))
     {
-        if (const auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith); Result.IsValid)
+        if (const auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith, TEXT("Player")); Result.IsValid)
         {
             Target = Result;
             CurrentMoveDirection = IntendedMoveDirection;
@@ -111,7 +111,7 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
             const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
             const FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
             const auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
-            const auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith);
+            const auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith, TEXT("Player"));
 
             // Update our actor's state depending on the result.
             Target = Result;

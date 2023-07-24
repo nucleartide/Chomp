@@ -43,7 +43,8 @@ void AStar::Pathfind(IGraph *Graph,
             auto NewCost = CostSoFar[Current] + Graph->Cost(Current, Next);
 
             // If we haven't recorded a cost for this neighbor node, or if the new cost is less than the current cost,
-            if (!CostSoFar.contains(Next) || NewCost < CostSoFar[Next])
+            // ReSharper disable once CppUseAssociativeContains
+            if (CostSoFar.find(Next) == CostSoFar.end() || NewCost < CostSoFar[Next])
             {
                 // Place neighbor into priority queue.
                 double Priority = NewCost + Heuristic(Next, Goal);
@@ -65,7 +66,6 @@ template void AStar::Pathfind(IGraph *Graph,
                               const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
 std::vector<FGridLocation> AStar::ReconstructPath(
-    const FVector2D CurrentWorldPosition,
     const FGridLocation& Start,
     const FGridLocation& Goal,
     std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
@@ -73,10 +73,10 @@ std::vector<FGridLocation> AStar::ReconstructPath(
     std::vector<FGridLocation> Path;
     FGridLocation Current = Goal;
 
-    // If Goal is not found,
+    // If Goal cannot be found,
     if (CameFrom.find(Goal) == CameFrom.end())
     {
-        // Then no Path could be found.
+        // Then there is no Path.
         return Path;
     }
 
@@ -88,6 +88,9 @@ std::vector<FGridLocation> AStar::ReconstructPath(
     }
     Path.push_back(Current);
 
+#if false
+    // Todo: this shouldn't be a concern of the AStar function, move this custom logic into the calling code.
+
     // Compute some values so that we can snap movement to the grid before moving on the A*-computed path.
     const auto [X2, Y2] = Path[CameFrom.size() - 2];
     const auto [X1, Y1] = Current;
@@ -97,14 +100,17 @@ std::vector<FGridLocation> AStar::ReconstructPath(
     {
         // Ensure horizontal alignment (align on the Y).
         const FGridLocation AlignmentNode{X1, Y1 - SnapY};
-        Path.push_back(AlignmentNode);
+        if (Current != AlignmentNode)
+            Path.push_back(AlignmentNode);
     }
     else if (X2 == X1)
     {
         // Ensure vertical alignment (align on the X).
         const FGridLocation AlignmentNode{X1 - SnapX, Y1};
-        Path.push_back(AlignmentNode);
+        if (Current != AlignmentNode)
+            Path.push_back(AlignmentNode);
     }
+#endif
 
     // Return the reversed path.
     std::reverse(Path.begin(), Path.end());
