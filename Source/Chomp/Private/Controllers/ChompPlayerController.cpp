@@ -103,6 +103,8 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
         }
     }
 
+    // [ ] funkiness occurs here when character wraps around, and the amount moved past is wonky
+    // [ ] see if the same bug affects ghosts, in that the actor location is set twice. most likely not since ghosts don't wrap around
     if (Target.IsValid)
     {
         if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)

@@ -166,7 +166,6 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 		EndGridPos,
 		CameFrom);
 	check(Path[0] == StartGridPos);
-	check(Path.size() >= 2);
 
 	// Assert that ghost is axis-aligned.
 	auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);
@@ -247,6 +246,8 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto GridLocation = Pawn->GetGridLocation();
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = FSafeGet::Pawn<AMovablePawn>(PlayerController);
+	const auto PlayerWorldPosition = PlayerPawn->GetActorLocation();
+	DEBUG_LOG(TEXT("%s"), *PlayerWorldPosition.ToString());
 	const auto PlayerGridLocation = PlayerPawn->GetGridLocation();
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);
