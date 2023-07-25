@@ -88,30 +88,6 @@ std::vector<FGridLocation> AStar::ReconstructPath(
     }
     Path.push_back(Current);
 
-#if false
-    // Todo: this shouldn't be a concern of the AStar function, move this custom logic into the calling code.
-
-    // Compute some values so that we can snap movement to the grid before moving on the A*-computed path.
-    const auto [X2, Y2] = Path[CameFrom.size() - 2];
-    const auto [X1, Y1] = Current;
-    const auto [SnapX, SnapY] = ULevelLoader::SnapToGridDirection(CurrentWorldPosition);
-
-    if (Y2 == Y1)
-    {
-        // Ensure horizontal alignment (align on the Y).
-        const FGridLocation AlignmentNode{X1, Y1 - SnapY};
-        if (Current != AlignmentNode)
-            Path.push_back(AlignmentNode);
-    }
-    else if (X2 == X1)
-    {
-        // Ensure vertical alignment (align on the X).
-        const FGridLocation AlignmentNode{X1 - SnapX, Y1};
-        if (Current != AlignmentNode)
-            Path.push_back(AlignmentNode);
-    }
-#endif
-
     // Return the reversed path.
     std::reverse(Path.begin(), Path.end());
     return Path;
