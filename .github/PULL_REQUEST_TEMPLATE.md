@@ -12,5 +12,5 @@
 ## Presentation Checklist
 
 * [ ] *Optional:* Make a GIF to display what you made.
-* [ ] *Optional:* Do a CAR/STAR write-up for this pull request.
+* [ ] *Optional:* Add discussion points to the readme. Remember: [CAR/STAR](https://www.google.com/search?q=car+challenge+action+result).
 * [ ] Cut a new build in Unreal, and upload a GitHub release.
