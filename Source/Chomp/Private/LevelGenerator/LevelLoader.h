@@ -20,7 +20,7 @@ struct FComputeTargetTileResult
 	static FComputeTargetTileResult Invalid()
 	{
 		constexpr FGridLocation Location{0, 0};
-		FComputeTargetTileResult Result{false, Location};
+		constexpr FComputeTargetTileResult Result{false, Location};
 		return Result;
 	}
 };

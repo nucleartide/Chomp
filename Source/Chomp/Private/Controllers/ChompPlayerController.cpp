@@ -155,7 +155,7 @@ void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChom
     if (NewState == EChompGameState::Playing)
     {
         // If we are restarting, reset some internal state around the selected target tile + move direction.
-        Target.IsValid = false;
+        Target = FComputeTargetTileResult::Invalid();
         CurrentMoveDirection.X = InitialMoveDirection.X;
         CurrentMoveDirection.Y = InitialMoveDirection.Y;
     }
