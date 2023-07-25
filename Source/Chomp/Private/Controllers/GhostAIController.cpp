@@ -10,14 +10,11 @@
 void AGhostAIController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	auto World = GetWorld();
-	check(World);
-
-	auto ChompGameState = World->GetGameState<AChompGameState>();
-	ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
-		this, &AGhostAIController::HandleGamePlayingSubstateChanged);
-	ChompGameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+	GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+		this,
+		&AGhostAIController::HandleGamePlayingSubstateChanged);
+	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
 }
 
 void AGhostAIController::Tick(float DeltaTime)
@@ -76,10 +73,10 @@ void AGhostAIController::Tick(float DeltaTime)
 		MovementPath.Increment();
 		if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
 		{
-			FGridLocation Swap{ScatterOrigin.X, ScatterOrigin.Y};
-			ScatterOrigin = ScatterDestination;
-			ScatterDestination = Swap;
-			ComputeScatterForMovementPath();
+			auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+			auto Destination = Pawn->GetScatterDestination();
+			ComputeScatterForMovementPath(Destination);
+			Pawn->SwapScatterOriginAndDestination();
 		}
 		else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
 		{
@@ -111,9 +108,15 @@ void AGhostAIController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 {
 	check(OldState != NewState);
 	if (NewState == EChompGamePlayingSubstate::Scatter)
-		ComputeScatterForMovementPath();
+	{
+		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		auto Destination = Pawn->GetScatterDestination();
+		ComputeScatterForMovementPath(Destination);
+	}
 	else if (NewState == EChompGamePlayingSubstate::Chase)
+	{
 		ComputeChaseForMovementPath();
+	}
 }
 
 /**
@@ -225,7 +228,7 @@ void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGri
 	}
 }
 
-void AGhostAIController::ComputeScatterForMovementPath()
+void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = Pawn->GetActorLocation2D();

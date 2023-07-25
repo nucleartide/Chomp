@@ -9,4 +9,7 @@ public:
 	static UWorld *World(AActor *Actor);
 	
 	static APlayerController *PlayerController(AActor *Actor, int PlayerIndex);
+	
+	template <typename T>
+	static T* GameState(AActor *Actor);
 };

@@ -4,6 +4,8 @@
 AGhostPawn::AGhostPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	CurrentScatterOrigin = ScatterOrigin;
+	CurrentScatterDestination = ScatterDestination;
 }
 
 void AGhostPawn::BeginPlay()
@@ -20,17 +22,7 @@ void AGhostPawn::BeginPlay()
 	DEBUG_LOG(TEXT("Body component name: %s"), *BodyComponents[0]->GetReadableName());
 }
 
-void AGhostPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void AGhostPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
-
-FGridLocation AGhostPawn::GetStartingPosition()
+FGridLocation AGhostPawn::GetStartingPosition() const
 {
 	return StartingPosition;
 }
@@ -38,4 +30,16 @@ FGridLocation AGhostPawn::GetStartingPosition()
 int AGhostPawn::GetDotsConsumedMovementThreshold() const
 {
 	return DotsConsumedMovementThreshold;
+}
+
+FGridLocation AGhostPawn::GetScatterDestination() const
+{
+	return ScatterDestination;
+}
+
+void AGhostPawn::SwapScatterOriginAndDestination()
+{
+	const FGridLocation Swap{CurrentScatterOrigin.X, CurrentScatterOrigin.Y};
+	CurrentScatterOrigin = CurrentScatterDestination;
+	CurrentScatterDestination = Swap;
 }

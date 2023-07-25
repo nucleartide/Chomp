@@ -19,12 +19,6 @@ private:
 	TSubclassOf<ULevelLoader> Level;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation ScatterOrigin;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation ScatterDestination;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
 private:
@@ -57,7 +51,7 @@ private:
 	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	                       ULevelLoader* LevelInstance);
 
-	void ComputeScatterForMovementPath();
+	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
 
 	void ComputeChaseForMovementPath();
 };
