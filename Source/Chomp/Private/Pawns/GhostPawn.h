@@ -15,7 +15,7 @@ class AGhostPawn : public AMovablePawn
 public:
 	AGhostPawn();
 	FGridLocation GetStartingPosition();
-	int GetDotsConsumedMovementThreshold();
+	int GetDotsConsumedMovementThreshold() const;
 
 protected:
 	virtual void BeginPlay() override;

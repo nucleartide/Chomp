@@ -49,7 +49,9 @@ private:
 public:
 	AMovablePawn();
 	TArray<FName> GetTagsToCollideWith();
-	FMovementResult MoveTowardsPoint(FGridLocation TargetGridPosition, FGridLocation TargetDirection, float DeltaTime);
+	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection, float DeltaTime);
+	FGridLocation GetGridLocation() const;
+	FVector2D GetActorLocation2D() const;
 
 private:
 	void WrapAroundWorld();

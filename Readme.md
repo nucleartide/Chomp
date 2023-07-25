@@ -62,6 +62,25 @@ While I created a dummy behavior tree that runs in a Blueprint subclass of `AGho
 
 ...
 
+### Productivity
+
+...
+
+### Debugging with Rider
+
+...
+
+### Test-Driven Development (TDD) with Unreal's Automation Framework
+
+TODO: Discuss the following:
+
+* being clear about what state is mutated (function names) or read (args)
+* isolating integration with engine features that return unexpected results (`GetWorld()`, collision checks)
+
+### Garbage collection with Unreal's `UOBJECT` system
+
+...
+
 ## Contributing
 
 TODO.

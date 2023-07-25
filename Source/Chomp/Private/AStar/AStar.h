@@ -32,8 +32,7 @@ public:
 						 std::unordered_map<Location, double> &CostSoFar,
 						 const std::function<double(Location, Location)> &Heuristic);
 
-	static std::vector<FGridLocation> ReconstructPath(FVector2D CurrentWorldPosition,
-													  FGridLocation Start,
-													  FGridLocation Goal,
+	static std::vector<FGridLocation> ReconstructPath(const FGridLocation& Start,
+													  const FGridLocation& Goal,
 													  std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
 };

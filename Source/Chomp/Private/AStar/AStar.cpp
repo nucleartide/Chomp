@@ -7,8 +7,6 @@
 */
 
 #include "AStar/AStar.h"
-
-#include "Utils/Debug.h"
 #include "Utils/PriorityQueue.h"
 #include "LevelGenerator/LevelLoader.h"
 
@@ -36,10 +34,7 @@ void AStar::Pathfind(IGraph *Graph,
         // If we're at the goal, then we're done! Break and end the search.
         auto Current = Frontier.get();
         if (Current == Goal)
-        {
-            DEBUG_LOG(TEXT("breaking early"));
             break;
-        }
 
         // For each neighbor,
         for (auto Next : Graph->Neighbors(Current))
@@ -47,12 +42,8 @@ void AStar::Pathfind(IGraph *Graph,
             // Compute the new cost.
             auto NewCost = CostSoFar[Current] + Graph->Cost(Current, Next);
 
-            if (Next.X == 5 && Next.Y == 6)
-            {
-                check(false);
-            }
-
             // If we haven't recorded a cost for this neighbor node, or if the new cost is less than the current cost,
+            // ReSharper disable once CppUseAssociativeContains
             if (CostSoFar.find(Next) == CostSoFar.end() || NewCost < CostSoFar[Next])
             {
                 // Place neighbor into priority queue.
@@ -75,18 +66,17 @@ template void AStar::Pathfind(IGraph *Graph,
                               const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
 std::vector<FGridLocation> AStar::ReconstructPath(
-    FVector2D CurrentWorldPosition,
-    FGridLocation Start,
-    FGridLocation Goal,
+    const FGridLocation& Start,
+    const FGridLocation& Goal,
     std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
 {
     std::vector<FGridLocation> Path;
     FGridLocation Current = Goal;
 
-    // If Goal is not found,
+    // If Goal cannot be found,
     if (CameFrom.find(Goal) == CameFrom.end())
     {
-        // Then no Path could be found.
+        // Then there is no Path.
         return Path;
     }
 
@@ -97,24 +87,6 @@ std::vector<FGridLocation> AStar::ReconstructPath(
         Current = CameFrom[Current];
     }
     Path.push_back(Current);
-
-    // Compute some values so that we can snap movement to the grid before moving on the A*-computed path.
-    auto SecondNode = Path[CameFrom.size() - 2];
-    auto FirstNode = Current;
-    auto SnapDirection = ULevelLoader::SnapToGridDirection(CurrentWorldPosition);
-
-    if (SecondNode.Y == FirstNode.Y)
-    {
-        // Ensure horizontal alignment (align on the Y).
-        FGridLocation AlignmentNode{FirstNode.X, FirstNode.Y - SnapDirection.Y};
-        Path.push_back(AlignmentNode);
-    }
-    else if (SecondNode.X == FirstNode.X)
-    {
-        // Ensure vertical alignment (align on the X).
-        FGridLocation AlignmentNode{FirstNode.X - SnapDirection.X, FirstNode.Y};
-        Path.push_back(AlignmentNode);
-    }
 
     // Return the reversed path.
     std::reverse(Path.begin(), Path.end());

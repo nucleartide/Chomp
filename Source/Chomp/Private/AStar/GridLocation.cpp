@@ -22,5 +22,10 @@ FString FGridLocation::ToString() const
 
 bool FGridLocation::IsNonZero() const
 {
-    return X != 0 || Y != 0;
+    return !IsZero();
+}
+
+bool FGridLocation::IsZero() const
+{
+    return X == 0 && Y == 0;
 }
