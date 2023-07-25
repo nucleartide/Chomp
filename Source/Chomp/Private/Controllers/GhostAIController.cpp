@@ -49,23 +49,24 @@ void AGhostAIController::Tick(float DeltaTime)
 	// In the code below, you should reason about the code while keeping 2 pieces of state in mind:
 	// MovementPath, and Target
 	//
-	
+	// TODO: Make this code more functional for future maintenance
+	// TODO: In any code section, be wary of what state you are updating, and what state you are reading
+	//
+
+	// Update movement path if needed.
+	const auto CurrentLocationIndex = MovementPath.GetCurrentLocationIndex();
 	auto CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
-	if (CurrentMoveDirection.IsZero())
+	if (CurrentLocationIndex == -1 && CurrentMoveDirection.IsZero())
 	{
 		MovementPath.Increment();
-		return;
+		CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
 	}
 
-	// Compute a new target tile if needed.
+	// Update target if needed.
 	if (!MovementPath.WasCompleted() && !Target.IsValid)
-	{
-		// Note that updates to our MovementPath are handled in GhostAIController callbacks.
-		Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith,
-		                                          TEXT("AI"));
-	}
+		Target = FComputeTargetTileResult{true, MovementPath.GetTargetLocation()};
 
-	// If there is no target tile, early return.
+	// If there is no target, early return.
 	if (!Target.IsValid)
 		return;
 
@@ -73,52 +74,35 @@ void AGhostAIController::Tick(float DeltaTime)
 	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(
 		Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)
 	{
-		// Fetch the target world position before clearing the target below.
-		const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
-
-		// Move onto the next node on the path, and invalidate the current target.
-		// We'll compute a new target on the next loop iteration.
+		// Update the movement path.
+		// Note that the order of operations is important here.
 		MovementPath.Increment();
+		if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
+		{
+			FGridLocation Swap{ScatterOrigin.X, ScatterOrigin.Y};
+			ScatterOrigin = ScatterDestination;
+			ScatterDestination = Swap;
+			ComputeScatterForMovementPath();
+		}
+		else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
+		{
+			ComputeChaseForMovementPath();
+		}
+
+		// Update the target.
+		// Note that the target world pos is fetched before clearing.
+		const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
 		Target = FComputeTargetTileResult::Invalid();
 
-		// Align the position to the target.
-		const FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
+		// Align the pawn to the target position + any extra amount in the new move direction.
+		const auto [DirX, DirY] = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
+		const FVector NewLocation{
+			TargetWorldPos.X + DirX * AmountMovedPast,
+			TargetWorldPos.Y + DirY * AmountMovedPast,
+			0.0f
+		};
 		MovablePawn->SetActorLocation(NewLocation);
 	}
-
-#if false
-
-			// If there is a next point,
-			const auto HasNextLocation = !MovementPath.WasCompleted();
-			if (HasNextLocation)
-			{
-				// Compute the move direction.
-				const auto [DirX, DirY] = MovementPath.GetCurrentMoveDirection();
-
-				// Align the pawn to the target position + any extra amount in the new move direction.
-				const FVector NewLocation{
-					TargetWorldPos.X, // + DirX * AmountMovedPast,
-					TargetWorldPos.Y, // + DirY * AmountMovedPast,
-					0.0f
-				};
-				MovablePawn->SetActorLocation(NewLocation);
-			}
-
-			// Recompute the movement path if needed.
-			if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && !HasNextLocation)
-			{
-				FGridLocation Swap{ScatterOrigin.X, ScatterOrigin.Y};
-				ScatterOrigin = ScatterDestination;
-				ScatterDestination = Swap;
-				ComputeScatterPath();
-			}
-			else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
-			{
-				ComputeChasePath();
-			}
-
-		}
-#endif
 }
 
 /**
@@ -130,9 +114,9 @@ void AGhostAIController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 {
 	check(OldState != NewState);
 	if (NewState == EChompGamePlayingSubstate::Scatter)
-		ComputeScatterPath();
+		ComputeScatterForMovementPath();
 	else if (NewState == EChompGamePlayingSubstate::Chase)
-		ComputeChasePath();
+		ComputeChaseForMovementPath();
 }
 
 /**
@@ -244,7 +228,7 @@ void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGri
 	}
 }
 
-void AGhostAIController::ComputeScatterPath()
+void AGhostAIController::ComputeScatterForMovementPath()
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = Pawn->GetActorLocation2D();
@@ -254,10 +238,9 @@ void AGhostAIController::ComputeScatterPath()
 
 	MovementPath = FPath(Path);
 	MovementPath.DebugLog(TEXT("Scatter"));
-	Target = FComputeTargetTileResult::Invalid();
 }
 
-void AGhostAIController::ComputeChasePath()
+void AGhostAIController::ComputeChaseForMovementPath()
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = Pawn->GetActorLocation2D();
@@ -270,5 +253,4 @@ void AGhostAIController::ComputeChasePath()
 
 	MovementPath = FPath(Path);
 	MovementPath.DebugLog(TEXT("Chase"));
-	Target = FComputeTargetTileResult::Invalid();
 }

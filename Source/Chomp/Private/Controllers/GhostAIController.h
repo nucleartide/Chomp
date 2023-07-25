@@ -32,26 +32,35 @@ public:
 
 	void Increment()
 	{
-		// TODO: Replace this with TArray which isn't completely broken
-		const size_t Size;
-		if (Size = Locations.size(); CurrentLocationIndex < Size - 2)
-			CurrentLocationIndex++;
+		 CurrentLocationIndex++;
+	}
+	
+	int GetCurrentLocationIndex() const
+	{
+		return CurrentLocationIndex;
 	}
 
 	FGridLocation GetCurrentMoveDirection(FVector WorldLocation, const ULevelLoader* LevelInstance)
 	{
 		if (CurrentLocationIndex == -1)
 		{
-			const auto StartGridPos = Locations.at(0);
-			const auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);
-			const auto DirX = StartWorldPos.X - WorldLocation.X;
-			const auto DirY = StartWorldPos.Y - WorldLocation.Y;
-			const auto SignX = DirX < 0.0 ? -1 : DirX > 0.0 ? 1 : 0;
-			const auto SignY = DirY < 0.0 ? -1 : DirY > 0.0 ? 1 : 0;
-			// Both can't be 1 at the same time, that'd be a diagonal.
-			check(!(FMath::Abs(SignX) == 1 && FMath::Abs(SignY) == 1));
-			FGridLocation Result{SignX, SignY};
-			return Result;
+    		const auto StartGridPos = Locations.at(0);
+    		const auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);
+    		const auto DirX = StartWorldPos.X - WorldLocation.X;
+    		const auto DirY = StartWorldPos.Y - WorldLocation.Y;
+    		const auto SignX = DirX < 0.0 ? -1 : DirX > 0.0 ? 1 : 0;
+    		const auto SignY = DirY < 0.0 ? -1 : DirY > 0.0 ? 1 : 0;
+    		// Both can't be 1 at the same time, that'd be a diagonal.
+    		check(!(FMath::Abs(SignX) == 1 && FMath::Abs(SignY) == 1));
+    		FGridLocation Result{SignX, SignY};
+    		return Result;
+    	}
+
+		const int NumLocations = Locations.size();
+		if (CurrentLocationIndex > NumLocations - 2)
+		{
+			FGridLocation Zero{0, 0};
+			return Zero;
 		}
 
 		const auto [CurrentX, CurrentY] = Locations.at(CurrentLocationIndex);
@@ -71,6 +80,11 @@ public:
 		// 0, 1, 2, 3, 4
 		// if CurrentLocationIndex == 4 or above, the path was completed.
 		return CurrentLocationIndex > Index;
+	}
+
+	FGridLocation GetTargetLocation() const
+	{
+		return Locations.at(CurrentLocationIndex + 1);
 	}
 
 	void DebugLog(const FString Label) const
@@ -145,7 +159,7 @@ private:
 	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	                       ULevelLoader* LevelInstance);
 
-	void ComputeScatterPath();
+	void ComputeScatterForMovementPath();
 
-	void ComputeChasePath();
+	void ComputeChaseForMovementPath();
 };

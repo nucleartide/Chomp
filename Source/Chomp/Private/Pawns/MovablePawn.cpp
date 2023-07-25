@@ -18,6 +18,10 @@ FMovementResult AMovablePawn::MoveTowardsPoint(
 	const FGridLocation& TargetDirection,
 	const float DeltaTime)
 {
+	FMovementResult Result{false, 0.0f};
+	if (TargetDirection.IsZero())
+		return Result;
+	
 	// Keep a reference to the level instance.
 	const auto LevelInstance = ULevelLoader::GetInstance(Level);
 
@@ -29,7 +33,6 @@ FMovementResult AMovablePawn::MoveTowardsPoint(
 	}
 
 	// Check if we moved past the target.
-	FMovementResult Result;
 	{
 		const auto TargetWorldPosition = LevelInstance->GridToWorld(TargetGridPosition);
 		const auto ActorLocation2D = GetActorLocation2D();
