@@ -19,15 +19,6 @@ private:
 	TSubclassOf<ULevelLoader> Level;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	bool UseTestOriginAndDestination = false;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation TestOrigin;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation TestDestination;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation ScatterOrigin;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
