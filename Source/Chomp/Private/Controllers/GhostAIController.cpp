@@ -49,9 +49,6 @@ void AGhostAIController::Tick(float DeltaTime)
 	// In the code below, you should reason about the code while keeping 2 pieces of state in mind:
 	// MovementPath, and Target
 	//
-	// TODO: Make this code more functional for future maintenance
-	// TODO: In any code section, be wary of what state you are updating, and what state you are reading
-	//
 
 	// Update movement path if needed.
 	const auto CurrentLocationIndex = MovementPath.GetCurrentLocationIndex();
