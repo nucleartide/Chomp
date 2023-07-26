@@ -51,7 +51,7 @@ private:
 	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	                       ULevelLoader* LevelInstance);
 
-	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination) cons;
+	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
 
 	void ComputeChaseForMovementPath();
 
