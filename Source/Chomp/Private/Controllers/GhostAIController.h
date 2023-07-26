@@ -17,6 +17,7 @@ class AGhostAIController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
+	// Whether to print out A* map info in the logs.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
@@ -24,10 +25,6 @@ class AGhostAIController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool IsTesting = false;
 
-	// Similar to AChompPlayerController, we store a notion of a TargetTile.
-	FComputeTargetTileResult Target;
-
-	// However, the concepts of "CurrentMoveDirection" and "IntendedMoveDirection" are encapsulated into the AI's computed movement path.
 	FPath MovementPath;
 
 protected:

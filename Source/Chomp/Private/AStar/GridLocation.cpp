@@ -1,4 +1,5 @@
 #include "AStar/GridLocation.h"
+#include "LevelGenerator/LevelLoader.h"
 #include <algorithm>
 
 bool operator ==(const FGridLocation& A, const FGridLocation& B)

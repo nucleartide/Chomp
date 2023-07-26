@@ -1,8 +1,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LevelGenerator/LevelLoader.h"
 #include "GridLocation.generated.h"
+
+class ULevelLoader;
 
 USTRUCT(BlueprintType, Blueprintable)
 struct FGridLocation

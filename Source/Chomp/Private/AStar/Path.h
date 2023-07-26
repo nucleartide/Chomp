@@ -1,6 +1,6 @@
 #pragma once
-#include <vector>
 
+#include <vector>
 #include "GridLocation.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "Utils/Debug.h"
@@ -14,6 +14,11 @@ private:
 	std::vector<FGridLocation> Locations;
 
 public:
+	explicit FPath()
+	{
+		// Default values are fine. This would just be a zero-node path.
+	}
+	
 	explicit FPath(
 		const FVector& CurrentWorldLocation,
 		const std::vector<FGridLocation>& LocationPath,
@@ -50,10 +55,6 @@ public:
 		Locations = LocationPath;
 	}
 
-	// [x] 1st, 2nd, world position rule
-	// [x] assert always on path
-	// [x] assert path nodes are not walls
-	// [x] implement
 	// [ ] refactor ai controller so that you no longer have target tile nor current direction
 
 	void NextNode()

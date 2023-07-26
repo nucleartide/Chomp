@@ -16,6 +16,17 @@ struct FMovementResult
 	float AmountMovedPast = 0.0f;
 };
 
+USTRUCT()
+struct FAIMovementResult
+{
+	GENERATED_BODY()
+
+	FVector NewLocation;
+	FRotator NewRotation;
+	bool MovedPastTarget;
+	float AmountMovedPastTarget;
+};
+
 UCLASS()
 class AMovablePawn : public APawn
 {
@@ -48,9 +59,18 @@ class AMovablePawn : public APawn
 public:
 	AMovablePawn();
 	TArray<FName> GetTagsToCollideWith();
-	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection, float DeltaTime, FName DebugLabel);
+	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection,
+	                                 float DeltaTime, FName DebugLabel);
 	FGridLocation GetGridLocation() const;
 	FVector2D GetActorLocation2D() const;
+
+	// Move towards an FGridLocation by computing a new location, and returning it all in an FAIMovementResult.
+	static FAIMovementResult MoveTowardsPoint2(
+		FVector Location,
+		FRotator Rotation,
+		FVector TargetLocation,
+		float MovementSpeed,
+		float DeltaTime, float RotationInterpSpeed);
 
 private:
 	void WrapAroundWorld();

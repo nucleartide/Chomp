@@ -11,13 +11,13 @@ void AGhostAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
+	// Initialize MovementPath to a one-node path.
 	if (IsTesting)
 	{
-		// Test out the one node path case.
 		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		const auto StartingPosition = Pawn->GetStartingPosition();
 		const std::vector OneNodePath{StartingPosition};
-		MovementPath = FPath(OneNodePath);
+		MovementPath = FPath(Pawn->GetActorLocation(), OneNodePath, ULevelLoader::GetInstance(Level));
 	}
 
 	// Attach some handlers for when game state changes.
@@ -55,71 +55,47 @@ void AGhostAIController::Tick(float DeltaTime)
 	auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
 	auto GridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
 
-	//
-	// In the code below, you should reason about the code while keeping 2 pieces of state in mind:
-	// MovementPath, and Target
-	//
-
-	// Update movement path if needed.
-	const auto CurrentLocationIndex = MovementPath.GetCurrentLocationIndex();
-	auto CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
-	if (CurrentLocationIndex == -1 && CurrentMoveDirection.IsZero())
-	{
-		MovementPath.NextNode();
-		CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
-	}
-
-	// Update target if needed.
-	if (!MovementPath.WasCompleted() && !Target.IsValid)
-		Target = FComputeTargetTileResult{true, MovementPath.GetTargetLocation()};
-
-	// If there is no target, early return.
-	if (!Target.IsValid)
-		return;
-
+#if false
 	// Else, move toward the target.
-	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(
-		Target.Tile, CurrentMoveDirection, DeltaTime, FName("AI")); MovedPastTarget)
+	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, DeltaTime, FName("AI")); MovedPastTarget)
+		
+	// Update the movement path if condition is met
+	// Note that the order of operations is important here.
+	MovementPath.NextNode();
+
+	// Apply new location, which depends on the dir of the next node if exceeded.
+	// if there is no next node then the dir is zero
 	{
-		// Grab the old direction before updating the movement path.
-		const auto OldDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
-
-		// Update the movement path.
-		// Note that the order of operations is important here.
-		MovementPath.NextNode();
-		if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
-		{
-			auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-			auto Destination = Pawn->GetScatterDestination();
-			ComputeScatterForMovementPath(Destination);
-			Pawn->SwapScatterOriginAndDestination();
-		}
-		else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
-		{
-			ComputeChaseForMovementPath();
-		}
-
-		// Update the target.
-		// Note that the target world pos is fetched before clearing.
-		const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
-		Target = FComputeTargetTileResult::Invalid();
-
-		// Apply movement.
-		{
-			const auto NewDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
-			const auto ActorLocation2 = MovablePawn->GetActorLocation();
-			FVector NewLocation =
-				// Maintain the extra amount in the existing move direction.
-				FVector{
-					TargetWorldPos.X + NewDir.X * AmountMovedPast,
-					TargetWorldPos.Y + NewDir.Y * AmountMovedPast,
-					0.0f
-				};
-			const FVector Difference = NewLocation - ActorLocation2;
-			// check(Difference.Size() < 100.0f); // A half-unit jump is sketchy.
-			MovablePawn->SetActorLocation(NewLocation);
-		}
+		 const auto NewDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
+		 const auto ActorLocation2 = MovablePawn->GetActorLocation();
+		 FVector NewLocation =
+			 // Maintain the extra amount in the existing move direction.
+			 FVector{
+				 TargetWorldPos.X + NewDir.X * AmountMovedPast,
+				 TargetWorldPos.Y + NewDir.Y * AmountMovedPast,
+				 0.0f
+			 };
+		 const FVector Difference = NewLocation - ActorLocation2;
+		 // check(Difference.Size() < 100.0f); // A half-unit jump is sketchy.
+		 MovablePawn->SetActorLocation(NewLocation);
 	}
+
+	// Apply new rotation.
+	// ...
+
+	// After location and rotation have been applied, Replace path entirely if condition has been met
+	if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
+	{
+		  auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		  auto Destination = Pawn->GetScatterDestination();
+		  ComputeScatterForMovementPath(Destination);
+		  Pawn->SwapScatterOriginAndDestination();
+	}
+	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
+	{
+		  ComputeChaseForMovementPath();
+	}
+#endif
 }
 
 /**
@@ -258,8 +234,8 @@ void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& Scat
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);
 
-	MovementPath = FPath(Path);
-	MovementPath.DebugLog(TEXT("Scatter"));
+	// MovementPath = FPath(Path);
+	// MovementPath.DebugLog(TEXT("Scatter"));
 }
 
 void AGhostAIController::ComputeChaseForMovementPath()
@@ -275,6 +251,6 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);
 
-	MovementPath = FPath(Path);
-	MovementPath.DebugLog(TEXT("Chase"));
+	// MovementPath = FPath(Path);
+	// MovementPath.DebugLog(TEXT("Chase"));
 }
