@@ -24,6 +24,7 @@ class FMovementPath
 			return std::make_tuple(false, -1);
 
 		// If ActorLocation is on the path somewhere,
+		const FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
 		for (auto i = 0; i < Path.size() - 1; i++)
 		{
 			auto CurrentNode = Path[i];
@@ -34,13 +35,14 @@ class FMovementPath
 
 		// If ActorLocation is within 50 axis-aligned units (inclusive) of the start node,
 		const auto WorldA = LevelInstance->GridToWorld(Path.at(0));
-		if (ActorLocation.X == WorldA.X && FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0f ||
-			ActorLocation.Y == WorldA.Y && FGenericPlatformMath::Abs(ActorLocation.X - WorldA.X) <= 50.0f)
+		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) && FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0f ||
+			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) && FGenericPlatformMath::Abs(ActorLocation.X - WorldA.X) <= 50.0f)
 			return std::make_tuple(true, 0);
 
 		// If ActorLocation is at the end node,
 		const auto WorldLast = LevelInstance->GridToWorld(Path.at(Path.size() - 1));
-		if (ActorLocation.X == WorldLast.X && ActorLocation.Y == WorldLast.Y)
+		if (FMath::IsNearlyEqual(ActorLocation.X, WorldLast.X, 0.01f) &&
+			FMath::IsNearlyEqual(ActorLocation.Y, WorldLast.Y, 0.01f))
 			return std::make_tuple(true, -1);
 
 		return std::make_tuple(false, -1);
@@ -106,8 +108,9 @@ public:
 			// Compute direction.
 			DestWorldLocation = WorldLocationPath.at(DestIndex);
 			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
-			check(FGenericPlatformMath::Abs(Direction.X) == 1.0 && Direction.Y == 0.0 || Direction.X == 0 &&
-				FGenericPlatformMath::Abs(Direction.Y) == 1.0);
+			check(
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) && Direction.Y == 0.0 ||
+				Direction.X == 0 && FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0));
 		}
 
 		// Apply movement.
@@ -132,7 +135,7 @@ public:
 		{
 			// Reset the actor location.
 			ActorLocation = DestWorldLocation;
-			
+
 			// Check whether there is a next destination node.
 			const auto [OnPath, DestIndex] = IsOnPath(ActorLocation, GridLocationPath, LevelInstance);
 

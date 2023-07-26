@@ -38,7 +38,9 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 	const auto WorldA = LevelInstance->GridToWorld(A);
 	const auto WorldB = LevelInstance->GridToWorld(B);
 
-	if (WorldA.X == WorldB.X && Location.X == WorldA.X)
+	// TODO: jason order matters here
+
+	if (FMath::IsNearlyEqual(WorldA.X, WorldB.X, 0.01f) && FMath::IsNearlyEqual(Location.X, WorldA.X, 0.01f))
 	{
 		const auto MinY = std::min(WorldA.Y, WorldB.Y);
 		const auto MaxY = std::max(WorldA.Y, WorldB.Y);
@@ -46,7 +48,7 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 			return true;
 	}
 
-	if (WorldA.Y == WorldB.Y && Location.Y == WorldA.Y)
+	if (FMath::IsNearlyEqual(WorldA.Y, WorldB.Y, 0.01f) && FMath::IsNearlyEqual(Location.Y, WorldA.Y, 0.01f))
 	{
 		const auto MinX = std::min(WorldA.X, WorldB.X);
 		const auto MaxX = std::max(WorldA.X, WorldB.X);
