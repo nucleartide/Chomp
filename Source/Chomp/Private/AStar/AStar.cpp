@@ -24,15 +24,15 @@ void FAStar::Pathfind(IGraph *Graph,
                      const std::function<double(Location, Location)> &Heuristic)
 {
     TPriorityQueue<Location, double> Frontier;
-    Frontier.put(Start, 0);
+    Frontier.Put(Start, 0);
 
     CameFrom[Start] = Start;
     CostSoFar[Start] = 0;
 
-    while (!Frontier.empty())
+    while (!Frontier.Empty())
     {
         // If we're at the goal, then we're done! Break and end the search.
-        auto Current = Frontier.get();
+        auto Current = Frontier.Get();
         if (Current == Goal)
             break;
 
@@ -48,7 +48,7 @@ void FAStar::Pathfind(IGraph *Graph,
             {
                 // Place neighbor into priority queue.
                 double Priority = NewCost + Heuristic(Next, Goal);
-                Frontier.put(Next, Priority);
+                Frontier.Put(Next, Priority);
 
                 // Update our maps.
                 CostSoFar[Next] = NewCost;

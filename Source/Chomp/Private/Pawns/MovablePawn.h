@@ -48,7 +48,7 @@ class AMovablePawn : public APawn
 public:
 	AMovablePawn();
 	TArray<FName> GetTagsToCollideWith();
-	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection, float DeltaTime);
+	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection, float DeltaTime, FName DebugLabel);
 	FGridLocation GetGridLocation() const;
 	FVector2D GetActorLocation2D() const;
 

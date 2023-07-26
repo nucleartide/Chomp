@@ -1,5 +1,4 @@
 #include "Controllers/ChompPlayerController.h"
-#include "Pawns/ChompPawn.h"
 #include "Pawns/MovablePawn.h"
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "ChompGameState.h"
@@ -106,7 +105,7 @@ void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
     // [ ] see if the same bug affects ghosts, in that the actor location is set twice. most likely not since ghosts don't wrap around
     if (Target.IsValid)
     {
-        if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)
+        if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime, FName("Player")); MovedPastTarget)
         {
             // Check if next move from target is valid.
             const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);

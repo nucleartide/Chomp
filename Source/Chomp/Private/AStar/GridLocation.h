@@ -31,7 +31,7 @@ struct FGridLocation
 // Overload some operators.
 bool operator==(const FGridLocation& A, const FGridLocation& B);
 bool operator!=(const FGridLocation& A, const FGridLocation& B);
-bool operator<(FGridLocation A, FGridLocation B);
+bool operator<(const FGridLocation& A, const FGridLocation& B);
 
 // Implement hash function so we can put FGridLocation into an unordered_set.
 namespace std

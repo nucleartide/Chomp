@@ -16,7 +16,8 @@ TArray<FName> AMovablePawn::GetTagsToCollideWith()
 FMovementResult AMovablePawn::MoveTowardsPoint(
 	const FGridLocation& TargetGridPosition,
 	const FGridLocation& TargetDirection,
-	const float DeltaTime)
+	const float DeltaTime,
+	FName DebugLabel)
 {
 	FMovementResult Result{false, 0.0f};
 	if (TargetDirection.IsZero())

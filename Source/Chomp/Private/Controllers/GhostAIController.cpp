@@ -77,8 +77,11 @@ void AGhostAIController::Tick(float DeltaTime)
 
 	// Else, move toward the target.
 	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(
-		Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)
+		Target.Tile, CurrentMoveDirection, DeltaTime, FName("AI")); MovedPastTarget)
 	{
+		// Grab the old direction before updating the movement path.
+		const auto OldDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
+
 		// Update the movement path.
 		// Note that the order of operations is important here.
 		MovementPath.Increment();
@@ -99,14 +102,30 @@ void AGhostAIController::Tick(float DeltaTime)
 		const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
 		Target = FComputeTargetTileResult::Invalid();
 
-		// Align the pawn to the target position + any extra amount in the new move direction.
-		const auto [DirX, DirY] = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
-		const FVector NewLocation{
-			TargetWorldPos.X + DirX * AmountMovedPast,
-			TargetWorldPos.Y + DirY * AmountMovedPast,
-			0.0f
-		};
-		MovablePawn->SetActorLocation(NewLocation);
+		// Apply movement.
+		{
+			const auto NewDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
+			const auto ActorLocation2 = MovablePawn->GetActorLocation();
+			FVector NewLocation =
+				OldDir == NewDir
+					?
+					// Maintain the extra amount in the existing move direction.
+					FVector{
+						TargetWorldPos.X + OldDir.X * AmountMovedPast,
+						TargetWorldPos.Y + OldDir.Y * AmountMovedPast,
+						0.0f
+					}
+					:
+					// Do not apply any extra amount in the new move direction.
+					FVector{
+						TargetWorldPos.X,
+						TargetWorldPos.Y,
+						0.0f
+					};
+			const FVector Difference = NewLocation - ActorLocation2;
+			check(Difference.Size() < 0.5f * 100.0f); // A half-unit jump is sketchy.
+			MovablePawn->SetActorLocation(NewLocation);
+		}
 	}
 }
 
