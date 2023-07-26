@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AStar/MovementPath.h"
 #include "GameFramework/Pawn.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "MovablePawn.generated.h"
@@ -20,11 +21,9 @@ USTRUCT()
 struct FAIMovementResult
 {
 	GENERATED_BODY()
-
+	
 	FVector NewLocation;
 	FRotator NewRotation;
-	bool MovedPastTarget;
-	float AmountMovedPastTarget;
 };
 
 UCLASS()
@@ -65,12 +64,11 @@ public:
 	FVector2D GetActorLocation2D() const;
 
 	// Move towards an FGridLocation by computing a new location, and returning it all in an FAIMovementResult.
-	static FAIMovementResult MoveTowardsPoint2(
-		FVector Location,
-		FRotator Rotation,
-		FVector TargetLocation,
-		float MovementSpeed,
-		float DeltaTime, float RotationInterpSpeed);
+	FAIMovementResult MoveTowardsPoint2(
+		const FVector& Location,
+		const FRotator& Rotation,
+		FMovementPath* MovementPath,
+		const float DeltaTime) const;
 
 private:
 	void WrapAroundWorld();

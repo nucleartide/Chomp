@@ -42,7 +42,7 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 	{
 		const auto MinY = std::min(WorldA.Y, WorldB.Y);
 		const auto MaxY = std::max(WorldA.Y, WorldB.Y);
-		if (MinY <= Location.Y && Location.Y <= MaxY)
+		if (MinY <= Location.Y && Location.Y < MaxY)
 			return true;
 	}
 
@@ -50,7 +50,7 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 	{
 		const auto MinX = std::min(WorldA.X, WorldB.X);
 		const auto MaxX = std::max(WorldA.X, WorldB.X);
-		if (MinX <= Location.X && Location.X <= MaxX)
+		if (MinX <= Location.X && Location.X < MaxX)
 			return true;
 	}
 

@@ -1,4 +1,6 @@
 #include "MovablePawn.h"
+
+#include "AStar/MovementPath.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
@@ -91,50 +93,28 @@ FVector2D AMovablePawn::GetActorLocation2D() const
 // Note: I think it makes sense to have 2 movement algorithms for now.
 // One is a cleaner version of the original, and I will refactor the player movement if the need arises.
 FAIMovementResult AMovablePawn::MoveTowardsPoint2(
-	FVector Location,
-	FRotator Rotation,
-	FVector TargetLocation,
-	float MovementSpeed,
-	float DeltaTime,
-	float RotationInterpSpeed)
+	const FVector& Location,
+	const FRotator& Rotation,
+	FMovementPath* MovementPath,
+	const float DeltaTime) const
 {
-	// We're already there, return a no-movement result.
-	if (Location == TargetLocation)
-		return FAIMovementResult{Location, Rotation, false, 0.0f};
+	// If we're already at the end, return a no-movement result. Note that no rotation takes place.
+	if (MovementPath->WasCompleted(Location))
+		 return FAIMovementResult{Location, Rotation};
 
-	// Assert that Location is within 100 axis-aligned units (inclusive) of TargetLocation.
-	check(
-		Location.X == TargetLocation.X && FGenericPlatformMath::Abs(Location.Y - TargetLocation.Y) <= 100.0f ||
-		Location.Y == TargetLocation.Y && FGenericPlatformMath::Abs(Location.X - TargetLocation.X) <= 100.0f
-	);
+	// Else, compute the DeltaDistance.
+	const auto DeltaDistance = MovementSpeed * DeltaTime;
 
-	// Drop the unneeded Z axis.
-	FVector2D Location2D{Location.X, Location.Y};
-	FVector2D TargetLocation2D{TargetLocation.X, TargetLocation.Y};
+	// Call out to MovementPath->MoveAlongPath(ActorLocation, DeltaDistance), which will return an FVector.
+	const auto NewLocation = MovementPath->MoveAlongPath(Location, DeltaDistance);
 
-	// Compute the new location.
-	const auto Direction = (TargetLocation2D - Location2D).GetSafeNormal();
-	check(Direction.X == 0.0 && Direction.Y == 0.0 || Direction.X == 1.0 && Direction.Y == 0.0 || Direction.X == 0.0 &&
-		Direction.Y == 1.0);
-	const auto NewLocation = Location2D + MovementSpeed * DeltaTime * Direction;
-
-	// Compute whether we moved past the target.
-	const auto MovementDotProduct = FVector2D::DotProduct(Direction, (TargetLocation2D - NewLocation).GetSafeNormal());
-	const auto MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
-	// MovementDotProduct moved past target if it's around -1.0f 
-	const float AmountMovedPast = MovedPastTarget
-		                              ? FMath::Abs(FVector2D::DotProduct(Direction, TargetLocation2D - NewLocation))
-		                              : 0.0f;
-
-	// Compute new rotation.
-	const FVector Dir{Direction.X, Direction.Y, 0.0f};
+	// Compute new rotation given the new position.
+	const auto Dir = (NewLocation - Location).GetSafeNormal();
 	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 
 	// Return computed results.
-	return FAIMovementResult{
-		FVector{NewLocation.X, NewLocation.Y, 0.0f}, NewRotation, MovedPastTarget, AmountMovedPast
-	};
+	return FAIMovementResult{NewLocation, NewRotation};
 }
 
 void AMovablePawn::WrapAroundWorld()

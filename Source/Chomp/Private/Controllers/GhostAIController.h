@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "AStar/GridLocation.h"
 #include "ChompGameState.h"
-#include "AStar/Path.h"
+#include "AStar/MovementPath.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "GhostAIController.generated.h"
 
@@ -25,7 +25,8 @@ class AGhostAIController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool IsTesting = false;
 
-	FPath MovementPath;
+	// TSharedPtr has the benefit of being automatically released when GhostAIController goes out of scope.
+	TSharedPtr<FMovementPath> MovementPath;
 
 protected:
 	virtual void BeginPlay() override;
@@ -50,7 +51,9 @@ private:
 	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	                       ULevelLoader* LevelInstance);
 
-	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
+	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination) cons;
 
 	void ComputeChaseForMovementPath();
+
+	void ResetPawnPosition() const;
 };

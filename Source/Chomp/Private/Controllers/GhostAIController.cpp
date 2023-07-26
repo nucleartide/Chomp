@@ -14,10 +14,15 @@ void AGhostAIController::BeginPlay()
 	// Initialize MovementPath to a one-node path.
 	if (IsTesting)
 	{
+		// Reset pawn position before performing test.
+		ResetPawnPosition();
+
+		// Construct test movement path.
 		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		const auto StartingPosition = Pawn->GetStartingPosition();
 		const std::vector OneNodePath{StartingPosition};
-		MovementPath = FPath(Pawn->GetActorLocation(), OneNodePath, ULevelLoader::GetInstance(Level));
+		MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), OneNodePath, ULevelLoader::GetInstance(Level));
+		check(MovementPath.IsValid());
 	}
 
 	// Attach some handlers for when game state changes.
@@ -27,12 +32,17 @@ void AGhostAIController::BeginPlay()
 		&AGhostAIController::HandleGamePlayingSubstateChanged);
 	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
 
+	// Idea for debugging if you need it:
 	// InputComponent->BindAction("Perform", IE_Pressed, this, &AGhostAIController::OnEKeyPressed);
 }
 
 void AGhostAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Should have been initialized in BeginPlay().
+	if (!MovementPath.IsValid())
+		return;
 
 	auto World = GetWorld();
 	check(World);
@@ -54,36 +64,21 @@ void AGhostAIController::Tick(float DeltaTime)
 	FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
 	auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
 	auto GridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+	check(MovementPath.IsValid());
+	const auto MovementPathPtr = MovementPath.Get();
 
+	// Compute new location and rotation.
+	const auto [NewLocation, NewRotation] = MovablePawn->MoveTowardsPoint2(
+		ActorLocation,
+		MovablePawn->GetActorRotation(),
+		MovementPathPtr,
+		DeltaTime);
+	
+	// Apply new location.
+	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
+	
 #if false
-	// Else, move toward the target.
-	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, DeltaTime, FName("AI")); MovedPastTarget)
-		
-	// Update the movement path if condition is met
-	// Note that the order of operations is important here.
-	MovementPath.NextNode();
-
-	// Apply new location, which depends on the dir of the next node if exceeded.
-	// if there is no next node then the dir is zero
-	{
-		 const auto NewDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
-		 const auto ActorLocation2 = MovablePawn->GetActorLocation();
-		 FVector NewLocation =
-			 // Maintain the extra amount in the existing move direction.
-			 FVector{
-				 TargetWorldPos.X + NewDir.X * AmountMovedPast,
-				 TargetWorldPos.Y + NewDir.Y * AmountMovedPast,
-				 0.0f
-			 };
-		 const FVector Difference = NewLocation - ActorLocation2;
-		 // check(Difference.Size() < 100.0f); // A half-unit jump is sketchy.
-		 MovablePawn->SetActorLocation(NewLocation);
-	}
-
-	// Apply new rotation.
-	// ...
-
-	// After location and rotation have been applied, Replace path entirely if condition has been met
+	// After location and rotation have been applied, compute a new path if condition has been met.
 	if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
 	{
 		  auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -125,14 +120,7 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 {
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
-	{
-		// Set the starting position of the pawn.
-		auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
-		auto StartingGridPosition = GhostPawn->GetStartingPosition();
-		auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
-		FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-		GetPawn()->SetActorLocation(StartingWorldPos);
-	}
+		ResetPawnPosition();
 }
 
 std::vector<FGridLocation> AGhostAIController::ComputePath(
@@ -191,8 +179,11 @@ bool AGhostAIController::CanStartMoving() const
 		NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
 	}
 
-	return Threshold >= 0 && NumberOfDotsConsumed >= 0 && NumberOfDotsConsumed >= Threshold && !MovementPath.
-		WasCompleted();
+	auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	return Threshold >= 0 &&
+		NumberOfDotsConsumed >= 0 &&
+		NumberOfDotsConsumed >= Threshold &&
+		!MovementPath->WasCompleted(Pawn->GetActorLocation());
 }
 
 void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
@@ -234,8 +225,9 @@ void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& Scat
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);
 
-	// MovementPath = FPath(Path);
-	// MovementPath.DebugLog(TEXT("Scatter"));
+	MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	check(MovementPath.IsValid());
+	MovementPath->DebugLog(TEXT("Scatter"));
 }
 
 void AGhostAIController::ComputeChaseForMovementPath()
@@ -251,6 +243,17 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);
 
-	// MovementPath = FPath(Path);
-	// MovementPath.DebugLog(TEXT("Chase"));
+	MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	check(MovementPath.IsValid());
+	MovementPath->DebugLog(TEXT("Chase"));
+}
+
+void AGhostAIController::ResetPawnPosition() const
+{
+	// Set the starting position of the pawn.
+	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
+	const auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
+	const FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
+    GetPawn()->SetActorLocation(StartingWorldPos);
 }
