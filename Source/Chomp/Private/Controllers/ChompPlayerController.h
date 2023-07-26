@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChompGameState.h"
 #include "GameFramework/PlayerController.h"
 #include "AStar/GridLocation.h"
 #include "LevelGenerator/LevelLoader.h"
@@ -13,14 +14,12 @@ class AChompPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<class ULevelLoader> Level;
+	TSubclassOf<ULevelLoader> Level;
 
 	UPROPERTY(EditDefaultsOnly, Category = "CustomSettings")
 	float TimeForIntendedDirectionToLast = 0.5f;
 
-private:
 	float VerticalAxis = 0.0f;
 	float HorizontalAxis = 0.0f;
 	float TimeOfLastIntendedDirUpdate = 0.0f;
@@ -38,8 +37,8 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	void OnMoveHorizontal(float Delta);
-	void OnMoveVertical(float Delta);
+	void OnMoveHorizontal(float Input);
+	void OnMoveVertical(float Input);
 
 	UFUNCTION()
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);

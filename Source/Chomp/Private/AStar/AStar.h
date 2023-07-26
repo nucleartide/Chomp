@@ -1,28 +1,20 @@
 #pragma once
 
-#include <algorithm>
-#include <iostream>
 #include <functional>
-#include <iomanip>
-#include <unordered_map>
 #include <unordered_set>
-#include <array>
 #include <vector>
 #include <utility>
-#include <queue>
 #include <tuple>
 #include <cstdlib>
-
 #include "CoreMinimal.h"
 #include "Math/IntPoint.h"
-
 #include "AStar/GridLocation.h"
 #include "AStar/Graph.h"
 
-class AStar
+class FAStar
 {
 public:
-	static double ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b);
+	static double ManhattanDistanceHeuristic(const FGridLocation& A, const FGridLocation& B);
 
 	template <typename Location>
 	static void Pathfind(IGraph *Graph,

@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChompGameState.h"
 #include "GameFramework/Actor.h"
 #include "Engine/StaticMeshActor.h"
 #include "Templates/SubclassOf.h"
@@ -36,12 +37,13 @@ private:
 	/**
 	 * A list of generated tiles in the scene.
 	 */
+	UPROPERTY()
 	TArray<AActor *> Tiles;
 
 	/**
 	 * Override BeginPlay() to customize initialization.
 	 */
-	void BeginPlay() override;
+	virtual void BeginPlay() override;
 
 	/**
 	 * Clear any leftover tiles in the level.

@@ -10,6 +10,17 @@
 void AGhostAIController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	if (IsTesting)
+	{
+		// Test out the one node path case.
+		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		const auto StartingPosition = Pawn->GetStartingPosition();
+		const std::vector OneNodePath{StartingPosition};
+		MovementPath = FPath(OneNodePath);
+	}
+
+	// Attach some handlers for when game state changes.
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 		this,
@@ -122,7 +133,6 @@ void AGhostAIController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 /**
  * When the game starts playing, reset the position of the pawn.
  */
-// ReSharper disable once CppMemberFunctionMayBeConst
 void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
 {
 	check(OldState != NewState);
@@ -147,8 +157,8 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 	// Compute A* path.
 	std::unordered_map<FGridLocation, FGridLocation> CameFrom;
 	std::unordered_map<FGridLocation, double> CostSoFar;
-	const std::function FunctionObject = &AStar::ManhattanDistanceHeuristic;
-	AStar::Pathfind<FGridLocation>(
+	const std::function FunctionObject = &FAStar::ManhattanDistanceHeuristic;
+	FAStar::Pathfind<FGridLocation>(
 		LevelInstance,
 		StartGridPos,
 		EndGridPos,
@@ -161,11 +171,12 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 		DebugAStar(CameFrom, LevelInstance);
 
 	// Reconstruct the path.
-	auto Path = AStar::ReconstructPath(
+	auto Path = FAStar::ReconstructPath(
 		StartGridPos,
 		EndGridPos,
 		CameFrom);
 	check(Path[0] == StartGridPos);
+	check(Path.size() >= 1);
 
 	// Assert that ghost is axis-aligned.
 	auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);

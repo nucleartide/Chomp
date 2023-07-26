@@ -1,14 +1,11 @@
 #include "UI/ScoreWidget.h"
-
 #include "Components/TextBlock.h"
-
 #include "ChompGameState.h"
-#include "Utils/Debug.h"
 
 void UScoreWidget::NativeConstruct()
 {
     Super::NativeConstruct();
-    auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
+    const auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
     ChompGameState->OnScoreUpdatedDelegate.AddUniqueDynamic(this, &UScoreWidget::HandleScoreUpdated);
 }
 

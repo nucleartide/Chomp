@@ -1,9 +1,8 @@
 #include "LevelGenerator/LevelLoader.h"
 #include <algorithm>
 #include "Algo/Reverse.h"
-#include "Constants/GameplayTag.h"
+#include "Constants/ChompGameplayTag.h"
 #include "Engine/World.h"
-#include "Utils/Debug.h"
 
 ULevelLoader* ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass)
 {
@@ -52,8 +51,7 @@ void ULevelLoader::LoadLevel()
 	{
 		for (auto Y = 0; Y < NumberOfColumns; Y++)
 		{
-			auto Character = StringList[X][Y];
-			if (Character == 'W' || Character == 'x')
+			if (auto Character = StringList[X][Y]; Character == 'W' || Character == 'x')
 			{
 				Walls.insert(FGridLocation{X, Y});
 			}
@@ -184,7 +182,7 @@ FComputeTargetTileResult ULevelLoader::ComputeTargetTile(
 		const auto Blah = DebugLabel;
 		
 		// If we overlapped with a collider, then we can't travel to target position. Return false.
-		if (auto HitActor = HitResult.GetActor(); GameplayTag::ActorHasOneOf(HitActor, TagsToCollideWith))
+		if (auto HitActor = HitResult.GetActor(); FChompGameplayTag::ActorHasOneOf(HitActor, TagsToCollideWith))
 		{
 			Result.IsValid = false;
 			return Result;

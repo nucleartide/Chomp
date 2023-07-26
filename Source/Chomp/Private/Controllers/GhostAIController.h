@@ -14,14 +14,16 @@ class AGhostAIController : public AAIController
 {
 	GENERATED_BODY()
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
-private:
+	// Whether we are currently running test code for the sake of debugging.
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	bool IsTesting = false;
+
 	// Similar to AChompPlayerController, we store a notion of a TargetTile.
 	FComputeTargetTileResult Target;
 

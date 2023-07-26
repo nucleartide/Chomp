@@ -21,17 +21,17 @@ struct FGridLocation
     bool IsZero() const;
 
     // Copy assignment operator.
-    FGridLocation& operator=(const FGridLocation& other) {
-        X = other.X;
-        Y = other.Y;
+    FGridLocation& operator=(const FGridLocation& Other) {
+        X = Other.X;
+        Y = Other.Y;
         return *this;
     }
 };
 
 // Overload some operators.
-bool operator==(FGridLocation a, FGridLocation b);
-bool operator!=(FGridLocation a, FGridLocation b);
-bool operator<(FGridLocation a, FGridLocation b);
+bool operator==(const FGridLocation& A, const FGridLocation& B);
+bool operator!=(const FGridLocation& A, const FGridLocation& B);
+bool operator<(FGridLocation A, FGridLocation B);
 
 // Implement hash function so we can put FGridLocation into an unordered_set.
 namespace std
@@ -39,10 +39,10 @@ namespace std
     template <>
     struct hash<FGridLocation>
     {
-        std::size_t operator()(const FGridLocation &id) const noexcept
+        std::size_t operator()(const FGridLocation &ID) const noexcept
         {
             // NOTE: better to use something like boost hash_combine
-            return std::hash<int>()(id.X ^ (id.Y << 16));
+            return std::hash<int>()(ID.X ^ ID.Y << 16);
         }
     };
 }

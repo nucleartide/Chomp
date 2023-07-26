@@ -1,5 +1,4 @@
 #include "Pawns/ChompPawnManager.h"
-#include "ChompGameMode.h"
 #include "ChompGameState.h"
 #include "Pawns/ChompPawn.h"
 #include "Kismet/GameplayStatics.h"

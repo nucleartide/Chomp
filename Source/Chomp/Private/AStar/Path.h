@@ -50,8 +50,7 @@ public:
 			return Result;
 		}
 
-		const int NumLocations = Locations.size();
-		if (CurrentLocationIndex > NumLocations - 2)
+		if (const int NumLocations = Locations.size(); CurrentLocationIndex > NumLocations - 2)
 		{
 			FGridLocation Zero{0, 0};
 			return Zero;

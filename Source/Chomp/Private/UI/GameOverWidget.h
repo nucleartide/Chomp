@@ -18,7 +18,7 @@ protected:
 	virtual void NativeConstruct() override;
 
 	UFUNCTION()
-	void HandleRestartGame();
+	void HandleRestartGame() const;
 
 public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)

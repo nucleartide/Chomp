@@ -10,20 +10,20 @@
 #include "Utils/PriorityQueue.h"
 #include "LevelGenerator/LevelLoader.h"
 
-double AStar::ManhattanDistanceHeuristic(FGridLocation a, FGridLocation b)
+double FAStar::ManhattanDistanceHeuristic(const FGridLocation& A, const FGridLocation& B)
 {
-    return std::abs(a.X - b.X) + std::abs(a.Y - b.Y);
+    return std::abs(A.X - B.X) + std::abs(A.Y - B.Y);
 }
 
 template <typename Location>
-void AStar::Pathfind(IGraph *Graph,
+void FAStar::Pathfind(IGraph *Graph,
                      Location Start,
                      Location Goal,
                      std::unordered_map<Location, Location> &CameFrom,
                      std::unordered_map<Location, double> &CostSoFar,
                      const std::function<double(Location, Location)> &Heuristic)
 {
-    PriorityQueue<Location, double> Frontier;
+    TPriorityQueue<Location, double> Frontier;
     Frontier.put(Start, 0);
 
     CameFrom[Start] = Start;
@@ -58,14 +58,14 @@ void AStar::Pathfind(IGraph *Graph,
     }
 }
 
-template void AStar::Pathfind(IGraph *Graph,
+template void FAStar::Pathfind(IGraph *Graph,
                               FGridLocation Start,
                               FGridLocation Goal,
                               std::unordered_map<FGridLocation, FGridLocation> &CameFrom,
                               std::unordered_map<FGridLocation, double> &CostSoFar,
                               const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
-std::vector<FGridLocation> AStar::ReconstructPath(
+std::vector<FGridLocation> FAStar::ReconstructPath(
     const FGridLocation& Start,
     const FGridLocation& Goal,
     std::unordered_map<FGridLocation, FGridLocation> &CameFrom)

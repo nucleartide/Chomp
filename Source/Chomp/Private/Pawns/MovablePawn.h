@@ -21,7 +21,6 @@ class AMovablePawn : public APawn
 {
 	GENERATED_BODY()
 
-private:
 	/**
 	 * The collision tags that this pawn collides with.
 	 */
@@ -38,7 +37,7 @@ private:
 	 * Reference to the ULevelLoader. Needed for bounds checks.
 	 */
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
-	TSubclassOf<class ULevelLoader> Level;
+	TSubclassOf<ULevelLoader> Level;
 
 	/**
 	 * Movement speed scaling factor.

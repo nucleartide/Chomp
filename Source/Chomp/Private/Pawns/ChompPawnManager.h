@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChompGameState.h"
 #include "GameFramework/Actor.h"
 #include "UObject/WeakObjectPtrTemplates.h"
 #include "AStar/GridLocation.h"
@@ -15,7 +16,6 @@ class AChompPawnManager : public AActor
 {
 	GENERATED_BODY()
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<class AChompPawn> ChompPawn;
 
@@ -28,8 +28,7 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FRotator SpawnRotation;
 
-private:
-	TWeakObjectPtr<class AChompPawn> ChompPawnInstance;
+	TWeakObjectPtr<AChompPawn> ChompPawnInstance;
 
 protected:
 	virtual void BeginPlay() override;

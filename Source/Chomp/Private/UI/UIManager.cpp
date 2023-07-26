@@ -3,11 +3,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
-#include "ChompGameMode.h"
 #include "ChompGameState.h"
-#include "Blueprint/WidgetBlueprintLibrary.h"
 
-AUIManager::AUIManager()
+AUIManager::AUIManager(): AActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -15,12 +13,12 @@ AUIManager::AUIManager()
 void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
-	auto GameState = GetWorld()->GetGameState<AChompGameState>();
+	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
 	GameState->OnDotsClearedDelegate.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
 }
 
-void AUIManager::Tick(float DeltaTime)
+void AUIManager::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }
@@ -33,14 +31,14 @@ void AUIManager::HandleDotsCleared()
 	GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
 	GameOverWidgetInstance->AddToViewport();
 
-	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
-void AUIManager::HandlePlayerDeath(EChompGameState OldState, EChompGameState NewState)
+void AUIManager::HandlePlayerDeath(const EChompGameState OldState, const EChompGameState NewState)
 {
-	auto DidLose = OldState != NewState && NewState == EChompGameState::GameOverLose;
+	const auto DidLose = OldState != NewState && NewState == EChompGameState::GameOverLose;
 	if (!DidLose)
 		return;
 
@@ -50,7 +48,7 @@ void AUIManager::HandlePlayerDeath(EChompGameState OldState, EChompGameState New
 	GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
 	GameOverWidgetInstance->AddToViewport();
 
-	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(true);
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
@@ -67,7 +65,7 @@ void AUIManager::HandleRestartGameClicked()
 	GameOverWidgetInstance = nullptr;
 
 	// Reset mouse cursor state.
-	auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
 	Controller->SetInputMode(FInputModeGameOnly());
 }

@@ -1,15 +1,10 @@
 #include "LevelGenerator/LevelGenerationActor.h"
-
 #include "Misc/FileHelper.h"
 #include "Misc/Paths.h"
 #include "Kismet/BlueprintFunctionLibrary.h"
 #include "GameFramework/Actor.h"
-#include "Kismet/GameplayStatics.h"
-
 #include "Actors/ConsumableDotActor.h"
 #include "AStar/GridLocation.h"
-#include "AStar/AStar.h"
-#include "ChompGameMode.h"
 #include "ChompGameState.h"
 #include "Utils/Debug.h"
 
@@ -18,14 +13,14 @@ void ALevelGenerationActor::BeginPlay()
 	Super::BeginPlay();
 
 	// Load level data before doing anything else.
-	auto Level = ULevelLoader::GetInstance(LevelLoader);
+	const auto Level = ULevelLoader::GetInstance(LevelLoader);
 	Level->LoadLevel();
 
 	// Once level data is loaded, generate tiles based off tile data.
 	GenerateTiles();
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
-	auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
+	const auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
 	ChompGameMode->OnLateGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
 }
 
@@ -33,7 +28,7 @@ void ALevelGenerationActor::ClearLeftoverTiles()
 {
 	DEBUG_LOG(TEXT("Destroying all leftover tiles..."));
 
-	for (auto Tile : Tiles)
+	for (const auto Tile : Tiles)
 	{
 		if (IsValid(Tile))
 		{
@@ -55,8 +50,7 @@ void ALevelGenerationActor::GenerateTiles()
 
 		for (int Y = 0; Y < Level->GetLevelWidth(); Y++)
 		{
-			auto Character = Row[Y];
-			if (Character == 'W' || Character == '-')
+			if (auto Character = Row[Y]; Character == 'W' || Character == '-')
 			{
 				// Compute selected tile.
 				TSubclassOf<AStaticMeshActor> SelectedTile;
@@ -124,7 +118,7 @@ void ALevelGenerationActor::GenerateTiles()
 	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetTiles(EChompGameState OldState, EChompGameState NewState)
+void ALevelGenerationActor::ResetTiles(const EChompGameState OldState, const EChompGameState NewState)
 {
 	if (NewState == EChompGameState::Playing)
 	{

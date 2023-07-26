@@ -1,31 +1,31 @@
 #include "AStar/GridLocation.h"
-#include <functional>
 
-bool operator == (FGridLocation a, FGridLocation b) {
-  return a.X == b.X && a.Y == b.Y;
+bool operator ==(const FGridLocation& A, const FGridLocation& B)
+{
+	return A.X == B.X && A.Y == B.Y;
 }
 
-bool operator!=(FGridLocation a, FGridLocation b)
+bool operator!=(const FGridLocation& A, const FGridLocation& B)
 {
-    return !(a == b);
+	return !(A == B);
 }
 
-bool operator<(FGridLocation a, FGridLocation b)
+bool operator<(const FGridLocation& A, const FGridLocation& B)
 {
-    return std::tie(a.X, a.Y) < std::tie(b.X, b.Y);
+	return std::tie(A.X, A.Y) < std::tie(B.X, B.Y);
 }
 
 FString FGridLocation::ToString() const
 {
-    return FString::Printf(TEXT("(%d, %d)"), X, Y);
+	return FString::Printf(TEXT("(%d, %d)"), X, Y);
 }
 
 bool FGridLocation::IsNonZero() const
 {
-    return !IsZero();
+	return !IsZero();
 }
 
 bool FGridLocation::IsZero() const
 {
-    return X == 0 && Y == 0;
+	return X == 0 && Y == 0;
 }

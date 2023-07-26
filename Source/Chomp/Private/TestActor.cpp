@@ -1,8 +1,7 @@
 #include "TestActor.h"
 #include "Utils/Debug.h"
-#include "ChompGameMode.h"
 
-ATestActor::ATestActor()
+ATestActor::ATestActor(): AActor()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
@@ -23,7 +22,7 @@ void ATestActor::BeginPlay()
 	}
 }
 
-void ATestActor::Tick(float DeltaTime)
+void ATestActor::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 }

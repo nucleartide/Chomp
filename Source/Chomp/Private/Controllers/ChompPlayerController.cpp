@@ -13,12 +13,12 @@ AChompPlayerController::AChompPlayerController(): APlayerController()
     bAutoManageActiveCameraTarget = false;
 }
 
-void AChompPlayerController::OnMoveVertical(float Input)
+void AChompPlayerController::OnMoveVertical(const float Input)
 {
     VerticalAxis = Input;
 }
 
-void AChompPlayerController::OnMoveHorizontal(float Input)
+void AChompPlayerController::OnMoveHorizontal(const float Input)
 {
     HorizontalAxis = Input;
 }
@@ -54,8 +54,7 @@ void AChompPlayerController::Tick(float DeltaTime)
     check(GameState);
 
     // Early return if game is not playing.
-    auto IsGamePlaying = GameState->GetEnum() == EChompGameState::Playing;
-    if (!IsGamePlaying)
+    if (auto IsGamePlaying = GameState->GetEnum() == EChompGameState::Playing; !IsGamePlaying)
         return;
 
     // Early return if pawn is dead.

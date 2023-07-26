@@ -52,7 +52,6 @@ class AChompGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float ScoreMultiplier = 10;
 
@@ -78,7 +77,6 @@ public:
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnGamePlayingStateChangedSignature OnGamePlayingStateChangedDelegate;
 
-public:	
 	AChompGameState();
 	void ResetDots(int NumberOfDots);
 	void ConsumeDot();
@@ -103,7 +101,6 @@ private:
 	// The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
 	float GameStartTime = 0.0f;
 
-private:
 	void UpdateScore(int NewScore);
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 	void UpdateNumberOfDotsConsumed(int NewNumberOfDotsConsumed);

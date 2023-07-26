@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChompGameState.h"
 #include "GameFramework/Actor.h"
 #include "LevelGenerator/LevelGenerationActor.h"
 #include "Blueprint/UserWidget.h"
@@ -40,6 +41,7 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	UPROPERTY()
 	class UGameOverWidget* GameOverWidgetInstance;
 
 	UFUNCTION()
