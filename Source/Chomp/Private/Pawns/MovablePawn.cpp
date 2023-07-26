@@ -88,6 +88,8 @@ FVector2D AMovablePawn::GetActorLocation2D() const
 	return Location2D;
 }
 
+// Note: I think it makes sense to have 2 movement algorithms for now.
+// One is a cleaner version of the original, and I will refactor the player movement if the need arises.
 FAIMovementResult AMovablePawn::MoveTowardsPoint2(
 	FVector Location,
 	FRotator Rotation,
