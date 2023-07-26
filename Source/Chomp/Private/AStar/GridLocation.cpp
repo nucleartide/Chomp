@@ -1,4 +1,5 @@
 #include "AStar/GridLocation.h"
+#include <algorithm>
 
 bool operator ==(const FGridLocation& A, const FGridLocation& B)
 {
@@ -28,4 +29,29 @@ bool FGridLocation::IsNonZero() const
 bool FGridLocation::IsZero() const
 {
 	return X == 0 && Y == 0;
+}
+
+bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B,
+                                const ULevelLoader* LevelInstance)
+{
+	const auto WorldA = LevelInstance->GridToWorld(A);
+	const auto WorldB = LevelInstance->GridToWorld(B);
+
+	if (WorldA.X == WorldB.X && Location.X == WorldA.X)
+	{
+		const auto MinY = std::min(WorldA.Y, WorldB.Y);
+		const auto MaxY = std::max(WorldA.Y, WorldB.Y);
+		if (MinY <= Location.Y && Location.Y <= MaxY)
+			return true;
+	}
+
+	if (WorldA.Y == WorldB.Y && Location.Y == WorldA.Y)
+	{
+		const auto MinX = std::min(WorldA.X, WorldB.X);
+		const auto MaxX = std::max(WorldA.X, WorldB.X);
+		if (MinX <= Location.X && Location.X <= MaxX)
+			return true;
+	}
+
+	return false;
 }

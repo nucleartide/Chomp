@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "LevelGenerator/LevelLoader.h"
 #include "GridLocation.generated.h"
 
 USTRUCT(BlueprintType, Blueprintable)
@@ -19,6 +20,8 @@ struct FGridLocation
     bool IsNonZero() const;
 
     bool IsZero() const;
+
+    static bool IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B, const ULevelLoader *LevelInstance);
 
     // Copy assignment operator.
     FGridLocation& operator=(const FGridLocation& Other) {

@@ -96,6 +96,8 @@ public:
 	 */
 	bool Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const;
 
+	bool IsWall(const FGridLocation& Location) const;
+
 	FComputeTargetTileResult ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, const TArray<FName> &TagsToCollideWith, FString DebugLabel) const;
 
 	/**

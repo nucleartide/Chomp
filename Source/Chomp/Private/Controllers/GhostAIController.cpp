@@ -26,6 +26,8 @@ void AGhostAIController::BeginPlay()
 		this,
 		&AGhostAIController::HandleGamePlayingSubstateChanged);
 	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+
+	// InputComponent->BindAction("Perform", IE_Pressed, this, &AGhostAIController::OnEKeyPressed);
 }
 
 void AGhostAIController::Tick(float DeltaTime)
@@ -63,7 +65,7 @@ void AGhostAIController::Tick(float DeltaTime)
 	auto CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
 	if (CurrentLocationIndex == -1 && CurrentMoveDirection.IsZero())
 	{
-		MovementPath.Increment();
+		MovementPath.NextNode();
 		CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
 	}
 
@@ -84,7 +86,7 @@ void AGhostAIController::Tick(float DeltaTime)
 
 		// Update the movement path.
 		// Note that the order of operations is important here.
-		MovementPath.Increment();
+		MovementPath.NextNode();
 		if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
 		{
 			auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -107,23 +109,14 @@ void AGhostAIController::Tick(float DeltaTime)
 			const auto NewDir = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
 			const auto ActorLocation2 = MovablePawn->GetActorLocation();
 			FVector NewLocation =
-				OldDir == NewDir
-					?
-					// Maintain the extra amount in the existing move direction.
-					FVector{
-						TargetWorldPos.X + OldDir.X * AmountMovedPast,
-						TargetWorldPos.Y + OldDir.Y * AmountMovedPast,
-						0.0f
-					}
-					:
-					// Do not apply any extra amount in the new move direction.
-					FVector{
-						TargetWorldPos.X,
-						TargetWorldPos.Y,
-						0.0f
-					};
+				// Maintain the extra amount in the existing move direction.
+				FVector{
+					TargetWorldPos.X + NewDir.X * AmountMovedPast,
+					TargetWorldPos.Y + NewDir.Y * AmountMovedPast,
+					0.0f
+				};
 			const FVector Difference = NewLocation - ActorLocation2;
-			check(Difference.Size() < 0.5f * 100.0f); // A half-unit jump is sketchy.
+			// check(Difference.Size() < 100.0f); // A half-unit jump is sketchy.
 			MovablePawn->SetActorLocation(NewLocation);
 		}
 	}

@@ -4,36 +4,65 @@
 #include "GridLocation.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "Utils/Debug.h"
+#include "GenericPlatform/GenericPlatformMath.h"
 
 struct FPath
 {
 private:
-	// Should be initialized to -1 so that Pawn can reach the first point on the path before continuing.
+	// A value of -1 indicates that the Pawn must reach the first point on the path before continuing.
 	int CurrentLocationIndex = -1;
 	std::vector<FGridLocation> Locations;
 
 public:
-	explicit FPath()
+	explicit FPath(
+		const FVector& CurrentWorldLocation,
+		const std::vector<FGridLocation>& LocationPath,
+		const ULevelLoader *LevelInstance)
 	{
-		CurrentLocationIndex = -1;
+		// Update CurrentLocationIndex.
+		for (auto i = 0; i < LocationPath.size() - 1; i++)
+		{
+			auto CurrentNode = LocationPath[i];
+			auto NextNode = LocationPath[i + 1];
+			if (FGridLocation::IsInBetween(CurrentWorldLocation, CurrentNode, NextNode, LevelInstance))
+				CurrentLocationIndex = i;
+		}
+
+		// Sanity check on CurrentLocationIndex.
+		// If we haven't reached the start node yet,
+		if (CurrentLocationIndex == -1 && LocationPath.size() >= 1)
+		{
+			// Then CurrentWorldLocation must be within 50 axis-aligned units (inclusive) of the start node.
+			const auto WorldA = LevelInstance->GridToWorld(LocationPath.at(0));
+			check(
+				CurrentWorldLocation.X == WorldA.X && FGenericPlatformMath::Abs(CurrentWorldLocation.Y - WorldA.Y) <= 50.0f ||
+				CurrentWorldLocation.Y == WorldA.Y && FGenericPlatformMath::Abs(CurrentWorldLocation.X - WorldA.X) <= 50.0f);
+		}
+
+		// Sanity check on LocationPath.
+		// Assert that each grid location is not a wall.
+		for (auto Location : LocationPath)
+		{
+			check(!LevelInstance->IsWall(Location));
+		}
+
+		// Update Locations.
+		Locations = LocationPath;
 	}
 
-	explicit FPath(const std::vector<FGridLocation>& NewLocations)
-	{
-		CurrentLocationIndex = -1;
-		Locations = NewLocations;
-	}
+	// [x] 1st, 2nd, world position rule
+	// [x] assert always on path
+	// [x] assert path nodes are not walls
+	// [x] implement
+	// [ ] refactor ai controller so that you no longer have target tile nor current direction
 
-	void Increment()
+	void NextNode()
 	{
 		CurrentLocationIndex++;
 	}
 
-	int GetCurrentLocationIndex() const
-	{
-		return CurrentLocationIndex;
-	}
-
+#if false
+	// TODO.
 	FGridLocation GetCurrentMoveDirection(FVector WorldLocation, const ULevelLoader* LevelInstance)
 	{
 		if (CurrentLocationIndex == -1)
@@ -63,7 +92,9 @@ public:
 		check(FMath::Abs(Result.Y) <= 1);
 		return Result;
 	}
+#endif
 
+	// Unit test this when I have time: zero location path should also work.
 	bool WasCompleted(int Index = -1) const
 	{
 		if (Index == -1)
