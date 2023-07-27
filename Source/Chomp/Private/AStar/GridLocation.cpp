@@ -31,6 +31,11 @@ bool FGridLocation::IsZero() const
 	return X == 0 && Y == 0;
 }
 
+FGridLocation FGridLocation::operator+(const FGridLocation& IntendedDir) const
+{
+	return FGridLocation{X + IntendedDir.X, Y + IntendedDir.Y};
+}
+
 bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B,
                                 const ULevelLoader* LevelInstance)
 {

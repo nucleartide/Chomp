@@ -6,24 +6,29 @@
 #include "AStar/MovementPath.h"
 #include "GameFramework/Pawn.h"
 #include "LevelGenerator/LevelLoader.h"
+
 #include "MovablePawn.generated.h"
+
+struct FMovementIntention;
+struct FMovement;
 
 USTRUCT()
 struct FMovementResult
 {
 	GENERATED_BODY()
 
-	bool MovedPastTarget = false;
-	float AmountMovedPast = 0.0f;
+	FVector NewLocation;
+	FRotator NewRotation;
 };
 
 USTRUCT()
-struct FAIMovementResult
+struct FMoveInDirectionResult
 {
 	GENERATED_BODY()
-	
+
 	FVector NewLocation;
 	FRotator NewRotation;
+	bool InvalidateTargetTile;	
 };
 
 UCLASS()
@@ -57,19 +62,25 @@ class AMovablePawn : public APawn
 
 public:
 	AMovablePawn();
-	TArray<FName> GetTagsToCollideWith();
-	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection,
-	                                 float DeltaTime, FName DebugLabel);
+
+	FMoveInDirectionResult MoveInDirection(
+    	TSharedPtr<FMovement> Movement,
+    	TSharedPtr<FMovementIntention> MovementIntention,
+		const float DeltaTime) const;
+
 	FGridLocation GetGridLocation() const;
+	
 	FVector2D GetActorLocation2D() const;
 
-	// Move towards an FGridLocation by computing a new location, and returning it all in an FAIMovementResult.
-	FAIMovementResult MoveTowardsPoint2(
-		const FVector& Location,
-		const FRotator& Rotation,
+	FMovementResult MoveAlongPath(
 		FMovementPath* MovementPath,
 		const float DeltaTime) const;
 
+	// Check whether a Pawn at Location can travel 1 unit in Direction.
+	bool CanTravelInDirection(FVector Location, FGridLocation Direction) const;
+
 private:
-	void WrapAroundWorld();
+	FVector WrapAroundWorld(FVector Location) const;
+
+	FRotator ComputeNewRotation(const FVector& CurrentLocation, const FVector& NewLocation, float DeltaTime) const;
 };

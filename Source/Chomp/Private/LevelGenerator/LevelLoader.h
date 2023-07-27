@@ -9,22 +9,6 @@
 #include "AStar/GridLocation.h"
 #include "LevelLoader.generated.h"
 
-USTRUCT()
-struct FComputeTargetTileResult
-{
-	GENERATED_BODY()
-
-	bool IsValid;
-	FGridLocation Tile;
-
-	static FComputeTargetTileResult Invalid()
-	{
-		constexpr FGridLocation Location{0, 0};
-		constexpr FComputeTargetTileResult Result{false, Location};
-		return Result;
-	}
-};
-
 /**
  * ULevelLoader loads the contents of a level file (.txt file extension) into memory,
  * then also serves as an instance of the loaded level afterward.
@@ -98,7 +82,6 @@ public:
 
 	bool IsWall(const FGridLocation& Location) const;
 
-	FComputeTargetTileResult ComputeTargetTile(UWorld *World, FVector Location, FGridLocation Direction, const TArray<FName> &TagsToCollideWith, FString DebugLabel) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.

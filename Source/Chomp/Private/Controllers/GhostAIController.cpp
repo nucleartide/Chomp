@@ -6,6 +6,7 @@
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
+#include "Pawns/MovablePawn.h"
 
 void AGhostAIController::BeginPlay()
 {
@@ -48,21 +49,11 @@ void AGhostAIController::Tick(float DeltaTime)
 	if (!CanStartMoving())
 		return;
 
-	// Grab references to things.
-	auto PlayingSubstate = GameState->GetPlayingSubstate();
-	auto LevelInstance = ULevelLoader::GetInstance(Level);
-	auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
-	auto ActorLocation = MovablePawn->GetActorLocation();
-	FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-	auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
-	auto GridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+	// Compute new location and rotation.
+	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
 	check(MovementPath.IsValid());
 	const auto MovementPathPtr = MovementPath.Get();
-
-	// Compute new location and rotation.
-	const auto [NewLocation, NewRotation] = MovablePawn->MoveTowardsPoint2(
-		ActorLocation,
-		MovablePawn->GetActorRotation(),
+	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
 		MovementPathPtr,
 		DeltaTime);
 
@@ -70,7 +61,9 @@ void AGhostAIController::Tick(float DeltaTime)
 	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// Compute a new movement path if conditions are met.
-	if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath->WasCompleted(NewLocation))
+	if (auto PlayingSubstate = GameState->GetPlayingSubstate();
+		PlayingSubstate == EChompGamePlayingSubstate::Scatter &&
+		MovementPath->WasCompleted(NewLocation))
 	{
 		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto Destination = Pawn->GetScatterDestination();

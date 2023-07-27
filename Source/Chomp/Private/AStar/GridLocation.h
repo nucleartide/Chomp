@@ -22,6 +22,8 @@ struct FGridLocation
 
 	bool IsZero() const;
 
+	FGridLocation operator+(const FGridLocation& IntendedDir) const;
+
 	static bool IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B,
 	                        const ULevelLoader* LevelInstance);
 
@@ -31,6 +33,22 @@ struct FGridLocation
 		X = Other.X;
 		Y = Other.Y;
 		return *this;
+	}
+};
+
+struct FMaybeGridLocation
+{
+	bool IsValid;
+	FGridLocation GridLocation;
+
+	static FMaybeGridLocation Invalid()
+	{
+		return FMaybeGridLocation{false, FGridLocation{0, 0}};
+	}
+
+	static FMaybeGridLocation Valid(const FGridLocation& GridLocation)
+	{
+		return FMaybeGridLocation{true, GridLocation};
 	}
 };
 

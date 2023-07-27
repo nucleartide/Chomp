@@ -3,160 +3,106 @@
 #include "GenericPlatform/GenericPlatformMath.h"
 #include "ChompGameState.h"
 #include "Engine/World.h"
+#include "Utils/SafeGet.h"
+#include "Pawns/Movement/Movement.h"
+#include "Pawns/Movement/MovementIntention.h"
 
 AChompPlayerController::AChompPlayerController(): APlayerController()
 {
-    PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = true;
 
-    // Disable this. We want to manage the active camera ourselves.
-    bAutoManageActiveCameraTarget = false;
+	// Disable this. We want to manage the active camera ourselves.
+	bAutoManageActiveCameraTarget = false;
 }
 
 void AChompPlayerController::OnMoveVertical(const float Input)
 {
-    VerticalAxis = Input;
+	VerticalAxisInput = Input;
 }
 
 void AChompPlayerController::OnMoveHorizontal(const float Input)
 {
-    HorizontalAxis = Input;
+	HorizontalAxisInput = Input;
 }
 
-void AChompPlayerController::UpdateIntendedMoveDirection()
+TSharedPtr<FMovementIntention> AChompPlayerController::UpdateIntendedMovement() const
 {
-    auto World = GetWorld();
-    check(World);
+	const auto WorldInstance = FSafeGet::World(this);
 
-    if (VerticalAxis != 0.0f || HorizontalAxis != 0.0f)
-    {
-        // Update intended move direction using raw input.
-        IntendedMoveDirection.X = FGenericPlatformMath::RoundToInt(VerticalAxis);
-        IntendedMoveDirection.Y = FGenericPlatformMath::RoundToInt(HorizontalAxis);
-        TimeOfLastIntendedDirUpdate = World->GetRealTimeSeconds();
-    }
-    else if (World->GetRealTimeSeconds() > TimeOfLastIntendedDirUpdate + TimeForIntendedDirectionToLast)
-    {
-        // Clear input if there's been no new input for awhile (this is configurable).
-        IntendedMoveDirection.X = 0;
-        IntendedMoveDirection.Y = 0;
-    }
+	if (VerticalAxisInput != 0.0f || HorizontalAxisInput != 0.0f)
+		return MakeShared<FMovementIntention>(VerticalAxisInput, HorizontalAxisInput, WorldInstance);
+
+	if (IntendedMovement->SinceLastUpdate(TimeForIntendedDirectionToLast, WorldInstance))
+		return MakeShared<FMovementIntention>(0.0f, 0.0f, WorldInstance);
+
+	return IntendedMovement;
 }
 
-void AChompPlayerController::Tick(float DeltaTime)
+TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile) const
 {
-    Super::Tick(DeltaTime);
+	const auto NewMovement = InvalidateTargetTile
+		                         ? MakeShared<FMovement>(CurrentMovement->Direction,
+		                                                 FMaybeGridLocation{false, FGridLocation{0, 0}})
+		                         : CurrentMovement;
 
-    // Sanity check that World & GameState aren't null.
-    auto World = GetWorld();
-    check(World);
-    auto GameState = World->GetGameState<AChompGameState>();
-    check(GameState);
+	if (NewMovement->HasValidTargetTile())
+		return NewMovement;
 
-    // Early return if game is not playing.
-    if (auto IsGamePlaying = GameState->GetEnum() == EChompGameState::Playing; !IsGamePlaying)
-        return;
+	if (!IntendedMovement->IsDifferentFrom(NewMovement))
+		return NewMovement;
 
-    // Early return if pawn is dead.
-    auto MovablePawn = GetPawn<AMovablePawn>();
-    if (!MovablePawn)
-        return;
+	if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
+	{
+		const auto CurrentGridLocation = Pawn->GetGridLocation();
+		const auto NextGridLocation = CurrentGridLocation + IntendedMovement->Direction;
+		return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
+	}
 
-    UpdateIntendedMoveDirection();
-
-    auto LevelInstance = ULevelLoader::GetInstance(Level);
-    UpdateCurrentMoveDirectionAndTarget(
-        CurrentMoveDirection,
-        Target,
-        IntendedMoveDirection,
-        World,
-        MovablePawn,
-        LevelInstance,
-        DeltaTime);
+	return NewMovement;
 }
 
-void AChompPlayerController::UpdateCurrentMoveDirectionAndTarget(
-    FGridLocation &CurrentMoveDirection,
-    FComputeTargetTileResult &Target,
-    const FGridLocation& IntendedMoveDirection,
-    UWorld *World,
-    AMovablePawn *MovablePawn,
-    const ULevelLoader *LevelInstance,
-    const float DeltaTime)
+void AChompPlayerController::Tick(const float DeltaTime)
 {
-    const auto ActorLocation = MovablePawn->GetActorLocation();
-    const auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
+	Super::Tick(DeltaTime);
 
-    if (!Target.IsValid)
-    {
-        Target = LevelInstance->ComputeTargetTile(World, ActorLocation, CurrentMoveDirection, TagsToCollideWith, TEXT("Player"));
-        // CurrentMoveDirection remains the same.
-    }
+	if (const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+		GameState->GetEnum() != EChompGameState::Playing)
+		return;
 
-    if (IntendedMoveDirection.IsNonZero() && (!Target.IsValid || CurrentMoveDirection != IntendedMoveDirection))
-    {
-        if (const auto Result = LevelInstance->ComputeTargetTile(World, ActorLocation, IntendedMoveDirection, TagsToCollideWith, TEXT("Player")); Result.IsValid)
-        {
-            Target = Result;
-            CurrentMoveDirection = IntendedMoveDirection;
-        }
-    }
+	const auto MovablePawn = GetPawn<AMovablePawn>();
+	if (!MovablePawn)
+		return;
 
-    // [ ] funkiness occurs here when character wraps around, and the amount moved past is wonky
-    // [ ] see if the same bug affects ghosts, in that the actor location is set twice. most likely not since ghosts don't wrap around
-    if (Target.IsValid)
-    {
-        if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(Target.Tile, CurrentMoveDirection, DeltaTime, FName("Player")); MovedPastTarget)
-        {
-            // Check if next move from target is valid.
-            const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
-            const FVector TargetWorldVec{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
-            const auto Dir = IntendedMoveDirection.IsNonZero() ? IntendedMoveDirection : CurrentMoveDirection;
-            const auto Result = LevelInstance->ComputeTargetTile(World, TargetWorldVec, Dir, TagsToCollideWith, TEXT("Player"));
-
-            // Update our actor's state depending on the result.
-            Target = Result;
-            if (Result.IsValid) CurrentMoveDirection = Dir;
-
-            // Finally, update our actor's position depending on the result.
-            if (Result.IsValid)
-            {
-                const FVector NewLocation{
-                    TargetWorldPos.X + Dir.X * AmountMovedPast,
-                    TargetWorldPos.Y + Dir.Y * AmountMovedPast,
-                    0.0f};
-                MovablePawn->SetActorLocation(NewLocation);
-            }
-            else
-            {
-                const FVector NewLocation{TargetWorldPos.X, TargetWorldPos.Y, 0.0f};
-                MovablePawn->SetActorLocation(NewLocation);
-            }
-        }
-    }
+	const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
+		CurrentMovement,
+		IntendedMovement,
+		DeltaTime);
+	MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
+	
+	IntendedMovement = UpdateIntendedMovement();
+	CurrentMovement = UpdateCurrentMovement(InvalidateTargetTile);
 }
 
 void AChompPlayerController::BeginPlay()
 {
-    Super::BeginPlay();
+	Super::BeginPlay();
 
-    // Bind input axes.
-    InputComponent->BindAxis("Move Forward / Backward", this, &AChompPlayerController::OnMoveVertical);
-    InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
+	// Bind input axes.
+	InputComponent->BindAxis("Move Forward / Backward", this, &AChompPlayerController::OnMoveVertical);
+	InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
 
-    // Bind restart handler.
-    auto World = GetWorld();
-    check(World);
-    World->GetGameState<AChompGameState>()->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
+	// Bind restart handler.
+	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
 }
 
 void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
 {
-    check(OldState != NewState);
-    if (NewState == EChompGameState::Playing)
-    {
-        // If we are restarting, reset some internal state around the selected target tile + move direction.
-        Target = FComputeTargetTileResult::Invalid();
-        CurrentMoveDirection.X = InitialMoveDirection.X;
-        CurrentMoveDirection.Y = InitialMoveDirection.Y;
-    }
+	check(OldState != NewState);
+	if (NewState == EChompGameState::Playing)
+	{
+		const auto World = FSafeGet::World(this);
+		IntendedMovement = MakeShared<FMovementIntention>(InitialMoveDirection, World);
+	}
 }

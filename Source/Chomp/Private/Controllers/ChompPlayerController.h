@@ -3,11 +3,13 @@
 #include "CoreMinimal.h"
 #include "ChompGameState.h"
 #include "GameFramework/PlayerController.h"
-#include "AStar/GridLocation.h"
 #include "LevelGenerator/LevelLoader.h"
-#include "Pawns/MovablePawn.h"
 
 #include "ChompPlayerController.generated.h"
+
+struct FMovement;
+struct FMovementIntention;
+struct FGridLocation;
 
 UCLASS()
 class AChompPlayerController : public APlayerController
@@ -17,39 +19,42 @@ class AChompPlayerController : public APlayerController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
-	UPROPERTY(EditDefaultsOnly, Category = "CustomSettings")
-	float TimeForIntendedDirectionToLast = 0.5f;
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	double TimeForIntendedDirectionToLast = 0.5;
 
-	float VerticalAxis = 0.0f;
-	float HorizontalAxis = 0.0f;
-	float TimeOfLastIntendedDirUpdate = 0.0f;
-
+	// The pawn's initial movement direction.
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation InitialMoveDirection{0, 1};
-	FGridLocation CurrentMoveDirection{0, 1};
-	FGridLocation IntendedMoveDirection;
-	FComputeTargetTileResult Target;
+
+	// Vertical input that is read from keyboard.
+	float VerticalAxisInput = 0.0f;
+
+	// Horizontal input that is read from keyboard.
+	float HorizontalAxisInput = 0.0f;
+
+	// The next movement that is intended by the player.
+	TSharedPtr<FMovementIntention> IntendedMovement;
+
+	// The movement that is currently taking place.
+	TSharedPtr<FMovement> CurrentMovement;
 
 public:
 	AChompPlayerController();
 
 protected:
 	virtual void BeginPlay() override;
+
 	virtual void Tick(float DeltaTime) override;
 
 private:
 	void OnMoveHorizontal(float Input);
+
 	void OnMoveVertical(float Input);
 
 	UFUNCTION()
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
-	void UpdateIntendedMoveDirection();
-	static void UpdateCurrentMoveDirectionAndTarget(
-		FGridLocation &CurrentMoveDirection,
-		FComputeTargetTileResult &Target,
-		const FGridLocation& IntendedMoveDirection,
-		UWorld *World,
-		AMovablePawn *MovablePawn,
-		const ULevelLoader *LevelInstance,
-		float DeltaTime);
+	TSharedPtr<FMovementIntention> UpdateIntendedMovement() const;
+
+	TSharedPtr<FMovement> UpdateCurrentMovement(const bool InvalidateTargetTile) const;
 };
