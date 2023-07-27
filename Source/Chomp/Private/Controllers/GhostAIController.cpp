@@ -21,7 +21,8 @@ void AGhostAIController::BeginPlay()
 		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		const auto StartingPosition = Pawn->GetStartingPosition();
 		const std::vector OneNodePath{StartingPosition};
-		MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), OneNodePath, ULevelLoader::GetInstance(Level));
+		MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), OneNodePath,
+		                                         ULevelLoader::GetInstance(Level));
 		check(MovementPath.IsValid());
 	}
 
@@ -73,24 +74,22 @@ void AGhostAIController::Tick(float DeltaTime)
 		MovablePawn->GetActorRotation(),
 		MovementPathPtr,
 		DeltaTime);
-	
+
 	// Apply new location.
 	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
-	
-#if false
-	// After location and rotation have been applied, compute a new path if condition has been met.
-	if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
+
+	// Compute a new movement path if conditions are met.
+	if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath->WasCompleted(NewLocation))
 	{
-		  auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-		  auto Destination = Pawn->GetScatterDestination();
-		  ComputeScatterForMovementPath(Destination);
-		  Pawn->SwapScatterOriginAndDestination();
+		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		auto Destination = Pawn->GetScatterDestination();
+		ComputeScatterForMovementPath(Destination);
+		Pawn->SwapScatterOriginAndDestination();
 	}
-	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
+	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath->DidComplete(NewLocation, 1))
 	{
-		  ComputeChaseForMovementPath();
+		ComputeChaseForMovementPath();
 	}
-#endif
 }
 
 /**
@@ -255,5 +254,5 @@ void AGhostAIController::ResetPawnPosition() const
 	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
 	const auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
 	const FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-    GetPawn()->SetActorLocation(StartingWorldPos);
+	GetPawn()->SetActorLocation(StartingWorldPos);
 }

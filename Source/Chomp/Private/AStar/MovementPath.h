@@ -78,6 +78,12 @@ public:
 		return ActorLocation == FVector{LastWorldLoc.X, LastWorldLoc.Y, 0.0f};
 	}
 
+	bool DidComplete(const FVector& ActorLocation, int Index) const
+	{
+		const auto [OnPath, NextIndex] = IsOnPath(ActorLocation, GridLocationPath, LevelInstance);
+		return OnPath && (NextIndex == -1 || NextIndex > Index);
+	}
+
 	void DebugLog(const FString Label) const
 	{
 		FString DynamicString{""};
