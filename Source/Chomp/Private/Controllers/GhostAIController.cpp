@@ -11,30 +11,21 @@ void AGhostAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Initialize MovementPath to a one-node path.
-	if (IsTesting)
+	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
 	{
-		// Reset pawn position before performing test.
-		ResetPawnPosition();
-
-		// Construct test movement path.
 		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-		const auto StartingPosition = Pawn->GetStartingPosition();
-		const std::vector OneNodePath{StartingPosition};
-		MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), OneNodePath,
-		                                         ULevelLoader::GetInstance(Level));
-		check(MovementPath.IsValid());
+		CurrentScatterOrigin = Pawn->GetScatterOrigin();
+		CurrentScatterDestination = Pawn->GetScatterDestination();
 	}
 
 	// Attach some handlers for when game state changes.
-	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-	GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
-		this,
-		&AGhostAIController::HandleGamePlayingSubstateChanged);
-	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
-
-	// Idea for debugging if you need it:
-	// InputComponent->BindAction("Perform", IE_Pressed, this, &AGhostAIController::OnEKeyPressed);
+	{
+		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+			this,
+			&AGhostAIController::HandleGamePlayingSubstateChanged);
+		GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+	}
 }
 
 void AGhostAIController::Tick(float DeltaTime)
@@ -84,7 +75,7 @@ void AGhostAIController::Tick(float DeltaTime)
 		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto Destination = Pawn->GetScatterDestination();
 		ComputeScatterForMovementPath(Destination);
-		Pawn->SwapScatterOriginAndDestination();
+		SwapScatterOriginAndDestination();
 	}
 	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath->DidComplete(NewLocation, 1))
 	{
@@ -119,7 +110,9 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 {
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
+	{
 		ResetPawnPosition();
+	}
 }
 
 std::vector<FGridLocation> AGhostAIController::ComputePath(
@@ -255,4 +248,11 @@ void AGhostAIController::ResetPawnPosition() const
 	const auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
 	const FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
 	GetPawn()->SetActorLocation(StartingWorldPos);
+}
+
+void AGhostAIController::SwapScatterOriginAndDestination()
+{
+	const FGridLocation Swap{CurrentScatterOrigin.X, CurrentScatterOrigin.Y};
+	CurrentScatterOrigin = CurrentScatterDestination;
+	CurrentScatterDestination = Swap;
 }

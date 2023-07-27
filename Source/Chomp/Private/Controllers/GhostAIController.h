@@ -28,6 +28,9 @@ class AGhostAIController : public AAIController
 	// TSharedPtr has the benefit of being automatically released when GhostAIController goes out of scope.
 	TSharedPtr<FMovementPath> MovementPath;
 
+	FGridLocation CurrentScatterOrigin;
+	FGridLocation CurrentScatterDestination;
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -56,4 +59,6 @@ private:
 	void ComputeChaseForMovementPath();
 
 	void ResetPawnPosition() const;
+	
+	void SwapScatterOriginAndDestination();
 };

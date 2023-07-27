@@ -4,8 +4,6 @@
 AGhostPawn::AGhostPawn()
 {
 	PrimaryActorTick.bCanEverTick = true;
-	CurrentScatterOrigin = ScatterOrigin;
-	CurrentScatterDestination = ScatterDestination;
 }
 
 void AGhostPawn::BeginPlay()
@@ -32,14 +30,12 @@ int AGhostPawn::GetDotsConsumedMovementThreshold() const
 	return DotsConsumedMovementThreshold;
 }
 
+FGridLocation AGhostPawn::GetScatterOrigin() const
+{
+	return ScatterOrigin;
+}
+
 FGridLocation AGhostPawn::GetScatterDestination() const
 {
 	return ScatterDestination;
-}
-
-void AGhostPawn::SwapScatterOriginAndDestination()
-{
-	const FGridLocation Swap{CurrentScatterOrigin.X, CurrentScatterOrigin.Y};
-	CurrentScatterOrigin = CurrentScatterDestination;
-	CurrentScatterDestination = Swap;
 }

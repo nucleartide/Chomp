@@ -24,15 +24,12 @@ class AGhostPawn : public AMovablePawn
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	FGridLocation ScatterDestination;
 
-	FGridLocation CurrentScatterOrigin;
-	FGridLocation CurrentScatterDestination;
-
 public:
 	AGhostPawn();
 	FGridLocation GetStartingPosition() const;
 	int GetDotsConsumedMovementThreshold() const;
+	FGridLocation GetScatterOrigin() const;
 	FGridLocation GetScatterDestination() const;
-	void SwapScatterOriginAndDestination();
 
 protected:
 	virtual void BeginPlay() override;
