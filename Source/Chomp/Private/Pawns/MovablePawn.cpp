@@ -14,23 +14,25 @@ AMovablePawn::AMovablePawn(): APawn()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// move toward an FGridLocation, and return a movement result.
 FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	TSharedPtr<FMovement> Movement,
 	TSharedPtr<FMovementIntention> MovementIntention,
 	const float DeltaTime) const
 {
-	// Preconditions.
-	check(Movement->Direction.IsNonZero());
-
 	// Can't move if there is no target, cause then we can't perform axis alignment.
 	if (!Movement->HasValidTargetTile())
 		return FMoveInDirectionResult{GetActorLocation(), GetActorRotation(), false};
+	else // Preconditions.
+		check(Movement->Direction.IsNonZero());
 
 	// Otherwise, move in the TargetDirection.
 	auto ActorLocation = GetActorLocation();
 	{
-		FVector DeltaLocation{static_cast<double>(Movement->Direction.X), static_cast<double>(Movement->Direction.Y), 0.0};
+		FVector DeltaLocation{
+			static_cast<double>(Movement->Direction.X),
+			static_cast<double>(Movement->Direction.Y),
+			0.0
+		};
 		DeltaLocation *= MovementSpeed * DeltaTime;
 		ActorLocation += DeltaLocation;
 	}
@@ -47,40 +49,17 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
 		const auto AmountMovedPast = FMath::Abs(AmountDotProduct);
 
-		// If we did move past the target,
-		if (MovedPastTarget)
+		if (MovedPastTarget &&
+			!CanTravelInDirection(ActorLocation, MovementIntention->Direction) &&
+			!CanTravelInDirection(ActorLocation, Movement->Direction))
 		{
-			// Then if we can travel in the intended direction,
-			if (CanTravelInDirection(ActorLocation, MovementIntention->Direction))
-			{
-				// Apply the remaining delta toward the next grid location's direction.
-				ActorLocation = FVector{
-					TargetLocation.X + MovementIntention->Direction.X * AmountMovedPast,
-					TargetLocation.Y + MovementIntention->Direction.Y * AmountMovedPast,
-					0.0f
-				};
-			}
-			// Then if we can travel in the current direction,
-			else if (CanTravelInDirection(ActorLocation, Movement->Direction))
-			{
-				// Apply the remaining delta toward the next grid location's direction.
-				ActorLocation = FVector{
-					TargetLocation.X + Movement->Direction.X * AmountMovedPast,
-					TargetLocation.Y + Movement->Direction.Y * AmountMovedPast,
-					0.0f
-				};
-			}
-			// Otherwise,
-			else
-			{
-				// Lock the location to the target's location.
-				ActorLocation = FVector{TargetLocation.X, TargetLocation.Y, 0.0};
-			}
+			// Lock the location to the target's location.
+			ActorLocation = FVector{TargetLocation.X, TargetLocation.Y, 0.0};
 		}
 	}
 
 	// Finally, perform wrap-around.
-	ActorLocation = WrapAroundWorld(ActorLocation);
+	// ActorLocation = WrapAroundWorld(ActorLocation);
 
 	// And very finally, compute new rotation.
 	// You can extract the part of AI movement into a new method, and just call that.

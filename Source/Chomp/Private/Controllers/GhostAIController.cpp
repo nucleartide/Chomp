@@ -136,8 +136,8 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 		StartGridPos,
 		EndGridPos,
 		CameFrom);
-	check(Path[0] == StartGridPos);
 	check(Path.size() >= 1);
+	check(Path[0] == StartGridPos);
 
 	// Assert that ghost is axis-aligned.
 	auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);

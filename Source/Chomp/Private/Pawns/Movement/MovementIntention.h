@@ -19,7 +19,6 @@ struct FMovementIntention
 		}),
 		TimeOfLastUpdate(WorldInstance->GetRealTimeSeconds())
 	{
-		check(VerticalAxisInput != 0.0f || HorizontalAxisInput != 0.0f);
 	}
 
 	FMovementIntention(
@@ -29,17 +28,10 @@ struct FMovementIntention
 		Direction(Direction),
 		TimeOfLastUpdate(WorldInstance->GetRealTimeSeconds())
 	{
-		check(Direction.IsNonZero());
 	}
 
-	bool SinceLastUpdate(const double Duration, const UWorld* WorldInstance) const
+	bool HasElapsedSinceLastUpdate(const double Duration, const UWorld* WorldInstance) const
 	{
 		return WorldInstance->GetRealTimeSeconds() > TimeOfLastUpdate + Duration;
-	}
-
-	bool IsDifferentFrom(const TSharedPtr<FMovement>& CurrentMovement) const
-	{
-		const auto CurrentDirection = CurrentMovement->Direction;
-		return CurrentDirection.IsNonZero() && CurrentDirection != Direction;
 	}
 };

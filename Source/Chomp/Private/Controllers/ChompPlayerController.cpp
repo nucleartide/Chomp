@@ -20,6 +20,16 @@ void AChompPlayerController::OnMoveVertical(const float Input)
 	VerticalAxisInput = Input;
 }
 
+void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
+{
+	check(OldState != NewState);
+	if (NewState == EChompGameState::Playing)
+	{
+		CurrentMovement.Reset();
+		IntendedMovement.Reset();
+	}
+}
+
 void AChompPlayerController::OnMoveHorizontal(const float Input)
 {
 	HorizontalAxisInput = Input;
@@ -32,26 +42,24 @@ TSharedPtr<FMovementIntention> AChompPlayerController::UpdateIntendedMovement() 
 	if (VerticalAxisInput != 0.0f || HorizontalAxisInput != 0.0f)
 		return MakeShared<FMovementIntention>(VerticalAxisInput, HorizontalAxisInput, WorldInstance);
 
-	if (IntendedMovement->SinceLastUpdate(TimeForIntendedDirectionToLast, WorldInstance))
+	if (!IntendedMovement.IsValid())
+		return MakeShared<FMovementIntention>(0.0f, 0.0f, WorldInstance);
+
+	if (IntendedMovement->Direction.IsNonZero() &&
+		IntendedMovement->HasElapsedSinceLastUpdate(TimeForIntendedDirectionToLast, WorldInstance))
 		return MakeShared<FMovementIntention>(0.0f, 0.0f, WorldInstance);
 
 	return IntendedMovement;
 }
 
-TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile) const
+TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile = false) const
 {
-	const auto NewMovement = InvalidateTargetTile
-		                         ? MakeShared<FMovement>(CurrentMovement->Direction,
-		                                                 FMaybeGridLocation{false, FGridLocation{0, 0}})
-		                         : CurrentMovement;
-
-	if (NewMovement->HasValidTargetTile())
-		return NewMovement;
-
-	if (!IntendedMovement->IsDifferentFrom(NewMovement))
-		return NewMovement;
+	if (!CurrentMovement.IsValid())
+		return ComputeMovementWithTargetTile(InitialMoveDirection);
 
 	if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+		IntendedMovement->Direction.IsNonZero() &&
+		IntendedMovement->Direction != CurrentMovement->Direction &&
 		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
 	{
 		const auto CurrentGridLocation = Pawn->GetGridLocation();
@@ -59,7 +67,23 @@ TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool I
 		return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
 	}
 
-	return NewMovement;
+	if (!CurrentMovement->HasValidTargetTile() || InvalidateTargetTile)
+		return ComputeMovementWithTargetTile(CurrentMovement->Direction);
+
+	return CurrentMovement;
+}
+
+TSharedPtr<FMovement> AChompPlayerController::ComputeMovementWithTargetTile(FGridLocation Direction) const
+{
+	if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), Direction))
+	{
+		const auto CurrentGridLocation = Pawn->GetGridLocation();
+		const auto NextGridLocation = CurrentGridLocation + Direction;
+		return MakeShared<FMovement>(Direction, FMaybeGridLocation{true, NextGridLocation});
+	}
+
+	return MakeShared<FMovement>(Direction, FMaybeGridLocation{false, FGridLocation{0, 0}});
 }
 
 void AChompPlayerController::Tick(const float DeltaTime)
@@ -74,17 +98,16 @@ void AChompPlayerController::Tick(const float DeltaTime)
 	if (!MovablePawn)
 		return;
 
-	if (!CurrentMovement.IsValid() || !IntendedMovement.IsValid())
-		return;
+	IntendedMovement = UpdateIntendedMovement();
+	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
 
 	const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
 		CurrentMovement,
 		IntendedMovement,
 		DeltaTime);
+
 	MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
-	
-	IntendedMovement = UpdateIntendedMovement();
-	CurrentMovement = UpdateCurrentMovement(InvalidateTargetTile);
+	ShouldInvalidateTargetTile = InvalidateTargetTile;
 }
 
 void AChompPlayerController::BeginPlay()
@@ -98,14 +121,4 @@ void AChompPlayerController::BeginPlay()
 	// Bind restart handler.
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
-}
-
-void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
-{
-	check(OldState != NewState);
-	if (NewState == EChompGameState::Playing)
-	{
-		const auto World = FSafeGet::World(this);
-		IntendedMovement = MakeShared<FMovementIntention>(InitialMoveDirection, World);
-	}
 }

@@ -38,6 +38,9 @@ class AChompPlayerController : public APlayerController
 	// The movement that is currently taking place.
 	TSharedPtr<FMovement> CurrentMovement;
 
+	// Whether to invalidate target tile on next CurrentMovement update.
+	bool ShouldInvalidateTargetTile = false;
+
 public:
 	AChompPlayerController();
 
@@ -57,4 +60,6 @@ private:
 	TSharedPtr<FMovementIntention> UpdateIntendedMovement() const;
 
 	TSharedPtr<FMovement> UpdateCurrentMovement(const bool InvalidateTargetTile) const;
+
+	TSharedPtr<FMovement> ComputeMovementWithTargetTile(FGridLocation Direction) const;
 };
