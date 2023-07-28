@@ -83,7 +83,9 @@ TODO: Discuss the following:
 
 ### Benefits of functional programming
 
-* See http://sevangelatos.com/john-carmack-on/
+TODO: Discuss the implementation of the techniques in:
+
+* http://sevangelatos.com/john-carmack-on/
 
 ## Contributing
 
