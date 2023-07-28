@@ -87,6 +87,10 @@ TODO: Discuss the implementation of the techniques in:
 
 * http://sevangelatos.com/john-carmack-on/
 
+### Game juice and polish
+
+...
+
 ## Contributing
 
 TODO.
