@@ -117,8 +117,4 @@ void AChompPlayerController::BeginPlay()
 	// Bind input axes.
 	InputComponent->BindAxis("Move Forward / Backward", this, &AChompPlayerController::OnMoveVertical);
 	InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
-
-	// Bind restart handler.
-	// const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-	// GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
 }
