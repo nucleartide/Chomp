@@ -20,17 +20,7 @@ void AGhostPawn::BeginPlay()
 	DEBUG_LOG(TEXT("Body component name: %s"), *BodyComponents[0]->GetReadableName());
 }
 
-void AGhostPawn::Tick(float DeltaTime)
-{
-	Super::Tick(DeltaTime);
-}
-
-void AGhostPawn::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-}
-
-FGridLocation AGhostPawn::GetStartingPosition()
+FGridLocation AGhostPawn::GetStartingPosition() const
 {
 	return StartingPosition;
 }
@@ -38,4 +28,14 @@ FGridLocation AGhostPawn::GetStartingPosition()
 int AGhostPawn::GetDotsConsumedMovementThreshold() const
 {
 	return DotsConsumedMovementThreshold;
+}
+
+FGridLocation AGhostPawn::GetScatterOrigin() const
+{
+	return ScatterOrigin;
+}
+
+FGridLocation AGhostPawn::GetScatterDestination() const
+{
+	return ScatterDestination;
 }

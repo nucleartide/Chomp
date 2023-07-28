@@ -5,7 +5,7 @@
 #include "AIController.h"
 #include "AStar/GridLocation.h"
 #include "ChompGameState.h"
-#include "AStar/Path.h"
+#include "AStar/MovementPath.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "GhostAIController.generated.h"
 
@@ -14,26 +14,26 @@ class AGhostAIController : public AAIController
 {
 	GENERATED_BODY()
 
-private:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation ScatterOrigin;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	FGridLocation ScatterDestination;
-
+	// Whether to print out A* map info in the logs.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
-private:
-	// Similar to AChompPlayerController, we store a notion of a TargetTile.
-	FComputeTargetTileResult Target;
+	// Whether we are currently running test code for the sake of debugging.
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	bool IsTesting = false;
 
-	// However, the concepts of "CurrentMoveDirection" and "IntendedMoveDirection" are encapsulated into the AI's computed movement path.
-	FPath MovementPath;
+	// TSharedPtr has the benefit of being automatically released when GhostAIController goes out of scope.
+	TSharedPtr<FMovementPath> MovementPath;
 
+	FGridLocation CurrentScatterOrigin;
+	FGridLocation CurrentScatterDestination;
+
+public:
+	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+	
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -41,9 +41,6 @@ protected:
 private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
-
-	UFUNCTION()
-	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
 	static std::vector<FGridLocation> ComputePath(
 		ULevelLoader* LevelInstance,
@@ -57,7 +54,11 @@ private:
 	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	                       ULevelLoader* LevelInstance);
 
-	void ComputeScatterForMovementPath();
+	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
 
 	void ComputeChaseForMovementPath();
+
+	void ResetPawnPosition() const;
+	
+	void SwapScatterOriginAndDestination();
 };

@@ -12,23 +12,25 @@ class AGhostPawn : public AMovablePawn
 {
 	GENERATED_BODY()
 
-public:
-	AGhostPawn();
-	FGridLocation GetStartingPosition();
-	int GetDotsConsumedMovementThreshold() const;
-
-protected:
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-private:
-	class UStaticMeshComponent* HeadStaticMesh;
-	class UStaticMeshComponent* BodyStaticMesh;
-
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	FGridLocation StartingPosition;
 
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	int DotsConsumedMovementThreshold = 0;
+
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	FGridLocation ScatterOrigin;
+
+	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	FGridLocation ScatterDestination;
+
+public:
+	AGhostPawn();
+	FGridLocation GetStartingPosition() const;
+	int GetDotsConsumedMovementThreshold() const;
+	FGridLocation GetScatterOrigin() const;
+	FGridLocation GetScatterDestination() const;
+
+protected:
+	virtual void BeginPlay() override;
 };

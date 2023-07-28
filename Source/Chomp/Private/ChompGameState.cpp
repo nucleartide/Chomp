@@ -5,7 +5,7 @@ AChompGameState::AChompGameState()
     PrimaryActorTick.bCanEverTick = true;
 }
 
-void AChompGameState::ResetDots(int NumberOfDots)
+void AChompGameState::ResetDots(const int NumberOfDots)
 {
     UpdateScore(0);
     UpdateNumberOfDotsRemaining(NumberOfDots);
@@ -19,7 +19,7 @@ void AChompGameState::ConsumeDot()
     UpdateNumberOfDotsConsumed(NumberOfDotsConsumed + 1);
 }
 
-void AChompGameState::UpdateScore(int NewScore)
+void AChompGameState::UpdateScore(const int NewScore)
 {
     Score = NewScore;
     OnScoreUpdatedDelegate.Broadcast(NewScore);
@@ -59,7 +59,6 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
 
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
-    OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);
 
     if (NewState != EChompGameState::Playing)
     {

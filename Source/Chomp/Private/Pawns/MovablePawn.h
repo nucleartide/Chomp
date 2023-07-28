@@ -3,17 +3,32 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "AStar/MovementPath.h"
 #include "GameFramework/Pawn.h"
 #include "LevelGenerator/LevelLoader.h"
+
 #include "MovablePawn.generated.h"
+
+struct FMovementIntention;
+struct FMovement;
 
 USTRUCT()
 struct FMovementResult
 {
 	GENERATED_BODY()
 
-	bool MovedPastTarget = false;
-	float AmountMovedPast = 0.0f;
+	FVector NewLocation;
+	FRotator NewRotation;
+};
+
+USTRUCT()
+struct FMoveInDirectionResult
+{
+	GENERATED_BODY()
+
+	FVector NewLocation;
+	FRotator NewRotation;
+	bool InvalidateTargetTile;	
 };
 
 UCLASS()
@@ -21,7 +36,6 @@ class AMovablePawn : public APawn
 {
 	GENERATED_BODY()
 
-private:
 	/**
 	 * The collision tags that this pawn collides with.
 	 */
@@ -38,7 +52,7 @@ private:
 	 * Reference to the ULevelLoader. Needed for bounds checks.
 	 */
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
-	TSubclassOf<class ULevelLoader> Level;
+	TSubclassOf<ULevelLoader> Level;
 
 	/**
 	 * Movement speed scaling factor.
@@ -48,11 +62,25 @@ private:
 
 public:
 	AMovablePawn();
-	TArray<FName> GetTagsToCollideWith();
-	FMovementResult MoveTowardsPoint(const FGridLocation& TargetGridPosition, const FGridLocation& TargetDirection, float DeltaTime);
+
+	FMoveInDirectionResult MoveInDirection(
+    	TSharedPtr<FMovement> Movement,
+    	TSharedPtr<FMovementIntention> MovementIntention,
+		const float DeltaTime) const;
+
 	FGridLocation GetGridLocation() const;
+	
 	FVector2D GetActorLocation2D() const;
 
+	FMovementResult MoveAlongPath(
+		FMovementPath* MovementPath,
+		const float DeltaTime) const;
+
+	// Check whether a Pawn at Location can travel 1 unit in Direction.
+	bool CanTravelInDirection(FVector Location, FGridLocation Direction) const;
+
 private:
-	void WrapAroundWorld();
+	FVector WrapAroundWorld(FVector Location) const;
+
+	FRotator ComputeNewRotation(const FVector& CurrentLocation, const FVector& NewLocation, float DeltaTime) const;
 };

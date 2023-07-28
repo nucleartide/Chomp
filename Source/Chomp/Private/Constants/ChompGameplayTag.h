@@ -2,13 +2,11 @@
 
 #include "CoreMinimal.h"
 
-class GameplayTag
+class FChompGameplayTag
 {
 public:
 	static FName LevelGeometry;
 	static FName SmallDot;
 	static FName GateTile;
-
-public:
-	static bool ActorHasOneOf(AActor *SomeActor, TArray<FName> Tags);
+	static bool ActorHasOneOf(const AActor *SomeActor, TArray<FName> Tags);
 };

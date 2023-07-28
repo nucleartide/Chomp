@@ -6,23 +6,35 @@
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
+#include "Pawns/MovablePawn.h"
 
 void AGhostAIController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto World = GetWorld();
-	check(World);
+	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
+	{
+		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		CurrentScatterOrigin = Pawn->GetScatterOrigin();
+		CurrentScatterDestination = Pawn->GetScatterDestination();
+	}
 
-	auto ChompGameState = World->GetGameState<AChompGameState>();
-	ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
-		this, &AGhostAIController::HandleGamePlayingSubstateChanged);
-	ChompGameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+	// Attach some handlers for when game state changes.
+	{
+		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+			this,
+			&AGhostAIController::HandleGamePlayingSubstateChanged);
+	}
 }
 
 void AGhostAIController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	// Should have been initialized in BeginPlay().
+	if (!MovementPath.IsValid())
+		return;
 
 	auto World = GetWorld();
 	check(World);
@@ -36,69 +48,30 @@ void AGhostAIController::Tick(float DeltaTime)
 	if (!CanStartMoving())
 		return;
 
-	// Grab references to things.
-	auto PlayingSubstate = GameState->GetPlayingSubstate();
-	auto LevelInstance = ULevelLoader::GetInstance(Level);
-	auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
-	auto ActorLocation = MovablePawn->GetActorLocation();
-	FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-	auto TagsToCollideWith = MovablePawn->GetTagsToCollideWith();
-	auto GridLocation = LevelInstance->WorldToGrid(ActorLocation2D);
+	// Compute new location and rotation.
+	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
+	check(MovementPath.IsValid());
+	const auto MovementPathPtr = MovementPath.Get();
+	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
+		MovementPathPtr,
+		DeltaTime);
 
-	//
-	// In the code below, you should reason about the code while keeping 2 pieces of state in mind:
-	// MovementPath, and Target
-	//
+	// Apply new location.
+	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
-	// Update movement path if needed.
-	const auto CurrentLocationIndex = MovementPath.GetCurrentLocationIndex();
-	auto CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
-	if (CurrentLocationIndex == -1 && CurrentMoveDirection.IsZero())
+	// Compute a new movement path if conditions are met.
+	if (auto PlayingSubstate = GameState->GetPlayingSubstate();
+		PlayingSubstate == EChompGamePlayingSubstate::Scatter &&
+		MovementPath->WasCompleted(NewLocation))
 	{
-		MovementPath.Increment();
-		CurrentMoveDirection = MovementPath.GetCurrentMoveDirection(ActorLocation, LevelInstance);
+		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		auto Destination = Pawn->GetScatterDestination();
+		ComputeScatterForMovementPath(Destination);
+		SwapScatterOriginAndDestination();
 	}
-
-	// Update target if needed.
-	if (!MovementPath.WasCompleted() && !Target.IsValid)
-		Target = FComputeTargetTileResult{true, MovementPath.GetTargetLocation()};
-
-	// If there is no target, early return.
-	if (!Target.IsValid)
-		return;
-
-	// Else, move toward the target.
-	if (const auto [MovedPastTarget, AmountMovedPast] = MovablePawn->MoveTowardsPoint(
-		Target.Tile, CurrentMoveDirection, DeltaTime); MovedPastTarget)
+	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath->DidComplete(NewLocation, 1))
 	{
-		// Update the movement path.
-		// Note that the order of operations is important here.
-		MovementPath.Increment();
-		if (PlayingSubstate == EChompGamePlayingSubstate::Scatter && MovementPath.WasCompleted())
-		{
-			FGridLocation Swap{ScatterOrigin.X, ScatterOrigin.Y};
-			ScatterOrigin = ScatterDestination;
-			ScatterDestination = Swap;
-			ComputeScatterForMovementPath();
-		}
-		else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.WasCompleted(0))
-		{
-			ComputeChaseForMovementPath();
-		}
-
-		// Update the target.
-		// Note that the target world pos is fetched before clearing.
-		const auto TargetWorldPos = LevelInstance->GridToWorld(Target.Tile);
-		Target = FComputeTargetTileResult::Invalid();
-
-		// Align the pawn to the target position + any extra amount in the new move direction.
-		const auto [DirX, DirY] = MovementPath.GetCurrentMoveDirection(MovablePawn->GetActorLocation(), LevelInstance);
-		const FVector NewLocation{
-			TargetWorldPos.X + DirX * AmountMovedPast,
-			TargetWorldPos.Y + DirY * AmountMovedPast,
-			0.0f
-		};
-		MovablePawn->SetActorLocation(NewLocation);
+		ComputeChaseForMovementPath();
 	}
 }
 
@@ -111,26 +84,26 @@ void AGhostAIController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 {
 	check(OldState != NewState);
 	if (NewState == EChompGamePlayingSubstate::Scatter)
-		ComputeScatterForMovementPath();
+	{
+		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		auto Destination = Pawn->GetScatterDestination();
+		ComputeScatterForMovementPath(Destination);
+	}
 	else if (NewState == EChompGamePlayingSubstate::Chase)
+	{
 		ComputeChaseForMovementPath();
+	}
 }
 
 /**
  * When the game starts playing, reset the position of the pawn.
  */
-// ReSharper disable once CppMemberFunctionMayBeConst
 void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
 {
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
 	{
-		// Set the starting position of the pawn.
-		auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
-		auto StartingGridPosition = GhostPawn->GetStartingPosition();
-		auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
-		FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-		GetPawn()->SetActorLocation(StartingWorldPos);
+		ResetPawnPosition();
 	}
 }
 
@@ -144,8 +117,8 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 	// Compute A* path.
 	std::unordered_map<FGridLocation, FGridLocation> CameFrom;
 	std::unordered_map<FGridLocation, double> CostSoFar;
-	const std::function FunctionObject = &AStar::ManhattanDistanceHeuristic;
-	AStar::Pathfind<FGridLocation>(
+	const std::function FunctionObject = &FAStar::ManhattanDistanceHeuristic;
+	FAStar::Pathfind<FGridLocation>(
 		LevelInstance,
 		StartGridPos,
 		EndGridPos,
@@ -158,12 +131,12 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 		DebugAStar(CameFrom, LevelInstance);
 
 	// Reconstruct the path.
-	auto Path = AStar::ReconstructPath(
+	auto Path = FAStar::ReconstructPath(
 		StartGridPos,
 		EndGridPos,
 		CameFrom);
+	check(Path.size() >= 1);
 	check(Path[0] == StartGridPos);
-	check(Path.size() >= 2);
 
 	// Assert that ghost is axis-aligned.
 	auto StartWorldPos = LevelInstance->GridToWorld(StartGridPos);
@@ -190,8 +163,11 @@ bool AGhostAIController::CanStartMoving() const
 		NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
 	}
 
-	return Threshold >= 0 && NumberOfDotsConsumed >= 0 && NumberOfDotsConsumed >= Threshold && !MovementPath.
-		WasCompleted();
+	auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	return Threshold >= 0 &&
+		NumberOfDotsConsumed >= 0 &&
+		NumberOfDotsConsumed >= Threshold &&
+		!MovementPath->WasCompleted(Pawn->GetActorLocation());
 }
 
 void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
@@ -225,7 +201,7 @@ void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGri
 	}
 }
 
-void AGhostAIController::ComputeScatterForMovementPath()
+void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = Pawn->GetActorLocation2D();
@@ -233,8 +209,9 @@ void AGhostAIController::ComputeScatterForMovementPath()
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);
 
-	MovementPath = FPath(Path);
-	MovementPath.DebugLog(TEXT("Scatter"));
+	MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	check(MovementPath.IsValid());
+	MovementPath->DebugLog(TEXT("Scatter"));
 }
 
 void AGhostAIController::ComputeChaseForMovementPath()
@@ -243,11 +220,32 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto WorldLocation = Pawn->GetActorLocation2D();
 	const auto GridLocation = Pawn->GetGridLocation();
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
-	const auto PlayerPawn = FSafeGet::Pawn<AMovablePawn>(PlayerController);
+	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
+	if (!PlayerPawn)
+		return;
+	const auto PlayerWorldPosition = PlayerPawn->GetActorLocation();
 	const auto PlayerGridLocation = PlayerPawn->GetGridLocation();
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);
 
-	MovementPath = FPath(Path);
-	MovementPath.DebugLog(TEXT("Chase"));
+	MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	check(MovementPath.IsValid());
+	MovementPath->DebugLog(TEXT("Chase"));
+}
+
+void AGhostAIController::ResetPawnPosition() const
+{
+	// Set the starting position of the pawn.
+	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
+	const auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
+	const FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
+	GetPawn()->SetActorLocation(StartingWorldPos);
+}
+
+void AGhostAIController::SwapScatterOriginAndDestination()
+{
+	const FGridLocation Swap{CurrentScatterOrigin.X, CurrentScatterOrigin.Y};
+	CurrentScatterOrigin = CurrentScatterDestination;
+	CurrentScatterDestination = Swap;
 }

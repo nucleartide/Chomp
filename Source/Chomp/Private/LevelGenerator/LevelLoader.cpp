@@ -1,9 +1,7 @@
 #include "LevelGenerator/LevelLoader.h"
 #include <algorithm>
 #include "Algo/Reverse.h"
-#include "Constants/GameplayTag.h"
 #include "Engine/World.h"
-#include "Utils/Debug.h"
 
 ULevelLoader* ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass)
 {
@@ -52,8 +50,7 @@ void ULevelLoader::LoadLevel()
 	{
 		for (auto Y = 0; Y < NumberOfColumns; Y++)
 		{
-			auto Character = StringList[X][Y];
-			if (Character == 'W' || Character == 'x')
+			if (auto Character = StringList[X][Y]; Character == 'W' || Character == 'x')
 			{
 				Walls.insert(FGridLocation{X, Y});
 			}
@@ -119,13 +116,13 @@ FGridLocation ULevelLoader::SnapToGridDirection(const FVector2D WorldPosition)
 	FGridLocation GridDirection{0, 0};
 	const auto FractionX = fmod(WorldPosition.X, 1.0);
 	const auto FractionY = fmod(WorldPosition.Y, 1.0);
-	
+
 	if (FractionX == 0.0 && FractionY == 0.0)
 		return GridDirection;
 
 	if (FractionX != 0.0)
 		GridDirection.X = FractionX < 0.5 ? -1 : 1;
-	
+
 	if (FractionY != 0.0)
 		GridDirection.Y = FractionY < 0.5 ? -1 : 1;
 
@@ -150,52 +147,9 @@ bool ULevelLoader::Passable(const FGridLocation& FromLocation, const FGridLocati
 	return true;
 }
 
-FComputeTargetTileResult ULevelLoader::ComputeTargetTile(
-	UWorld* World,
-	FVector Location,
-	FGridLocation Direction,
-	const TArray<FName>& TagsToCollideWith,
-	FString DebugLabel) const
+bool ULevelLoader::IsWall(const FGridLocation& Location) const
 {
-	// Compute the actor's collision sphere. Diameter needs to be slightly less than 100.0f to avoid overlapping.
-	auto ActorDiameter = 90.0f;
-	auto ActorRadius = ActorDiameter * 0.5f;
-	auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
-
-	// Given the current Position and Direction, compute the target position, but do not set the TargetTile reference just yet.
-	FVector StartPos = Location;
-	FVector TargetPos = Location;
-	TargetPos.X += Direction.X * ActorDiameter;
-	TargetPos.Y += Direction.Y * ActorDiameter;
-
-	// Prep our result struct.
-	FComputeTargetTileResult Result;
-
-	// Perform a sweep to check if we will overlap with the target.
-	TArray<FHitResult> HitResults;
-	World->SweepMultiByChannel(HitResults, StartPos, TargetPos, FQuat::Identity, ECC_Visibility, ActorSphere);
-	for (auto HitResult : HitResults)
-	{
-		// Some values for breakpoint debugging convenience.
-		const auto ReadableName = HitResult.GetActor()->GetHumanReadableName();
-		const auto WorldLocation = HitResult.GetActor()->GetActorLocation();
-		FVector2D Location2D{WorldLocation.X, WorldLocation.Y};
-		const auto GridPos = WorldToGrid(Location2D);
-		const auto Blah = DebugLabel;
-		
-		// If we overlapped with a collider, then we can't travel to target position. Return false.
-		if (auto HitActor = HitResult.GetActor(); GameplayTag::ActorHasOneOf(HitActor, TagsToCollideWith))
-		{
-			Result.IsValid = false;
-			return Result;
-		}
-	}
-
-	// Otherwise, set the TargetTile (from TargetPos) and return true.
-	FVector2D TargetPos2D{TargetPos.X, TargetPos.Y};
-	Result.IsValid = true;
-	Result.Tile = WorldToGrid(TargetPos2D);
-	return Result;
+	return Walls.find(Location) != Walls.end();
 }
 
 bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
