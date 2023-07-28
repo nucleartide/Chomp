@@ -25,7 +25,7 @@ void AGhostAIController::BeginPlay()
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
 			&AGhostAIController::HandleGamePlayingSubstateChanged);
-		GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
+		// GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
 	}
 }
 

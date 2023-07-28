@@ -59,7 +59,6 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
 
     GameState = NewState;
     OnGameStateChangedDelegate.Broadcast(OldState, NewState);
-    OnLateGameStateChangedDelegate.Broadcast(OldState, NewState);
 
     if (NewState != EChompGameState::Playing)
     {

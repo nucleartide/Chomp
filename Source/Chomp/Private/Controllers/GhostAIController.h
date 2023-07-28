@@ -30,6 +30,9 @@ class AGhostAIController : public AAIController
 
 	FGridLocation CurrentScatterOrigin;
 	FGridLocation CurrentScatterDestination;
+
+public:
+	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 	
 protected:
 	virtual void BeginPlay() override;
@@ -38,9 +41,6 @@ protected:
 private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
-
-	UFUNCTION()
-	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
 	static std::vector<FGridLocation> ComputePath(
 		ULevelLoader* LevelInstance,

@@ -6,7 +6,12 @@
 #include "Actors/ConsumableDotActor.h"
 #include "AStar/GridLocation.h"
 #include "ChompGameState.h"
+#include "Controllers/ChompPlayerController.h"
+#include "Controllers/GhostAIController.h"
+#include "Kismet/GameplayStatics.h"
+#include "Pawns/ChompPawnManager.h"
 #include "Utils/Debug.h"
+#include "Utils/SafeGet.h"
 
 void ALevelGenerationActor::BeginPlay()
 {
@@ -21,7 +26,7 @@ void ALevelGenerationActor::BeginPlay()
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
 	const auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
-	ChompGameMode->OnLateGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
+	ChompGameMode->OnGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
 }
 
 void ALevelGenerationActor::ClearLeftoverTiles()
@@ -71,7 +76,8 @@ void ALevelGenerationActor::GenerateTiles()
 				SpawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 				// Spawn the actor at the desired location.
-				auto SpawnedActor = GetWorld()->SpawnActor<AStaticMeshActor>(SelectedTile, Location, FRotator::ZeroRotator, SpawnParams);
+				auto SpawnedActor = GetWorld()->SpawnActor<AStaticMeshActor>(
+					SelectedTile, Location, FRotator::ZeroRotator, SpawnParams);
 				check(SpawnedActor);
 
 				// Keep reference to actor so we can destroy it later on.
@@ -81,10 +87,12 @@ void ALevelGenerationActor::GenerateTiles()
 			{
 				// Spawn dot actor.
 				auto BogusSpawn = Level->GridToWorld(FGridLocation{-100, -100});
-				FVector BogusLocation(BogusSpawn.X, BogusSpawn.Y, 0.0f); // Spawn in a spot away from the player to avoid spawn failures.
+				FVector BogusLocation(BogusSpawn.X, BogusSpawn.Y, 0.0f);
+				// Spawn in a spot away from the player to avoid spawn failures.
 				FActorSpawnParameters Params;
 				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				auto Actor = GetWorld()->SpawnActor<AStaticMeshActor>(PacmanDot, BogusLocation, FRotator::ZeroRotator, Params); 
+				auto Actor = GetWorld()->SpawnActor<AStaticMeshActor>(PacmanDot, BogusLocation, FRotator::ZeroRotator,
+				                                                      Params);
 				check(Actor);
 
 				// Need this so we can change the dot's location.
@@ -122,7 +130,35 @@ void ALevelGenerationActor::ResetTiles(const EChompGameState OldState, const ECh
 {
 	if (NewState == EChompGameState::Playing)
 	{
+		// First, clean up the map.
 		ClearLeftoverTiles();
+
+		// Then, reset the ghost positions.
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhostAIController::StaticClass(), FoundActors);
+		for (const auto& Actor : FoundActors)
+		{
+			const auto Controller = Cast<AGhostAIController>(Actor);
+			check(Controller);
+			Controller->HandleGameStateChanged(OldState, NewState);
+		}
+
+		// Then, reset the player pawn position.
+		const auto ChompPawnManager = Cast<AChompPawnManager>(
+			UGameplayStatics::GetActorOfClass(GetWorld(), AChompPawnManager::StaticClass())
+		);
+		check(ChompPawnManager);
+		ChompPawnManager->HandleGameRestarted(OldState, NewState);
+
+		// Then, reset the movement brain.
+		const auto PlayerController = FSafeGet::PlayerController(this, 0);
+		const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController);
+		check(ChompPlayerController);
+		ChompPlayerController->HandleGameRestarted(OldState, NewState);
+
+		// Then, generate the tiles.
 		GenerateTiles();
+
+		// Note that this particular ordering ensures that no overlap conditions are triggered.
 	}
 }

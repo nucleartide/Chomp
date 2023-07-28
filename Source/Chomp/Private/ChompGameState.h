@@ -69,9 +69,6 @@ public:
 	FOnGameStateChangedSignature OnGameStateChangedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGameStateChangedSignature OnLateGameStateChangedDelegate;
-
-	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnScoreUpdatedSignature OnScoreUpdatedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)

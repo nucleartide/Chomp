@@ -29,11 +29,11 @@ class AChompPawnManager : public AActor
 	FRotator SpawnRotation;
 
 	TWeakObjectPtr<AChompPawn> ChompPawnInstance;
+	
+public:
+	UFUNCTION()
+	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
 protected:
 	virtual void BeginPlay() override;
-
-private:
-	UFUNCTION()
-	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 };

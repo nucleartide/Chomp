@@ -119,6 +119,6 @@ void AChompPlayerController::BeginPlay()
 	InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
 
 	// Bind restart handler.
-	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
+	// const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+	// GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPlayerController::HandleGameRestarted);
 }

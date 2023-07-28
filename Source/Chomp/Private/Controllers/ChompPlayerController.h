@@ -43,6 +43,8 @@ class AChompPlayerController : public APlayerController
 
 public:
 	AChompPlayerController();
+	
+	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
 protected:
 	virtual void BeginPlay() override;
@@ -53,9 +55,6 @@ private:
 	void OnMoveHorizontal(float Input);
 
 	void OnMoveVertical(float Input);
-
-	UFUNCTION()
-	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
 	TSharedPtr<FMovementIntention> UpdateIntendedMovement() const;
 
