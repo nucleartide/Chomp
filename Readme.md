@@ -81,6 +81,10 @@ TODO: Discuss the following:
 
 ...
 
+### Benefits of functional programming
+
+* See http://sevangelatos.com/john-carmack-on/
+
 ## Contributing
 
 TODO.
