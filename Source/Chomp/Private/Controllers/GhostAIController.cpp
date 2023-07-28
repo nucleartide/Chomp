@@ -25,7 +25,6 @@ void AGhostAIController::BeginPlay()
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
 			&AGhostAIController::HandleGamePlayingSubstateChanged);
-		// GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AGhostAIController::HandleGameStateChanged);
 	}
 }
 
@@ -225,7 +224,6 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	if (!PlayerPawn)
 		return;
 	const auto PlayerWorldPosition = PlayerPawn->GetActorLocation();
-	DEBUG_LOG(TEXT("%s"), *PlayerWorldPosition.ToString());
 	const auto PlayerGridLocation = PlayerPawn->GetGridLocation();
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);

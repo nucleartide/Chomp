@@ -61,5 +61,5 @@ private:
 	 * Reset the level's tiles to that of the original level data.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void ResetTiles(EChompGameState OldState, EChompGameState NewState);
+	void ResetStateOfEverything(EChompGameState OldState, EChompGameState NewState);
 };

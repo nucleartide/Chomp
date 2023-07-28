@@ -7,7 +7,6 @@ void AChompPawnManager::BeginPlay()
 {
 	Super::BeginPlay();
 	HandleGameRestarted(EChompGameState::None, EChompGameState::Playing);
-	// GetWorld()->GetGameState<AChompGameState>()->OnLateGameStateChangedDelegate.AddUniqueDynamic(this, &AChompPawnManager::HandleGameRestarted);
 }
 
 void AChompPawnManager::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)

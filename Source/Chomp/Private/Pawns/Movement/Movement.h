@@ -5,7 +5,7 @@
 struct FMovement
 {
 	const FGridLocation Direction;
-	const FMaybeGridLocation TargetTile; // Not sure if I need this yet.
+	const FMaybeGridLocation TargetTile;
 
 	explicit FMovement(
 		const FGridLocation& Direction,

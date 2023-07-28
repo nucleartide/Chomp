@@ -167,7 +167,7 @@ std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
 	FGridLocation{0, 1} // West
 };
 
-// TODO: Add support for wraparound positions in this Neighbors function..
+// TODO: Add support for wraparound positions in this Neighbors function.
 // You can probably pass in a set of special wraparound positions.
 // Currently ghosts will never traverse to the wraparound positions.
 std::vector<FGridLocation> ULevelLoader::Neighbors(const FGridLocation GridPosition) const

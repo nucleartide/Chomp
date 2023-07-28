@@ -26,7 +26,7 @@ void ALevelGenerationActor::BeginPlay()
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
 	const auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
-	ChompGameMode->OnGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetTiles);
+	ChompGameMode->OnGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetStateOfEverything);
 }
 
 void ALevelGenerationActor::ClearLeftoverTiles()
@@ -126,7 +126,7 @@ void ALevelGenerationActor::GenerateTiles()
 	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetTiles(const EChompGameState OldState, const EChompGameState NewState)
+void ALevelGenerationActor::ResetStateOfEverything(const EChompGameState OldState, const EChompGameState NewState)
 {
 	if (NewState == EChompGameState::Playing)
 	{
