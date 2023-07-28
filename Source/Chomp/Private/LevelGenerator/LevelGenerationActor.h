@@ -45,6 +45,8 @@ private:
 	 */
 	virtual void BeginPlay() override;
 
+	virtual void PostInitializeComponents() override;
+
 	/**
 	 * Clear any leftover tiles in the level.
 	 */

@@ -17,16 +17,21 @@ void ALevelGenerationActor::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Load level data before doing anything else.
-	const auto Level = ULevelLoader::GetInstance(LevelLoader);
-	Level->LoadLevel();
-
-	// Once level data is loaded, generate tiles based off tile data.
+	// Once level data is loaded (in PostInitializeComponents), generate tiles based off tile data.
 	GenerateTiles();
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
 	const auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
 	ChompGameMode->OnGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetStateOfEverything);
+}
+
+void ALevelGenerationActor::PostInitializeComponents()
+{
+	Super::PostInitializeComponents();
+
+	// Load level data before doing anything else.
+	const auto Level = ULevelLoader::GetInstance(LevelLoader);
+	Level->LoadLevel();
 }
 
 void ALevelGenerationActor::ClearLeftoverTiles()
