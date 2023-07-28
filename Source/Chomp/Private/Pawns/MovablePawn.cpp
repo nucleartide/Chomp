@@ -58,14 +58,13 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		}
 	}
 
-	// Finally, perform wrap-around.
-	// ActorLocation = WrapAroundWorld(ActorLocation);
-
 	// And very finally, compute new rotation.
 	// You can extract the part of AI movement into a new method, and just call that.
 	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), ActorLocation, DeltaTime);
-
+	
 	// Return the final computed location and rotation.
+	// Note that the ActorLocation is wrapped around to enable the warping in Pacman.
+	ActorLocation = WrapAroundWorld(ActorLocation);
 	return FMoveInDirectionResult{ActorLocation, ActorRotation, MovedPastTarget};
 }
 
