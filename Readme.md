@@ -91,6 +91,10 @@ TODO: Discuss the implementation of the techniques in:
 
 ...
 
+### Project timelines, the 5 phases of game development
+
+* Ideation, pre-prod, prod, post-prod, release, feedback & playtesting
+
 ## Contributing
 
 TODO.
