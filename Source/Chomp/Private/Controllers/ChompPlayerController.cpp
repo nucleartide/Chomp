@@ -74,6 +74,9 @@ void AChompPlayerController::Tick(const float DeltaTime)
 	if (!MovablePawn)
 		return;
 
+	if (!CurrentMovement.IsValid() || !IntendedMovement.IsValid())
+		return;
+
 	const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
 		CurrentMovement,
 		IntendedMovement,

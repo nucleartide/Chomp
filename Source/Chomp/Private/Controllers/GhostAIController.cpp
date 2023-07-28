@@ -221,7 +221,9 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto WorldLocation = Pawn->GetActorLocation2D();
 	const auto GridLocation = Pawn->GetGridLocation();
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
-	const auto PlayerPawn = FSafeGet::Pawn<AMovablePawn>(PlayerController);
+	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
+	if (!PlayerPawn)
+		return;
 	const auto PlayerWorldPosition = PlayerPawn->GetActorLocation();
 	DEBUG_LOG(TEXT("%s"), *PlayerWorldPosition.ToString());
 	const auto PlayerGridLocation = PlayerPawn->GetGridLocation();
