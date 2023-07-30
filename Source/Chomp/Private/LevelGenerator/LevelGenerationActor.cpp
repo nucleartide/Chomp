@@ -157,11 +157,10 @@ void ALevelGenerationActor::ResetStateOfEverything(const EChompGameState OldStat
 
 		// Then, reset the movement brain.
 		const auto PlayerController = FSafeGet::PlayerController(this, 0);
-		const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController);
-		check(ChompPlayerController);
-		ChompPlayerController->HandleGameRestarted(OldState, NewState);
+		if (const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController))
+			ChompPlayerController->HandleGameRestarted(OldState, NewState);
 
-		// Then, generate the tiles.
+		// Then generate tiles.
 		GenerateTiles();
 
 		// Note that this particular ordering ensures that no overlap conditions are triggered.
