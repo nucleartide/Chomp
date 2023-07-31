@@ -104,7 +104,7 @@ FMovementResult AMovablePawn::MoveAlongPath(
 	const auto NewLocation = MovementPath->MoveAlongPath(Location, DeltaDistance);
 
 	// Compute new rotation given the new position.
-	const auto Dir = (NewLocation - Location).GetSafeNormal();
+	const auto Dir = (NewLocation - Location).GetSafeNormal(0.01);
 	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 
@@ -195,7 +195,7 @@ FVector AMovablePawn::WrapAroundWorld(FVector Location) const
 FRotator AMovablePawn::ComputeNewRotation(const FVector& Location, const FVector& NewLocation, float DeltaTime) const
 {
 	const auto Rotation = GetActorRotation();
-	const auto Dir = (NewLocation - Location).GetSafeNormal();
+	const auto Dir = (NewLocation - Location).GetSafeNormal(0.01);
 	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 	return NewRotation;

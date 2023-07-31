@@ -115,12 +115,13 @@ public:
 
 			// Compute direction.
 			DestWorldLocation = WorldLocationPath.at(DestIndex);
-			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
+			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal(0.01);
 			check(
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) &&
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 0.0) ||
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 0.0) &&
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0));
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0, 0.01) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 0.0, 0.01) ||
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 0.0, 0.01) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0, 0.01)
+			);
 		}
 
 		// Apply movement.
@@ -133,7 +134,7 @@ public:
 		FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
 		const auto MovementDotProduct = FVector2D::DotProduct(
 			Direction2D,
-			(DestWorldLocation2D - ActorLocation2D).GetSafeNormal());
+			(DestWorldLocation2D - ActorLocation2D).GetSafeNormal(0.01));
 		const auto AmountDotProduct = FVector2D::DotProduct(
 			Direction2D,
 			DestWorldLocation2D - ActorLocation2D);
@@ -154,7 +155,7 @@ public:
 			{
 				// Compute next direction.
 				const auto NextDest = WorldLocationPath.at(DestIndex);
-				const auto NextDir = (NextDest - ActorLocation).GetSafeNormal();
+				const auto NextDir = (NextDest - ActorLocation).GetSafeNormal(0.01);
 
 				// And apply the remaining movement.
 				ActorLocation += AmountMovedPast * NextDir;
