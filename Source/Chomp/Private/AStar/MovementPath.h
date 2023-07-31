@@ -35,8 +35,10 @@ class FMovementPath
 
 		// If ActorLocation is within 50 axis-aligned units (inclusive) of the start node,
 		const auto WorldA = LevelInstance->GridToWorld(Path.at(0));
-		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) && FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0f ||
-			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) && FGenericPlatformMath::Abs(ActorLocation.X - WorldA.X) <= 50.0f)
+		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) && FGenericPlatformMath::Abs(
+				ActorLocation.Y - WorldA.Y) <= 50.0f ||
+			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) && FGenericPlatformMath::Abs(
+				ActorLocation.X - WorldA.X) <= 50.0f)
 			return std::make_tuple(true, 0);
 
 		// If ActorLocation is at the end node,
@@ -115,8 +117,10 @@ public:
 			DestWorldLocation = WorldLocationPath.at(DestIndex);
 			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
 			check(
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) && Direction.Y == 0.0 ||
-				Direction.X == 0 && FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0));
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 0.0) ||
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 0.0) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0));
 		}
 
 		// Apply movement.

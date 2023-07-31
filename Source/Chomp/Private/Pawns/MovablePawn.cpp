@@ -44,7 +44,7 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		FVector2D Dir{static_cast<double>(Movement->Direction.X), static_cast<double>(Movement->Direction.Y)};
 		const auto TargetLocation = LevelInstance->GridToWorld(Movement->TargetTile.GridLocation);
 		const auto ActorLocation2D = FVector2D{ActorLocation.X, ActorLocation.Y};
-		const auto MovementDotProduct = FVector2D::DotProduct(Dir, (TargetLocation - ActorLocation2D).GetSafeNormal());
+		const auto MovementDotProduct = FVector2D::DotProduct(Dir, (TargetLocation - ActorLocation2D).GetSafeNormal(0.01f));
 		const auto AmountDotProduct = FVector2D::DotProduct(Dir, TargetLocation - ActorLocation2D);
 		MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
 		const auto AmountMovedPast = FMath::Abs(AmountDotProduct);
@@ -55,6 +55,11 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		{
 			// Lock the location to the target's location.
 			ActorLocation = FVector{TargetLocation.X, TargetLocation.Y, 0.0};
+
+			// Early return to avoid rotation.
+			// Note that the ActorLocation is wrapped around to enable the warping in Pacman.
+			ActorLocation = WrapAroundWorld(ActorLocation);
+			return FMoveInDirectionResult{ActorLocation, GetActorRotation(), MovedPastTarget};
 		}
 	}
 
@@ -112,7 +117,7 @@ bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Directio
 	// Prepare data needed for performing our sweep check.
 	// Diameter needs to be slightly less than 100.0f to avoid overlapping with adjacent wall tiles.
 	const auto [X, Y] = Direction;
-	constexpr auto ActorDiameter = 90.0f;
+	constexpr auto ActorDiameter = 95.0f;
 	constexpr auto ActorRadius = ActorDiameter * 0.5f;
 	const auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
 	const auto StartLocation = Location;
@@ -131,8 +136,11 @@ bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Directio
 
 	// If we overlapped with something, then we can't travel in Direction's way. Return nothing.
 	for (auto HitResult : HitResults)
-		if (auto HitActor = HitResult.GetActor(); FChompGameplayTag::ActorHasOneOf(HitActor, TagsToCollideWith))
+	{
+		const auto HitActor = HitResult.GetActor();
+		if (FChompGameplayTag::ActorHasOneOf(HitActor, TagsToCollideWith))
 			return false;
+	}
 
 	// Otherwise, we *can* travel in Direction's way. Return true.
 	return true;
