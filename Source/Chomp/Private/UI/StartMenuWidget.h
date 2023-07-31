@@ -12,13 +12,14 @@ class CHOMP_API UStartMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	UPROPERTY(meta = (BindWidget))
+protected:
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* StartButton;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* OptionsButton;
 
-	UPROPERTY(meta = (BindWidget))
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* QuitButton;
 
 	UPROPERTY(meta = (BindWidget))
@@ -30,19 +31,24 @@ class CHOMP_API UStartMenuWidget : public UUserWidget
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* QuitButtonBullet;
 
-protected:
 	virtual void NativeConstruct() override;
 
 private:
 	UFUNCTION()
-	void HandleStartGame();
-
-	UFUNCTION()
-	void HandleOptionsButtonClicked();
-
-	UFUNCTION()
-	void HandleQuitGame();
-
-	UFUNCTION()
 	void HandleStartHover();
+	
+	UFUNCTION()
+	void HandleStartUnhover();
+	
+	UFUNCTION()
+	void HandleOptionsHover();
+	
+	UFUNCTION()
+	void HandleOptionsUnhover();
+		
+	UFUNCTION()
+	void HandleQuitHover();
+	
+	UFUNCTION()
+	void HandleQuitUnhover();
 };

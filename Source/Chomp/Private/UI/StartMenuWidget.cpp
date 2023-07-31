@@ -5,36 +5,43 @@
 void UStartMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	
-	StartButton->OnClicked.AddUniqueDynamic(this, &UStartMenuWidget::HandleStartGame);
-	OptionsButton->OnClicked.AddUniqueDynamic(this, &UStartMenuWidget::HandleOptionsButtonClicked);
-	QuitButton->OnClicked.AddUniqueDynamic(this, &UStartMenuWidget::HandleQuitGame);
-	
+
 	StartButton->OnHovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleStartHover);
-	// OptionsButton->OnClicked.AddUniqueDynamic(this, &UStartMenuWidget::HandleOptionsButtonClicked);
-	// QuitButton->OnClicked.AddUniqueDynamic(this, &UStartMenuWidget::HandleQuitGame);
-}
+	StartButton->OnUnhovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleStartUnhover);
 
-void UStartMenuWidget::HandleStartGame()
-{
-	DEBUG_LOG(TEXT("start game clicked"));
-}
+	OptionsButton->OnHovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleOptionsHover);
+	OptionsButton->OnUnhovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleOptionsUnhover);
 
-void UStartMenuWidget::HandleOptionsButtonClicked()
-{
-	DEBUG_LOG(TEXT("options button clicked"));
-}
-
-void UStartMenuWidget::HandleQuitGame()
-{
-	DEBUG_LOG(TEXT("quit game clicked"));
+	QuitButton->OnHovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleQuitHover);
+	QuitButton->OnUnhovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleQuitUnhover);
 }
 
 void UStartMenuWidget::HandleStartHover()
 {
-	// Find the dot text.
-	// ...
+	StartButtonBullet->SetVisibility(ESlateVisibility::Visible);
+}
 
-	// Enable the dot text.
-	// ...
+void UStartMenuWidget::HandleStartUnhover()
+{
+	StartButtonBullet->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UStartMenuWidget::HandleOptionsHover()
+{
+	OptionsButtonBullet->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UStartMenuWidget::HandleOptionsUnhover()
+{
+	OptionsButtonBullet->SetVisibility(ESlateVisibility::Hidden);
+}
+
+void UStartMenuWidget::HandleQuitHover()
+{
+	QuitButtonBullet->SetVisibility(ESlateVisibility::Visible);
+}
+
+void UStartMenuWidget::HandleQuitUnhover()
+{
+	QuitButtonBullet->SetVisibility(ESlateVisibility::Hidden);
 }
