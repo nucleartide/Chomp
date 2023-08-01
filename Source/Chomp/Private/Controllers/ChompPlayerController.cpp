@@ -6,6 +6,7 @@
 #include "Utils/SafeGet.h"
 #include "Pawns/Movement/Movement.h"
 #include "Pawns/Movement/MovementIntention.h"
+#include "Utils/MathHelpers.h"
 
 AChompPlayerController::AChompPlayerController(): APlayerController()
 {
@@ -99,7 +100,21 @@ void AChompPlayerController::Tick(const float DeltaTime)
 		return;
 
 	IntendedMovement = UpdateIntendedMovement();
-	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
+
+		CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
+#if false
+	{
+		const auto OldCurrentMovement = CurrentMovement;
+		CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
+		if (OldCurrentMovement.IsValid() && OldCurrentMovement->HasValidTargetTile() && OldCurrentMovement->Direction.IsTurningCorner(CurrentMovement->Direction))
+		{
+			const auto CurrentLocation = MovablePawn->GetActorLocation();
+			const auto TargetWorld =
+				ULevelLoader::GetInstance(Level)->GridToWorld(OldCurrentMovement->TargetTile.GridLocation);
+			MovablePawn->SetActorLocation(FVector{TargetWorld.X, TargetWorld.Y, 0.0});
+		}
+	}
+#endif
 
 	if (CurrentMovement->HasValidTargetTile())
 	{
@@ -109,7 +124,11 @@ void AChompPlayerController::Tick(const float DeltaTime)
 			DeltaTime);
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
+		
+
 	}
+
+
 }
 
 void AChompPlayerController::BeginPlay()

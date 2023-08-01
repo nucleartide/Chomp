@@ -30,6 +30,12 @@ bool MathHelpersTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("fourth"), Actual, Expected);
 	}
 
+	{
+		constexpr auto Expected = 0.0;
+		const auto Actual = MathHelpers::NotStupidFmod(-400.0, 100.0);
+		TestEqual(TEXT("fifth"), Actual, Expected);
+	}
+
 	// Make the test pass by returning true, or fail by returning false.
 	return true;
 }

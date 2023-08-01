@@ -40,6 +40,19 @@ struct FGridLocation
 	{
 		return FVector{static_cast<double>(X), static_cast<double>(Y), 0.0};
 	}
+
+	bool IsOppositeDirection(const FGridLocation& Other) const
+	{
+		const auto IsXOpposite = X == -Other.X;
+		const auto IsYOpposite = Y == -Other.Y;
+		return IsXOpposite && !IsYOpposite || !IsXOpposite && IsYOpposite;
+	}
+
+	bool IsTurningCorner(const FGridLocation& Other) const
+	{
+		const auto IsSame = X == Other.X && Y == Other.Y;
+		return !IsSame && !IsOppositeDirection(Other);
+	}
 };
 
 // Implement hash function so we can put FGridLocation into an unordered_set.

@@ -41,6 +41,9 @@ class AChompPlayerController : public APlayerController
 	// Whether to invalidate target tile on next CurrentMovement update.
 	bool ShouldInvalidateTargetTile = false;
 
+	// Value for sanity checking.
+	FVector OldLocation;
+
 public:
 	AChompPlayerController();
 	

@@ -114,6 +114,13 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	// Finally, compute new rotation. Be cognizant of Pac-Man's wrap-around! May need to do modular arithmetic.
 	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), ActorLocation, DeltaTime);
 	return FMoveInDirectionResult{ActorLocation, ActorRotation, MovedPastTarget};
+				{ // Grid alignment check.
+            		const auto Loc = NewLocation;
+            		check(
+            			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
+            			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
+            		 );
+            	}
 #endif
 
 	// And return the computed result.
