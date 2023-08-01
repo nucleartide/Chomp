@@ -50,7 +50,7 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		const auto AmountMovedPast = FMath::Abs(AmountDotProduct);
 
 		if (MovedPastTarget &&
-			!CanTravelInDirection(ActorLocation, MovementIntention->Direction) &&
+			// !CanTravelInDirection(ActorLocation, MovementIntention->Direction) &&
 			!CanTravelInDirection(ActorLocation, Movement->Direction))
 		{
 			// Lock the location to the target's location.

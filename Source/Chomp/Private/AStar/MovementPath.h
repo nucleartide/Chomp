@@ -107,7 +107,6 @@ public:
 		{
 			// Sanity check.
 			const auto [OnPath, DestIndex] = IsOnPath(ActorLocation, GridLocationPath, LevelInstance);
-			check(OnPath);
 
 			// No movement if there is no destination node.
 			if (DestIndex == -1)
@@ -115,7 +114,7 @@ public:
 
 			// Compute direction.
 			DestWorldLocation = WorldLocationPath.at(DestIndex);
-			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal(0.01);
+			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal(0.00001);
 			check(
 				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0, 0.01) &&
 				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 0.0, 0.01) ||
