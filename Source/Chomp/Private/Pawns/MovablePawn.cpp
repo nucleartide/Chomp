@@ -7,6 +7,7 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Movement/Movement.h"
 #include "Movement/MovementIntention.h"
+#include "Utils/MathHelpers.h"
 #include "Utils/SafeGet.h"
 
 AMovablePawn::AMovablePawn(): APawn()
@@ -14,63 +15,109 @@ AMovablePawn::AMovablePawn(): APawn()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
+// Given two vectors From and To,
+// find the difference vector (To - From) given that both vectors lie on a wrap-around space.
+FVector2D AMovablePawn::MinDifferenceVector(FVector From, FVector To, const ULevelLoader* LevelInstance)
+{
+	// Wrap around both vectors so we know they are within bounds.
+	From = WrapAroundWorld(From, LevelInstance);
+	To = WrapAroundWorld(To, LevelInstance);
+
+	const auto LevelHeight = LevelInstance->GetLevelHeight() * 100.0;
+	const auto LevelWidth = LevelInstance->GetLevelWidth() * 100.0;
+
+	// If you draw out individual axes, it should make sense.
+	// We are shifting to a positive space, taking the modulo, then unshifting to the old space.
+	// Note that fmod does not work the same as % in C++, so we need to adjust the result.
+	const auto DiffX = MathHelpers::NotStupidFmod(To.X - From.X + LevelHeight * 0.5, LevelHeight) - LevelHeight * 0.5;
+	const auto IntermediateResult = MathHelpers::NotStupidFmod(To.Y - From.Y + LevelWidth * 0.5, LevelWidth);
+	const auto DiffY = IntermediateResult - LevelWidth * 0.5;
+	check(FMath::Abs(DiffY) < 2000.0f);
+	return FVector2D{DiffX, DiffY};
+}
+
+// Compute the dot product between MovementDirection and (Target - PostMovementLocation),
+// which determines whether we've moved past the target or not, and by how much.
+FPeriodicDotProductResult AMovablePawn::ComputeDotProduct(
+	const FGridLocation& MovementDirection,
+	const FVector& PostMovementLocation,
+	const FGridLocation& Target,
+	const ULevelLoader* LevelInstance)
+{
+	// Compute dot product.
+	const FVector2D Dir{static_cast<double>(MovementDirection.X), static_cast<double>(MovementDirection.Y)};
+	const auto TargetWorld2D = LevelInstance->GridToWorld(Target);
+	const FVector TargetWorld{TargetWorld2D.X, TargetWorld2D.Y, 0.0};
+	const auto MinDiff = MinDifferenceVector(PostMovementLocation, TargetWorld, LevelInstance);
+	const auto DotProduct = FVector2D::DotProduct(Dir, MinDiff);
+
+	// Sanity check. Can't be more than 100 cm away from Target.
+	check(FMath::Abs(DotProduct) < 150.0f);
+
+	// Return results.
+	const auto MovedPastTarget = DotProduct < 0.0;
+	const auto AmountMovedPast = DotProduct < 0.0 ? FMath::Abs(DotProduct) : 0.0;
+	return FPeriodicDotProductResult{MovedPastTarget, AmountMovedPast};
+}
+
 FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	TSharedPtr<FMovement> Movement,
 	TSharedPtr<FMovementIntention> MovementIntention,
 	const float DeltaTime) const
 {
-	// Can't move if there is no target, cause then we can't perform axis alignment.
-	if (!Movement->HasValidTargetTile())
-		return FMoveInDirectionResult{GetActorLocation(), GetActorRotation(), false};
-	else // Preconditions.
-		check(Movement->Direction.IsNonZero());
+	// Movement's Direction should always be non-zero. Pacman is always moving.
+	check(Movement->Direction.IsNonZero());
+	check(Movement->HasValidTargetTile());
 
-	// Otherwise, move in the TargetDirection.
-	auto ActorLocation = GetActorLocation();
-	{
-		FVector DeltaLocation{
-			static_cast<double>(Movement->Direction.X),
-			static_cast<double>(Movement->Direction.Y),
-			0.0
-		};
-		DeltaLocation *= MovementSpeed * DeltaTime;
-		ActorLocation += DeltaLocation;
-	}
+	// If we move more than 100 cm, we have a problem because we may have moved into a wall.
+	// In this case, reject moving until framerate is better.
+	if (MovementSpeed * DeltaTime > 100.0)
+		return FMoveInDirectionResult(GetActorLocation(), GetActorRotation(), false);
 
-	// Check if we moved past the target.
-	bool MovedPastTarget = false;
-	{
-		const auto LevelInstance = ULevelLoader::GetInstance(Level);
-		FVector2D Dir{static_cast<double>(Movement->Direction.X), static_cast<double>(Movement->Direction.Y)};
-		const auto TargetLocation = LevelInstance->GridToWorld(Movement->TargetTile.GridLocation);
-		const auto ActorLocation2D = FVector2D{ActorLocation.X, ActorLocation.Y};
-		const auto MovementDotProduct = FVector2D::DotProduct(Dir, (TargetLocation - ActorLocation2D).GetSafeNormal(0.01f));
-		const auto AmountDotProduct = FVector2D::DotProduct(Dir, TargetLocation - ActorLocation2D);
-		MovedPastTarget = FMath::Abs(MovementDotProduct + 1) < 0.1f;
-		const auto AmountMovedPast = FMath::Abs(AmountDotProduct);
+	// Compute the new ActorLocation.
+	const auto OldLocation = GetActorLocation();
+	const auto DeltaLocation = MovementSpeed * DeltaTime * Movement->Direction.ToFVector();
+	const auto WrappedLocation = WrapAroundWorld(
+		OldLocation + DeltaLocation,
+		ULevelLoader::GetInstance(Level)
+	);
 
-		if (MovedPastTarget &&
-			// !CanTravelInDirection(ActorLocation, MovementIntention->Direction) &&
-			!CanTravelInDirection(ActorLocation, Movement->Direction))
-		{
-			// Lock the location to the target's location.
-			ActorLocation = FVector{TargetLocation.X, TargetLocation.Y, 0.0};
+	// Check whether we moved past the target, and by how much.
+	const auto [MovedPastTarget, AmountMovedPast] = ComputeDotProduct(
+		Movement->Direction,
+		WrappedLocation,
+		Movement->TargetTile.GridLocation,
+		ULevelLoader::GetInstance(Level)
+	);
 
-			// Early return to avoid rotation.
-			// Note that the ActorLocation is wrapped around to enable the warping in Pacman.
-			ActorLocation = WrapAroundWorld(ActorLocation);
-			return FMoveInDirectionResult{ActorLocation, GetActorRotation(), MovedPastTarget};
-		}
-	}
+	// If we moved past the target,
+	const auto TargetWorld2D = ULevelLoader::GetInstance(Level)->GridToWorld(Movement->TargetTile.GridLocation);
+	const FVector TargetWorld{TargetWorld2D.X, TargetWorld2D.Y, 0.0};
+	const FVector IntendedDir{
+		static_cast<double>(MovementIntention->Direction.X),
+		static_cast<double>(MovementIntention->Direction.Y),
+		0.0
+	};
+	const auto CanTravelInIntendedDir =
+		MovedPastTarget &&
+		MovementIntention->Direction.IsNonZero() &&
+		Movement->Direction != MovementIntention->Direction &&
+		CanTravelInDirection(TargetWorld, MovementIntention->Direction);
+	const auto NewLocation =
+		CanTravelInIntendedDir
+			? TargetWorld + AmountMovedPast * IntendedDir
+			: MovedPastTarget && !CanTravelInDirection(TargetWorld, Movement->Direction)
+			? TargetWorld
+			: WrappedLocation;
 
-	// And very finally, compute new rotation.
-	// You can extract the part of AI movement into a new method, and just call that.
+#if false
+	// Finally, compute new rotation. Be cognizant of Pac-Man's wrap-around! May need to do modular arithmetic.
 	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), ActorLocation, DeltaTime);
-	
-	// Return the final computed location and rotation.
-	// Note that the ActorLocation is wrapped around to enable the warping in Pacman.
-	ActorLocation = WrapAroundWorld(ActorLocation);
 	return FMoveInDirectionResult{ActorLocation, ActorRotation, MovedPastTarget};
+#endif
+
+	// And return the computed result.
+	return FMoveInDirectionResult(NewLocation, GetActorRotation(), MovedPastTarget);
 }
 
 FGridLocation AMovablePawn::GetGridLocation() const
@@ -104,7 +151,7 @@ FMovementResult AMovablePawn::MoveAlongPath(
 	const auto NewLocation = MovementPath->MoveAlongPath(Location, DeltaDistance);
 
 	// Compute new rotation given the new position.
-	const auto Dir = (NewLocation - Location).GetSafeNormal(0.01);
+	const auto Dir = (NewLocation - Location).GetSafeNormal();
 	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 
@@ -146,23 +193,23 @@ bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Directio
 	return true;
 }
 
-FVector AMovablePawn::WrapAroundWorld(FVector Location) const
+FVector AMovablePawn::WrapAroundWorld(FVector Location, const ULevelLoader* LevelInstance)
 {
 	// Grab references to stuff.
-	const auto LevelHeight = ULevelLoader::GetInstance(Level)->GetLevelHeight();
-	const auto LevelWidth = ULevelLoader::GetInstance(Level)->GetLevelWidth();
+	const auto LevelHeight = LevelInstance->GetLevelHeight();
+	const auto LevelWidth = LevelInstance->GetLevelWidth();
 
 	// Get bottom-left corner tile.
 	constexpr FGridLocation BottomLeft{0, 0};
-	const auto BottomLeftWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(BottomLeft);
-	const auto BottomBound = BottomLeftWorldPos.X - 50.0f;
-	const auto LeftBound = BottomLeftWorldPos.Y - 50.0f;
+	const auto BottomLeftWorldPos = LevelInstance->GridToWorld(BottomLeft);
+	const auto BottomBound = BottomLeftWorldPos.X - 50.0;
+	const auto LeftBound = BottomLeftWorldPos.Y - 50.0;
 
 	// Get top-right corner tile.
 	const FGridLocation TopRight{LevelHeight - 1, LevelWidth - 1};
-	const auto TopRightWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(TopRight);
-	const auto TopBound = TopRightWorldPos.X + 50.0f;
-	const auto RightBound = TopRightWorldPos.Y + 50.0f;
+	const auto TopRightWorldPos = LevelInstance->GridToWorld(TopRight);
+	const auto TopBound = TopRightWorldPos.X + 50.0;
+	const auto RightBound = TopRightWorldPos.Y + 50.0;
 
 	// Update X component of Location if needed.
 	if (Location.X < BottomBound)
@@ -195,7 +242,7 @@ FVector AMovablePawn::WrapAroundWorld(FVector Location) const
 FRotator AMovablePawn::ComputeNewRotation(const FVector& Location, const FVector& NewLocation, float DeltaTime) const
 {
 	const auto Rotation = GetActorRotation();
-	const auto Dir = (NewLocation - Location).GetSafeNormal(0.01);
+	const auto Dir = (NewLocation - Location).GetSafeNormal();
 	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 	return NewRotation;

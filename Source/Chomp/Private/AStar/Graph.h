@@ -1,8 +1,9 @@
 #pragma once
 
 #include "Math/IntPoint.h"
-#include "AStar/GridLocation.h"
 #include <vector>
+
+struct FGridLocation;
 
 class IGraph
 {

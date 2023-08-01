@@ -21,14 +21,24 @@ struct FMovementResult
 	FRotator NewRotation;
 };
 
-USTRUCT()
 struct FMoveInDirectionResult
 {
-	GENERATED_BODY()
-
 	FVector NewLocation;
 	FRotator NewRotation;
-	bool InvalidateTargetTile;	
+	bool InvalidateTargetTile;
+
+	FMoveInDirectionResult(const FVector& NewLocation, const FRotator& NewRotation, const bool bInvalidateTargetTile)
+		: NewLocation(NewLocation),
+		  NewRotation(NewRotation),
+		  InvalidateTargetTile(bInvalidateTargetTile)
+	{
+	}
+};
+
+struct FPeriodicDotProductResult
+{
+	bool MovedPastTarget{false};
+	double AmountMovedPast{0.0};
 };
 
 UCLASS()
@@ -62,14 +72,14 @@ class AMovablePawn : public APawn
 
 public:
 	AMovablePawn();
-
+	
 	FMoveInDirectionResult MoveInDirection(
-    	TSharedPtr<FMovement> Movement,
-    	TSharedPtr<FMovementIntention> MovementIntention,
+		TSharedPtr<FMovement> Movement,
+		TSharedPtr<FMovementIntention> MovementIntention,
 		const float DeltaTime) const;
 
 	FGridLocation GetGridLocation() const;
-	
+
 	FVector2D GetActorLocation2D() const;
 
 	FMovementResult MoveAlongPath(
@@ -80,7 +90,16 @@ public:
 	bool CanTravelInDirection(FVector Location, FGridLocation Direction) const;
 
 private:
-	FVector WrapAroundWorld(FVector Location) const;
+	static FVector WrapAroundWorld(FVector Location, const ULevelLoader* LevelInstance);
 
 	FRotator ComputeNewRotation(const FVector& CurrentLocation, const FVector& NewLocation, float DeltaTime) const;
+
+	static FPeriodicDotProductResult ComputeDotProduct(
+		const FGridLocation& MovementDirection,
+		const FVector& PostMovementLocation,
+		const FGridLocation& Target,
+		const ULevelLoader* LevelInstance
+	);
+	
+	static FVector2D MinDifferenceVector(FVector From, FVector To, const ULevelLoader* LevelInstance);
 };

@@ -2,6 +2,7 @@
 #include <algorithm>
 #include "Algo/Reverse.h"
 #include "Engine/World.h"
+#include "AStar/GridLocation.h"
 
 ULevelLoader* ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass)
 {

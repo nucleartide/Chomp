@@ -7,6 +7,8 @@
 #include "GenericPlatform/GenericPlatformMath.h"
 #include <tuple>
 
+#include "Utils/SafeGet.h"
+
 class FMovementPath
 {
 	std::vector<FGridLocation> GridLocationPath;
@@ -102,11 +104,12 @@ public:
 
 	FVector MoveAlongPath(FVector ActorLocation, float DeltaDistance)
 	{
-		FVector Direction{0.0f, 0.0f, 0.0f};
+		FVector Direction{0, 0, 0};
 		FVector DestWorldLocation;
 		{
 			// Sanity check.
 			const auto [OnPath, DestIndex] = IsOnPath(ActorLocation, GridLocationPath, LevelInstance);
+			check(OnPath);
 
 			// No movement if there is no destination node.
 			if (DestIndex == -1)
@@ -114,13 +117,7 @@ public:
 
 			// Compute direction.
 			DestWorldLocation = WorldLocationPath.at(DestIndex);
-			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal(0.00001);
-			check(
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0, 0.01) &&
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 0.0, 0.01) ||
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 0.0, 0.01) &&
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0, 0.01)
-			);
+			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
 		}
 
 		// Apply movement.
@@ -133,7 +130,7 @@ public:
 		FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
 		const auto MovementDotProduct = FVector2D::DotProduct(
 			Direction2D,
-			(DestWorldLocation2D - ActorLocation2D).GetSafeNormal(0.01));
+			(DestWorldLocation2D - ActorLocation2D).GetSafeNormal());
 		const auto AmountDotProduct = FVector2D::DotProduct(
 			Direction2D,
 			DestWorldLocation2D - ActorLocation2D);
@@ -154,7 +151,7 @@ public:
 			{
 				// Compute next direction.
 				const auto NextDest = WorldLocationPath.at(DestIndex);
-				const auto NextDir = (NextDest - ActorLocation).GetSafeNormal(0.01);
+				const auto NextDir = (NextDest - ActorLocation).GetSafeNormal();
 
 				// And apply the remaining movement.
 				ActorLocation += AmountMovedPast * NextDir;

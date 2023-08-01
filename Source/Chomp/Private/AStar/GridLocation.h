@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <functional>
 #include "GridLocation.generated.h"
 
 class ULevelLoader;
@@ -34,12 +35,28 @@ struct FGridLocation
 		Y = Other.Y;
 		return *this;
 	}
+
+	FVector ToFVector() const
+	{
+		return FVector{static_cast<double>(X), static_cast<double>(Y), 0.0};
+	}
+};
+
+// Implement hash function so we can put FGridLocation into an unordered_set.
+template <>
+struct std::hash<FGridLocation>
+{
+	std::size_t operator()(const FGridLocation& ID) const noexcept
+	{
+		// NOTE: better to use something like boost hash_combine
+		return std::hash<int>()(ID.X ^ ID.Y << 16);
+	}
 };
 
 struct FMaybeGridLocation
 {
-	bool IsValid;
-	FGridLocation GridLocation;
+	bool IsValid{false};
+	FGridLocation GridLocation{0, 0};
 
 	static FMaybeGridLocation Invalid()
 	{
@@ -56,17 +73,3 @@ struct FMaybeGridLocation
 bool operator==(const FGridLocation& A, const FGridLocation& B);
 bool operator!=(const FGridLocation& A, const FGridLocation& B);
 bool operator<(const FGridLocation& A, const FGridLocation& B);
-
-// Implement hash function so we can put FGridLocation into an unordered_set.
-namespace std
-{
-	template <>
-	struct hash<FGridLocation>
-	{
-		std::size_t operator()(const FGridLocation& ID) const noexcept
-		{
-			// NOTE: better to use something like boost hash_combine
-			return std::hash<int>()(ID.X ^ ID.Y << 16);
-		}
-	};
-}

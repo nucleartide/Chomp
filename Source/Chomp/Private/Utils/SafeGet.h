@@ -1,4 +1,5 @@
 #pragma once
+#include "AStar/GridLocation.h"
 
 class FSafeGet
 {
@@ -12,4 +13,7 @@ public:
 	
 	template <typename T>
 	static T* GameState(const AActor *Actor);
+
+	static FVector ActuallyGetSafeNormal(const FVector& Input);
+	static FVector2D ActuallyGetSafeNormal(const FVector2D& Input);
 };

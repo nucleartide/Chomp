@@ -101,13 +101,15 @@ void AChompPlayerController::Tick(const float DeltaTime)
 	IntendedMovement = UpdateIntendedMovement();
 	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
 
-	const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
-		CurrentMovement,
-		IntendedMovement,
-		DeltaTime);
-
-	MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
-	ShouldInvalidateTargetTile = InvalidateTargetTile;
+	if (CurrentMovement->HasValidTargetTile())
+	{
+		const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
+			CurrentMovement,
+			IntendedMovement,
+			DeltaTime);
+		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
+		ShouldInvalidateTargetTile = InvalidateTargetTile;
+	}
 }
 
 void AChompPlayerController::BeginPlay()

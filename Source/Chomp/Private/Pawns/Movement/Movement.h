@@ -14,12 +14,11 @@ struct FMovement
 		Direction(Direction),
 		TargetTile(TargetTile)
 	{
-		if (TargetTile.IsValid)
-			check(Direction.IsNonZero());
+		check(!TargetTile.IsValid || TargetTile.IsValid && Direction.IsNonZero());
 	}
 
 	bool HasValidTargetTile() const
 	{
-		return TargetTile.IsValid;
+		return TargetTile.IsValid && Direction.IsNonZero();
 	}
 };

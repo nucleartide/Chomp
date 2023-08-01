@@ -48,3 +48,24 @@ APlayerController* FSafeGet::PlayerController(const AActor* Actor, int PlayerInd
 	check(PlayerController);
 	return PlayerController;
 }
+
+// An alternative implementation of FVector::GetSafeNormal that relies on the signs of the values.
+// Will throw if the resulting signed vector does not have length 1.
+FVector FSafeGet::ActuallyGetSafeNormal(const FVector& Input)
+{
+	const auto X = FMath::IsNearlyEqual(Input.X, 0.0, 0.01) ? 0.0 : FMath::Sign(Input.X);
+	const auto Y = FMath::IsNearlyEqual(Input.Y, 0.0, 0.01) ? 0.0 : FMath::Sign(Input.Y);
+	check(
+		FMath::IsNearlyEqual(FGenericPlatformMath::Abs(X), 1.0, 0.01) &&
+		FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Y), 0.0, 0.01) ||
+		FMath::IsNearlyEqual(FGenericPlatformMath::Abs(X), 0.0, 0.01) &&
+		FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Y), 1.0, 0.01)
+	);
+	return FVector{X, Y, 0.0};
+}
+
+FVector2D FSafeGet::ActuallyGetSafeNormal(const FVector2D& Input)
+{
+	const auto Result = ActuallyGetSafeNormal(FVector{Input.X, Input.Y, 0.0});
+	return FVector2D{Result.X, Result.Y};
+}

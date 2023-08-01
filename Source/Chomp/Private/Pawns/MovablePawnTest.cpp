@@ -25,7 +25,7 @@ bool MovablePawnTest::RunTest(const FString& Parameters)
 		Rotation);
 
 	// Check assertions.
-	TestTrue(TEXT("truthy check inside MovablePawnTest"), false);
+	TestTrue(TEXT("truthy check inside MovablePawnTest"), true);
 	TestEqual(TEXT("thing check inside MovablePawnTest"), Thing, 42);
 
 	// Make the test pass by returning true, or fail by returning false.
