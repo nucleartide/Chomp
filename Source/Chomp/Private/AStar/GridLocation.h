@@ -1,6 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include <functional>
+
 #include "GridLocation.generated.h"
 
 class ULevelLoader;
@@ -34,12 +36,54 @@ struct FGridLocation
 		Y = Other.Y;
 		return *this;
 	}
+
+	FVector ToFVector() const
+	{
+		return FVector{static_cast<double>(X), static_cast<double>(Y), 0.0};
+	}
+
+	bool IsOppositeDirection(const FGridLocation& Other) const
+	{
+		const auto IsXZero = X == 0;
+		const auto IsYZero = Y == 0;
+		const auto IsXOpposite = !IsXZero && X == -Other.X;
+		const auto IsYOpposite = !IsYZero && Y == -Other.Y;
+		return IsXOpposite && !IsYOpposite || !IsXOpposite && IsYOpposite;
+	}
+
+	bool IsTurningCorner(const FGridLocation& Other) const
+	{
+		const auto IsSame = X == Other.X && Y == Other.Y;
+		return !IsSame && !IsOppositeDirection(Other);
+	}
+
+	FGridLocation Modulo(const ULevelLoader* LevelInstance) const;
+
+	bool IsCardinalOrZero() const
+	{
+		return X == 0 && Y == -1 ||
+			X == 0 && Y == 1 ||
+			X == -1 && Y == 0 ||
+			X == 1 && Y == 0 ||
+			X == 0 && Y == 0;
+	}
+};
+
+// Implement hash function so we can put FGridLocation into an unordered_set.
+template <>
+struct std::hash<FGridLocation>
+{
+	std::size_t operator()(const FGridLocation& ID) const noexcept
+	{
+		// NOTE: better to use something like boost hash_combine
+		return std::hash<int>()(ID.X ^ ID.Y << 16);
+	}
 };
 
 struct FMaybeGridLocation
 {
-	bool IsValid;
-	FGridLocation GridLocation;
+	bool IsValid{false};
+	FGridLocation GridLocation{0, 0};
 
 	static FMaybeGridLocation Invalid()
 	{
@@ -56,17 +100,3 @@ struct FMaybeGridLocation
 bool operator==(const FGridLocation& A, const FGridLocation& B);
 bool operator!=(const FGridLocation& A, const FGridLocation& B);
 bool operator<(const FGridLocation& A, const FGridLocation& B);
-
-// Implement hash function so we can put FGridLocation into an unordered_set.
-namespace std
-{
-	template <>
-	struct hash<FGridLocation>
-	{
-		std::size_t operator()(const FGridLocation& ID) const noexcept
-		{
-			// NOTE: better to use something like boost hash_combine
-			return std::hash<int>()(ID.X ^ ID.Y << 16);
-		}
-	};
-}

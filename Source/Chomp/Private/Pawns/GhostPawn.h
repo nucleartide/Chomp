@@ -25,7 +25,6 @@ class AGhostPawn : public AMovablePawn
 	FGridLocation ScatterDestination;
 
 public:
-	AGhostPawn();
 	FGridLocation GetStartingPosition() const;
 	int GetDotsConsumedMovementThreshold() const;
 	FGridLocation GetScatterOrigin() const;

@@ -12,7 +12,7 @@ template <class T>
 T* FSafeGet::Pawn(const AController* Controller)
 {
 	auto Pawn = Controller->GetPawn<T>();
-	check(Pawn);
+	check(IsValid(Pawn));
 	return Pawn;
 }
 

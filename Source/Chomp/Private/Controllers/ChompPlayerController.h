@@ -4,61 +4,71 @@
 #include "ChompGameState.h"
 #include "GameFramework/PlayerController.h"
 #include "LevelGenerator/LevelLoader.h"
+#include "Pawns/Movement/Movement.h"
+#include "Pawns/Movement/MovementIntention.h"
 
 #include "ChompPlayerController.generated.h"
-
-struct FMovement;
-struct FMovementIntention;
-struct FGridLocation;
 
 UCLASS()
 class AChompPlayerController : public APlayerController
 {
 	GENERATED_BODY()
 
+	// Reference to level.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	double TimeForIntendedDirectionToLast = 0.5;
 
 	// The pawn's initial movement direction.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation InitialMoveDirection{0, 1};
 
 	// Vertical input that is read from keyboard.
+	UPROPERTY(VisibleAnywhere)
 	float VerticalAxisInput = 0.0f;
 
+	// Time when the vertical input was last read.
+	UPROPERTY(VisibleAnywhere)
+	double TimeThatVerticalAxisWasSet = 0.0f;
+
 	// Horizontal input that is read from keyboard.
+	UPROPERTY(VisibleAnywhere)
 	float HorizontalAxisInput = 0.0f;
+	
+	// Time when the horizontal input was last read.
+	UPROPERTY(VisibleAnywhere)
+	double TimeThatHorizontalAxisWasSet = 0.0f;
+	
+	UPROPERTY(VisibleAnywhere)
+	double TimeBeforeClearingIntendedMovement = 0.25f;
 
-	// The next movement that is intended by the player.
-	TSharedPtr<FMovementIntention> IntendedMovement;
+	UPROPERTY(VisibleAnywhere)
+	FMovementIntention IntendedMovement;
 
-	// The movement that is currently taking place.
-	TSharedPtr<FMovement> CurrentMovement;
-
-	// Whether to invalidate target tile on next CurrentMovement update.
-	bool ShouldInvalidateTargetTile = false;
+	UPROPERTY(VisibleAnywhere)
+	FMovement CurrentMovement;
 
 public:
+	// Constructor to enable ticks.
 	AChompPlayerController();
-	
+
+	// Handle game restarts.
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
 protected:
+	// Needed to attach some handlers.
 	virtual void BeginPlay() override;
 
+	// Needed to run per-frame logic.
 	virtual void Tick(float DeltaTime) override;
 
 private:
+	// Capture horizontal input.
 	void OnMoveHorizontal(float Input);
 
+	// Capture vertical input.
 	void OnMoveVertical(float Input);
 
-	TSharedPtr<FMovementIntention> UpdateIntendedMovement() const;
+	FMovementIntention UpdateIntendedMovement() const;
 
-	TSharedPtr<FMovement> UpdateCurrentMovement(const bool InvalidateTargetTile) const;
-
-	TSharedPtr<FMovement> ComputeMovementWithTargetTile(FGridLocation Direction) const;
+	FMovement UpdateCurrentMovement(const bool InvalidateTargetTile) const;
 };

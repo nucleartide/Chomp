@@ -60,3 +60,23 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 
 	return false;
 }
+
+FGridLocation FGridLocation::Modulo(const ULevelLoader* LevelInstance) const
+{
+	const auto Height = LevelInstance->GetLevelHeight();
+	const auto Width = LevelInstance->GetLevelWidth();
+
+	auto NewX = X;
+	if (NewX < 0)
+		NewX += Height;
+	else if (NewX >= Height)
+		NewX -= Height;
+
+	auto NewY = Y;
+	if (NewY < 0)
+		NewY += Width;
+	else if (NewY >= Width)
+		NewY -= Width;
+
+	return FGridLocation{NewX, NewY};
+}

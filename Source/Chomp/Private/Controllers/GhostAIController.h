@@ -25,15 +25,18 @@ class AGhostAIController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool IsTesting = false;
 
-	// TSharedPtr has the benefit of being automatically released when GhostAIController goes out of scope.
-	TSharedPtr<FMovementPath> MovementPath;
+	UPROPERTY(VisibleAnywhere)
+	FMovementPath MovementPath;
 
+	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterOrigin;
+
+	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterDestination;
 
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -42,23 +45,26 @@ private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
 
-	static std::vector<FGridLocation> ComputePath(
+	static TArray<FGridLocation> ComputePath(
 		ULevelLoader* LevelInstance,
 		FVector2D CurrentWorldPosition,
 		FGridLocation StartGridPos,
 		FGridLocation EndGridPos,
-		bool Debug);
+		bool Debug
+	);
 
 	bool CanStartMoving() const;
 
-	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
-	                       ULevelLoader* LevelInstance);
+	static void DebugAStar(
+		const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
+		ULevelLoader* LevelInstance
+	);
 
 	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
 
 	void ComputeChaseForMovementPath();
 
 	void ResetPawnPosition() const;
-	
+
 	void SwapScatterOriginAndDestination();
 };
