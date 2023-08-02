@@ -204,7 +204,7 @@ void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGri
 void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-	const auto WorldLocation = Pawn->GetActorLocation2D();
+	const auto WorldLocation = FVector(Pawn->GetActorLocation());
 	const auto GridLocation = Pawn->GetGridLocation();
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);

@@ -5,8 +5,11 @@
 #include "LevelGenerator/LevelLoader.h"
 #include "Math/UnrealMathUtility.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Movement/MoveInDirectionResult.h"
 #include "Movement/Movement.h"
 #include "Movement/MovementIntention.h"
+#include "Movement/MovementResult.h"
+#include "Movement/PeriodicDotProductResult.h"
 #include "Utils/MathHelpers.h"
 #include "Utils/SafeGet.h"
 
@@ -131,16 +134,8 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 
 FGridLocation AMovablePawn::GetGridLocation() const
 {
-	const auto ActorLocation = GetActorLocation();
-	const FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-	return ULevelLoader::GetInstance(Level)->WorldToGrid(ActorLocation2D);
-}
-
-FVector2D AMovablePawn::GetActorLocation2D() const
-{
-	const auto Location = GetActorLocation();
-	const FVector2D Location2D{Location.X, Location.Y};
-	return Location2D;
+	const auto Loc = FVector2D(GetActorLocation());
+	return ULevelLoader::GetInstance(Level)->WorldToGrid(Loc);
 }
 
 FMovementResult AMovablePawn::MoveAlongPath(
@@ -171,7 +166,6 @@ FMovementResult AMovablePawn::MoveAlongPath(
 bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Direction) const
 {
 	// Prepare data needed for performing our sweep check.
-	// Diameter needs to be slightly less than 100.0f to avoid overlapping with adjacent wall tiles.
 	const auto [X, Y] = Direction;
 	constexpr auto ActorRadius = 1.0f;
 	const auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
