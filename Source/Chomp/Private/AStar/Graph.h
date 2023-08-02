@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Math/IntPoint.h"
 #include <vector>
+#include "Math/IntPoint.h"
 
 struct FGridLocation;
 
