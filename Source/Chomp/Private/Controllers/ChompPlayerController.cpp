@@ -9,6 +9,24 @@
 #include "Pawns/Movement/MovementIntention.h"
 #include "Utils/MathHelpers.h"
 
+void CheckThatPawnIsRightOnGrid(const AMovablePawn* Pawn)
+{
+	const auto Location = Pawn->GetActorLocation();
+	check(FMath::IsNearlyEqual(FMathHelpers::NegativeFriendlyFmod(Location.X, 100.0), 0.0));
+	check(FMath::IsNearlyEqual(FMathHelpers::NegativeFriendlyFmod(Location.Y, 100.0), 0.0));
+	check(FMath::IsNearlyEqual(Location.Z, 0.0));
+}
+
+FMovement NewMovement(
+	const AMovablePawn* Pawn,
+	const FGridLocation& Direction,
+	const ULevelLoader* LevelInstance)
+{
+	const auto CurrentGridLocation = Pawn->GetGridLocation();
+	const auto NextGridLocation = (CurrentGridLocation + Direction).Modulo(LevelInstance);
+	return FMovement(Direction, FMaybeGridLocation{true, NextGridLocation});
+}
+
 AChompPlayerController::AChompPlayerController(): APlayerController()
 {
 	// Enable Tick() function.
@@ -30,10 +48,7 @@ void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChom
 {
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
-	{
-		CurrentMovement.Reset();
-		IntendedMovement.Reset();
-	}
+		ResetMovement();
 }
 
 void AChompPlayerController::OnMoveHorizontal(const float Input)
@@ -61,24 +76,6 @@ FMovementIntention AChompPlayerController::UpdateIntendedMovement() const
 		return FMovementIntention(0.0, 0.0, WorldInstance);
 
 	return IntendedMovement;
-}
-
-FMovement NewMovement(
-	const AMovablePawn* Pawn,
-	const FGridLocation& Direction,
-	const ULevelLoader* LevelInstance)
-{
-	const auto CurrentGridLocation = Pawn->GetGridLocation();
-	const auto NextGridLocation = (CurrentGridLocation + Direction).Modulo(LevelInstance);
-	return FMovement(Direction, FMaybeGridLocation{true, NextGridLocation});
-}
-
-void CheckThatPawnIsRightOnGrid(const AMovablePawn* Pawn)
-{
-	const auto Location = Pawn->GetActorLocation();
-	check(FMath::IsNearlyEqual(FMathHelpers::NegativeFriendlyFmod(Location.X, 100.0), 0.0));
-	check(FMath::IsNearlyEqual(FMathHelpers::NegativeFriendlyFmod(Location.Y, 100.0), 0.0));
-	check(FMath::IsNearlyEqual(Location.Z, 0.0));
 }
 
 FMovement AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile = false) const
@@ -129,6 +126,22 @@ FMovement AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTar
 	return CurrentMovement;
 }
 
+void AChompPlayerController::ResetMovement()
+{
+	// Reset intended movement.
+	IntendedMovement.Reset();
+
+	// Reset current movement.
+	if (const auto Pawn = GetPawn<AMovablePawn>())
+	{
+		CheckThatPawnIsRightOnGrid(Pawn);
+		if (Pawn->CanTravelInDirection(Pawn->GetActorLocation(), InitialMoveDirection))
+			CurrentMovement = NewMovement(Pawn, InitialMoveDirection, ULevelLoader::GetInstance(Level));
+		else
+			CurrentMovement = FMovement(InitialMoveDirection, FMaybeGridLocation{false, FGridLocation{0, 0}});
+	}
+}
+
 void AChompPlayerController::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
@@ -166,17 +179,8 @@ void AChompPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Bind input axes.
 	InputComponent->BindAxis("Move Forward / Backward", this, &AChompPlayerController::OnMoveVertical);
 	InputComponent->BindAxis("Move Right / Left", this, &AChompPlayerController::OnMoveHorizontal);
-
-	// Initialize CurrentMovement.
-	if (const auto Pawn = GetPawn<AMovablePawn>())
-	{
-		CheckThatPawnIsRightOnGrid(Pawn);
-		if (Pawn->CanTravelInDirection(Pawn->GetActorLocation(), InitialMoveDirection))
-			CurrentMovement = NewMovement(Pawn, InitialMoveDirection, ULevelLoader::GetInstance(Level));
-		else
-			CurrentMovement = FMovement(InitialMoveDirection, FMaybeGridLocation{false, FGridLocation{0, 0}});
-	}
+	
+	ResetMovement();
 }

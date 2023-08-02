@@ -71,4 +71,6 @@ private:
 	FMovementIntention UpdateIntendedMovement() const;
 
 	FMovement UpdateCurrentMovement(const bool InvalidateTargetTile) const;
+
+	void ResetMovement();
 };
