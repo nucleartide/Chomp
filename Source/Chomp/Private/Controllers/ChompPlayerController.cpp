@@ -11,6 +11,7 @@
 
 AChompPlayerController::AChompPlayerController(): APlayerController()
 {
+	// Enable Tick() function.
 	PrimaryActorTick.bCanEverTick = true;
 
 	// Disable this. We want to manage the active camera ourselves.
@@ -137,20 +138,24 @@ void AChompPlayerController::Tick(const float DeltaTime)
 	if (!IsValid(MovablePawn))
 		return;
 
+	// Update intended movement.
 	IntendedMovement = UpdateIntendedMovement();
 	check(IntendedMovement.GetDirection().IsCardinalOrZero());
 
+	// Update location and rotation.
 	auto ShouldInvalidateTargetTile = false;
 	if (CurrentMovement.HasValidTargetTile())
 	{
 		const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
 			CurrentMovement,
 			IntendedMovement,
-			DeltaTime);
+			DeltaTime
+			);
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
 	}
 
+	// Update current movement.
 	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
 }
 
