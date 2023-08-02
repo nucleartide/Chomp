@@ -19,6 +19,9 @@ AChompPlayerController::AChompPlayerController(): APlayerController()
 void AChompPlayerController::OnMoveVertical(const float Input)
 {
 	VerticalAxisInput = Input;
+	const auto World = FSafeGet::World(this);
+	if (FMath::IsNearlyEqual(FMath::Abs(Input), 1.0))
+		TimeThatVerticalAxisWasSet = World->GetRealTimeSeconds();
 }
 
 void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
@@ -34,21 +37,26 @@ void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChom
 void AChompPlayerController::OnMoveHorizontal(const float Input)
 {
 	HorizontalAxisInput = Input;
+	const auto World = FSafeGet::World(this);
+	if (FMath::IsNearlyEqual(FMath::Abs(Input), 1.0))
+		TimeThatHorizontalAxisWasSet = World->GetRealTimeSeconds();
 }
 
 TSharedPtr<FMovementIntention> AChompPlayerController::UpdateIntendedMovement() const
 {
 	const auto WorldInstance = FSafeGet::World(this);
+	
+	if (!IntendedMovement.IsValid())
+		return MakeShared<FMovementIntention>(0.0, 0.0, WorldInstance);
 
 	if (VerticalAxisInput != 0.0f || HorizontalAxisInput != 0.0f)
-		return MakeShared<FMovementIntention>(VerticalAxisInput, HorizontalAxisInput, WorldInstance);
+	{
+		// Prioritize the latest pressed key.
+		if (TimeThatVerticalAxisWasSet > TimeThatHorizontalAxisWasSet)
+			return MakeShared<FMovementIntention>(VerticalAxisInput, 0.0, WorldInstance);
 
-	if (!IntendedMovement.IsValid())
-		return MakeShared<FMovementIntention>(0.0f, 0.0f, WorldInstance);
-
-	if (IntendedMovement->Direction.IsNonZero() &&
-		IntendedMovement->HasElapsedSinceLastUpdate(TimeForIntendedDirectionToLast, WorldInstance))
-		return MakeShared<FMovementIntention>(0.0f, 0.0f, WorldInstance);
+		return MakeShared<FMovementIntention>(0.0, HorizontalAxisInput, WorldInstance);
+	}
 
 	return IntendedMovement;
 }
@@ -156,7 +164,7 @@ void AChompPlayerController::Tick(const float DeltaTime)
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
 	}
-		
+
 	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
 
 	if (CurrentMovement.IsValid())

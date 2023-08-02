@@ -19,9 +19,6 @@ class AChompPlayerController : public APlayerController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	double TimeForIntendedDirectionToLast = 0.5;
-
 	// The pawn's initial movement direction.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	FGridLocation InitialMoveDirection{0, 1};
@@ -29,10 +26,12 @@ class AChompPlayerController : public APlayerController
 	// Vertical input that is read from keyboard.
 	UPROPERTY(VisibleAnywhere)
 	float VerticalAxisInput = 0.0f;
+	double TimeThatVerticalAxisWasSet = 0.0f;
 
 	// Horizontal input that is read from keyboard.
 	UPROPERTY(VisibleAnywhere)
 	float HorizontalAxisInput = 0.0f;
+	double TimeThatHorizontalAxisWasSet = 0.0f;
 
 	// The next movement that is intended by the player.
 	TSharedPtr<FMovementIntention> IntendedMovement;
