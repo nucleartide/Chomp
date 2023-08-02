@@ -64,9 +64,3 @@ FVector FSafeGet::ActuallyGetSafeNormal(const FVector& Input)
 	);
 	return FVector{X, Y, 0.0};
 }
-
-FVector2D FSafeGet::ActuallyGetSafeNormal(const FVector2D& Input)
-{
-	const auto Result = ActuallyGetSafeNormal(FVector{Input.X, Input.Y, 0.0});
-	return FVector2D{Result.X, Result.Y};
-}
