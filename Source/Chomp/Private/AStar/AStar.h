@@ -17,14 +17,14 @@ public:
 	static double ManhattanDistanceHeuristic(const FGridLocation& A, const FGridLocation& B);
 
 	template <typename Location>
-	static void Pathfind(IGraph *Graph,
-						 Location Start,
-						 Location Goal,
-						 std::unordered_map<Location, Location> &CameFrom,
-						 std::unordered_map<Location, double> &CostSoFar,
-						 const std::function<double(Location, Location)> &Heuristic);
+	static void Pathfind(IGraph* Graph,
+	                     Location Start,
+	                     Location Goal,
+	                     std::unordered_map<Location, Location>& CameFrom,
+	                     std::unordered_map<Location, double>& CostSoFar,
+	                     const std::function<double(Location, Location)>& Heuristic);
 
-	static std::vector<FGridLocation> ReconstructPath(const FGridLocation& Start,
-													  const FGridLocation& Goal,
-													  std::unordered_map<FGridLocation, FGridLocation> &CameFrom);
+	static TArray<FGridLocation> ReconstructPath(const FGridLocation& Start,
+	                                             const FGridLocation& Goal,
+	                                             std::unordered_map<FGridLocation, FGridLocation>& CameFrom);
 };

@@ -26,7 +26,7 @@ class AGhostAIController : public AAIController
 	bool IsTesting = false;
 
 	UPROPERTY(VisibleAnywhere)
-	UMovementPath MovementPath;
+	FMovementPath MovementPath;
 
 	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterOrigin;
@@ -36,7 +36,7 @@ class AGhostAIController : public AAIController
 
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
-	
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -45,23 +45,26 @@ private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
 
-	static std::vector<FGridLocation> ComputePath(
+	static TArray<FGridLocation> ComputePath(
 		ULevelLoader* LevelInstance,
 		FVector2D CurrentWorldPosition,
 		FGridLocation StartGridPos,
 		FGridLocation EndGridPos,
-		bool Debug);
+		bool Debug
+	);
 
 	bool CanStartMoving() const;
 
-	static void DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
-	                       ULevelLoader* LevelInstance);
+	static void DebugAStar(
+		const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
+		ULevelLoader* LevelInstance
+	);
 
 	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
 
 	void ComputeChaseForMovementPath();
 
 	void ResetPawnPosition() const;
-	
+
 	void SwapScatterOriginAndDestination();
 };

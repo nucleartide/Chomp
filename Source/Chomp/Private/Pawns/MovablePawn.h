@@ -49,7 +49,7 @@ public:
 
 	// Move along a path. Used by the AI controller.
 	FMovementResult MoveAlongPath(
-		const UMovementPath& MovementPath,
+		const FMovementPath& MovementPath,
 		const float DeltaTime
 	) const;
 

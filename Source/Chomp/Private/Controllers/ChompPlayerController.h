@@ -9,10 +9,6 @@
 
 #include "ChompPlayerController.generated.h"
 
-struct FMovement;
-struct FMovementIntention;
-struct FGridLocation;
-
 UCLASS()
 class AChompPlayerController : public APlayerController
 {

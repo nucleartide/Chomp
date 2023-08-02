@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include <tuple>
 
 #include "GridLocation.h"
@@ -10,13 +9,17 @@
 
 #include "MovementPath.generated.h"
 
-UCLASS()
-class UMovementPath : public UObject
+USTRUCT()
+struct FMovementPath
 {
 	GENERATED_BODY()
 
-	std::vector<FGridLocation> GridLocationPath;
-	std::vector<FVector> WorldLocationPath;
+private:
+	UPROPERTY()	
+	TArray<FGridLocation> GridLocationPath;
+
+	UPROPERTY()
+	TArray<FVector> WorldLocationPath;
 
 	UPROPERTY()
 	const ULevelLoader* LevelInstance;
@@ -25,15 +28,15 @@ class UMovementPath : public UObject
 	// int: The index of the next GridLocation. Will be -1 if there is no next GridLocation.
 	static std::tuple<bool, int> IsOnPath(
 		const FVector& ActorLocation,
-		const std::vector<FGridLocation>& Path,
+		const TArray<FGridLocation>& Path,
 		const ULevelLoader* LevelInstance)
 	{
-		if (Path.size() == 0)
+		if (Path.Num() == 0)
 			return std::make_tuple(false, -1);
 
 		// If ActorLocation is on the path somewhere,
 		const FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-		for (auto i = 0; i < Path.size() - 1; i++)
+		for (auto i = 0; i < Path.Num() - 1; i++)
 		{
 			auto CurrentNode = Path[i];
 			auto NextNode = Path[i + 1];
@@ -42,7 +45,7 @@ class UMovementPath : public UObject
 		}
 
 		// If ActorLocation is within 50 axis-aligned units (inclusive) of the start node,
-		const auto WorldA = LevelInstance->GridToWorld(Path.at(0));
+		const auto WorldA = LevelInstance->GridToWorld(Path[0]);
 		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) &&
 			FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0f ||
 			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) &&
@@ -50,7 +53,7 @@ class UMovementPath : public UObject
 			return std::make_tuple(true, 0);
 
 		// If ActorLocation is at the end node,
-		const auto WorldLast = LevelInstance->GridToWorld(Path.at(Path.size() - 1));
+		const auto WorldLast = LevelInstance->GridToWorld(Path[Path.Num() - 1]);
 		if (FMath::IsNearlyEqual(ActorLocation.X, WorldLast.X, 0.01f) &&
 			FMath::IsNearlyEqual(ActorLocation.Y, WorldLast.Y, 0.01f))
 			return std::make_tuple(true, -1);
@@ -59,9 +62,13 @@ class UMovementPath : public UObject
 	}
 
 public:
-	explicit UMovementPath(
+	FMovementPath(): LevelInstance(nullptr)
+	{
+	}
+
+	explicit FMovementPath(
 		const FVector& ActorLocation,
-		const std::vector<FGridLocation>& NewLocationPath,
+		const TArray<FGridLocation>& NewLocationPath,
 		const ULevelLoader* LevelInstance) : LevelInstance(LevelInstance)
 	{
 		// Sanity check.
@@ -74,16 +81,16 @@ public:
 		for (auto Location : NewLocationPath)
 		{
 			const auto WorldLocation = LevelInstance->GridToWorld(Location);
-			WorldLocationPath.push_back(FVector{WorldLocation.X, WorldLocation.Y, 0.0f});
+			WorldLocationPath.Add(FVector{WorldLocation.X, WorldLocation.Y, 0.0f});
 		}
 	}
 
 	bool WasCompleted(const FVector& ActorLocation) const
 	{
-		if (GridLocationPath.size() == 0)
+		if (GridLocationPath.Num() == 0)
 			return true;
 
-		const auto LastGridLocation = GridLocationPath.at(GridLocationPath.size() - 1);
+		const auto LastGridLocation = GridLocationPath[GridLocationPath.Num() - 1];
 		const auto LastWorldLoc = LevelInstance->GridToWorld(LastGridLocation);
 		return ActorLocation == FVector{LastWorldLoc.X, LastWorldLoc.Y, 0.0f};
 	}
@@ -122,7 +129,7 @@ public:
 				return ActorLocation;
 
 			// Compute direction.
-			DestWorldLocation = WorldLocationPath.at(DestIndex);
+			DestWorldLocation = WorldLocationPath[DestIndex];
 			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
 			check(
 				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) &&
@@ -162,7 +169,7 @@ public:
 			if (OnPath && DestIndex > -1)
 			{
 				// Compute next direction.
-				const auto NextDest = WorldLocationPath.at(DestIndex);
+				const auto NextDest = WorldLocationPath[DestIndex];
 				const auto NextDir = (NextDest - ActorLocation).GetSafeNormal();
 
 				// And apply the remaining movement.
@@ -174,7 +181,7 @@ public:
 		return ActorLocation;
 	}
 
-	UMovementPath& operator=(const UMovementPath& Other)
+	FMovementPath& operator=(const FMovementPath& Other)
 	{
 		if (this == &Other)
 			return *this;
@@ -186,8 +193,8 @@ public:
 
 	bool IsValid() const
 	{
-		const auto GridLocationPathSize = GridLocationPath.size();
-		check(GridLocationPathSize == WorldLocationPath.size());
+		const auto GridLocationPathSize = GridLocationPath.Num();
+		check(GridLocationPathSize == WorldLocationPath.Num());
 		return GridLocationPathSize > 0;
 	}
 };

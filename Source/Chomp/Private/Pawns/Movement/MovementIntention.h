@@ -14,6 +14,10 @@ private:
 	double TimeOfLastUpdate;
 
 public:
+	FMovementIntention(): Direction(FGridLocation{0, 0}), TimeOfLastUpdate(0)
+	{
+	}
+
 	FMovementIntention(
 		const float VerticalAxisInput,
 		const float HorizontalAxisInput,

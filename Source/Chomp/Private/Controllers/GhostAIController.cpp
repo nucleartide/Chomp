@@ -107,7 +107,7 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 	}
 }
 
-std::vector<FGridLocation> AGhostAIController::ComputePath(
+TArray<FGridLocation> AGhostAIController::ComputePath(
 	ULevelLoader* LevelInstance,
 	FVector2D CurrentWorldPosition,
 	FGridLocation StartGridPos,
@@ -135,7 +135,7 @@ std::vector<FGridLocation> AGhostAIController::ComputePath(
 		StartGridPos,
 		EndGridPos,
 		CameFrom);
-	check(Path.size() >= 1);
+	check(Path.Num() >= 1);
 	check(Path[0] == StartGridPos);
 
 	// Assert that ghost is axis-aligned.
@@ -210,7 +210,7 @@ void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& Scat
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);
 
-	MovementPath = UMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
 	check(MovementPath.IsValid());
 	MovementPath.DebugLog(TEXT("Scatter"));
 }
@@ -229,7 +229,7 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);
 
-	MovementPath = UMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
 	check(MovementPath.IsValid());
 	MovementPath.DebugLog(TEXT("Chase"));
 }

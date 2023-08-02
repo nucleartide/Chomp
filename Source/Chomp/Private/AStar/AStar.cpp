@@ -65,12 +65,12 @@ template void FAStar::Pathfind(IGraph *Graph,
                               std::unordered_map<FGridLocation, double> &CostSoFar,
                               const std::function<double(FGridLocation, FGridLocation)> &Heuristic);
 
-std::vector<FGridLocation> FAStar::ReconstructPath(
+TArray<FGridLocation> FAStar::ReconstructPath(
     const FGridLocation& Start,
     const FGridLocation& Goal,
     std::unordered_map<FGridLocation, FGridLocation> &CameFrom)
 {
-    std::vector<FGridLocation> Path;
+    TArray<FGridLocation> Path;
     FGridLocation Current = Goal;
 
     // If Goal cannot be found,
@@ -83,12 +83,19 @@ std::vector<FGridLocation> FAStar::ReconstructPath(
     // Reconstruct path.
     while (Current != Start)
     {
-        Path.push_back(Current);
+        Path.Add(Current);
         Current = CameFrom[Current];
     }
-    Path.push_back(Current);
+    Path.Add(Current);
 
-    // Return the reversed path.
-    std::reverse(Path.begin(), Path.end());
+    // Reverse the elements of Path.
+    for (auto i = 0; i < Path.Num() / 2; i++)
+    {
+        const auto ToSwap = Path.Num() - 1 - i;
+        const auto Temp = Path[i];
+        Path[i] = Path[ToSwap];
+        Path[ToSwap] = Temp;
+    }
+
     return Path;
 }

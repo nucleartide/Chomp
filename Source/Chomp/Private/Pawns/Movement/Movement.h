@@ -14,6 +14,10 @@ private:
 	FMaybeGridLocation TargetTile;
 
 public:
+	FMovement(): Direction(FGridLocation{0, 0}), TargetTile(FMaybeGridLocation{false, FGridLocation{0, 0}})
+	{
+	}
+
 	explicit FMovement(
 		const FGridLocation& Direction,
 		const FMaybeGridLocation& TargetTile

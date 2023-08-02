@@ -130,7 +130,7 @@ FGridLocation AMovablePawn::GetGridLocation() const
 }
 
 FMovementResult AMovablePawn::MoveAlongPath(
-	const UMovementPath& MovementPath,
+	const FMovementPath& MovementPath,
 	const float DeltaTime) const
 {
 	// If we're already at the end, return a no-movement result. Note that no rotation takes place.

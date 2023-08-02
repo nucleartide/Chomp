@@ -150,7 +150,7 @@ void AChompPlayerController::Tick(const float DeltaTime)
 			CurrentMovement,
 			IntendedMovement,
 			DeltaTime
-			);
+		);
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
 	}
