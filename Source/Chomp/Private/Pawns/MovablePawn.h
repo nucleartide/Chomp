@@ -11,53 +11,20 @@
 
 struct FMovementIntention;
 struct FMovement;
-
-USTRUCT()
-struct FMovementResult
-{
-	GENERATED_BODY()
-
-	FVector NewLocation;
-	FRotator NewRotation;
-};
-
-struct FMoveInDirectionResult
-{
-	FVector NewLocation;
-	FRotator NewRotation;
-	bool InvalidateTargetTile;
-	bool CanTravelInIntendedDirection;
-
-	FMoveInDirectionResult(const FVector& NewLocation, const FRotator& NewRotation, const bool bInvalidateTargetTile,
-	                       const bool CanTravelInIntendedDirection)
-		: NewLocation(NewLocation),
-		  NewRotation(NewRotation),
-		  InvalidateTargetTile(bInvalidateTargetTile),
-		  CanTravelInIntendedDirection(CanTravelInIntendedDirection)
-	{
-	}
-};
-
-struct FPeriodicDotProductResult
-{
-	bool MovedPastTarget{false};
-	double AmountMovedPast{0.0};
-};
+struct FMovementResult;
+struct FMoveInDirectionResult;
+struct FPeriodicDotProductResult;
 
 UCLASS()
 class AMovablePawn : public APawn
 {
 	GENERATED_BODY()
 
-	/**
-	 * The collision tags that this pawn collides with.
-	 */
+	// The collision tags that this pawn collides with.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TArray<FName> TagsToCollideWith;
 
-	/**
-	 * Scaling factor that is fed to RInterpTo.
-	 */
+	// Scaling factor that is fed to RInterpTo.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	float RotationInterpSpeed = 1.0f;
 
@@ -74,8 +41,6 @@ class AMovablePawn : public APawn
 	float MovementSpeed = 5.0f;
 
 public:
-	AMovablePawn();
-
 	FMoveInDirectionResult MoveInDirection(
 		TSharedPtr<FMovement> Movement,
 		TSharedPtr<FMovementIntention> MovementIntention,

@@ -1,11 +1,6 @@
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 
-AGhostPawn::AGhostPawn()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
-
 void AGhostPawn::BeginPlay()
 {
 	Super::BeginPlay();

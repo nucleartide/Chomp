@@ -13,7 +13,9 @@
  * ULevelLoader loads the contents of a level file (.txt file extension) into memory,
  * then also serves as an instance of the loaded level afterward.
  *
- * TODO: This could probably be split into 2 classes: ULevelLoader, and ULevel. Not that important though.
+ * TODO: This class has too many responsibilities.
+ * If time permits, I'd refactor into ULevel (UDataAsset) and ULoadedLevel (UObject),
+ * though that takes lower priority than implementing game mechanics and polishing the UX.
  */
 UCLASS(Blueprintable)
 class ULevelLoader : public UObject, public IGraph

@@ -10,11 +10,6 @@
 #include "Utils/MathHelpers.h"
 #include "Utils/SafeGet.h"
 
-AMovablePawn::AMovablePawn(): APawn()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
-
 // Given two vectors From and To,
 // find the difference vector (To - From) given that both vectors lie on a wrap-around space.
 FVector2D AMovablePawn::MinDifferenceVector(FVector From, FVector To, const ULevelLoader* LevelInstance)
