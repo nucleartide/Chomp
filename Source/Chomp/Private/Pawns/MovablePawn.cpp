@@ -72,7 +72,7 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	// If we move more than 100 cm, we have a problem because we may have moved into a wall.
 	// In this case, reject moving until framerate is better.
 	if (MovementSpeed * DeltaTime > 100.0)
-		return FMoveInDirectionResult(GetActorLocation(), GetActorRotation(), false);
+		return FMoveInDirectionResult(GetActorLocation(), GetActorRotation(), false, false);
 
 	// Compute the new ActorLocation.
 	const auto OldLocation = GetActorLocation();
@@ -114,17 +114,18 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	// Finally, compute new rotation. Be cognizant of Pac-Man's wrap-around! May need to do modular arithmetic.
 	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), ActorLocation, DeltaTime);
 	return FMoveInDirectionResult{ActorLocation, ActorRotation, MovedPastTarget};
-				{ // Grid alignment check.
-            		const auto Loc = NewLocation;
-            		check(
-            			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
-            			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
-            		 );
-            	}
+
 #endif
+					{ // Grid alignment check.
+                		const auto Loc = NewLocation;
+                		check(
+                			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
+                			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
+                		 );
+                	}
 
 	// And return the computed result.
-	return FMoveInDirectionResult(NewLocation, GetActorRotation(), MovedPastTarget);
+	return FMoveInDirectionResult(NewLocation, GetActorRotation(), MovedPastTarget, CanTravelInIntendedDir);
 }
 
 FGridLocation AMovablePawn::GetGridLocation() const

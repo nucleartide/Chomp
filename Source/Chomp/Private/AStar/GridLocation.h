@@ -43,8 +43,10 @@ struct FGridLocation
 
 	bool IsOppositeDirection(const FGridLocation& Other) const
 	{
-		const auto IsXOpposite = X == -Other.X;
-		const auto IsYOpposite = Y == -Other.Y;
+		const auto IsXZero = X == 0;
+		const auto IsYZero = Y == 0;
+		const auto IsXOpposite = !IsXZero && X == -Other.X;
+		const auto IsYOpposite = !IsYZero && Y == -Other.Y;
 		return IsXOpposite && !IsYOpposite || !IsXOpposite && IsYOpposite;
 	}
 

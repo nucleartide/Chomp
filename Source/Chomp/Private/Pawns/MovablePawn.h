@@ -26,11 +26,14 @@ struct FMoveInDirectionResult
 	FVector NewLocation;
 	FRotator NewRotation;
 	bool InvalidateTargetTile;
+	bool CanTravelInIntendedDirection;
 
-	FMoveInDirectionResult(const FVector& NewLocation, const FRotator& NewRotation, const bool bInvalidateTargetTile)
+	FMoveInDirectionResult(const FVector& NewLocation, const FRotator& NewRotation, const bool bInvalidateTargetTile,
+	                       const bool CanTravelInIntendedDirection)
 		: NewLocation(NewLocation),
 		  NewRotation(NewRotation),
-		  InvalidateTargetTile(bInvalidateTargetTile)
+		  InvalidateTargetTile(bInvalidateTargetTile),
+		  CanTravelInIntendedDirection(CanTravelInIntendedDirection)
 	{
 	}
 };
@@ -72,7 +75,7 @@ class AMovablePawn : public APawn
 
 public:
 	AMovablePawn();
-	
+
 	FMoveInDirectionResult MoveInDirection(
 		TSharedPtr<FMovement> Movement,
 		TSharedPtr<FMovementIntention> MovementIntention,
@@ -100,6 +103,6 @@ private:
 		const FGridLocation& Target,
 		const ULevelLoader* LevelInstance
 	);
-	
+
 	static FVector2D MinDifferenceVector(FVector From, FVector To, const ULevelLoader* LevelInstance);
 };

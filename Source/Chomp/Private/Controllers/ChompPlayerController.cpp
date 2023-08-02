@@ -60,7 +60,8 @@ TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool I
 
 	if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 		IntendedMovement->Direction.IsNonZero() &&
-		IntendedMovement->Direction != CurrentMovement->Direction &&
+		// IntendedMovement->Direction != CurrentMovement->Direction &&
+		IntendedMovement->Direction.IsOppositeDirection(CurrentMovement->Direction) &&
 		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
 	{
 		const auto CurrentGridLocation = Pawn->GetGridLocation();
@@ -69,7 +70,19 @@ TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool I
 	}
 
 	if (!CurrentMovement->HasValidTargetTile() || InvalidateTargetTile)
+	{
+		if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+			IntendedMovement->Direction.IsNonZero() &&
+			IntendedMovement->Direction != CurrentMovement->Direction &&
+			Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
+		{
+			const auto CurrentGridLocation = Pawn->GetGridLocation();
+			const auto NextGridLocation = CurrentGridLocation + IntendedMovement->Direction;
+			return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
+		}
+
 		return ComputeMovementWithTargetTile(CurrentMovement->Direction);
+	}
 
 	return CurrentMovement;
 }
@@ -101,7 +114,7 @@ void AChompPlayerController::Tick(const float DeltaTime)
 
 	IntendedMovement = UpdateIntendedMovement();
 
-		CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
+	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
 #if false
 	{
 		const auto OldCurrentMovement = CurrentMovement;
@@ -118,17 +131,21 @@ void AChompPlayerController::Tick(const float DeltaTime)
 
 	if (CurrentMovement->HasValidTargetTile())
 	{
-		const auto [NewLoc, NewRot, InvalidateTargetTile] = MovablePawn->MoveInDirection(
+		const auto [NewLoc, NewRot, InvalidateTargetTile, CanTravelInIntendedDir] = MovablePawn->MoveInDirection(
 			CurrentMovement,
 			IntendedMovement,
 			DeltaTime);
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
-		
 
+		if (CanTravelInIntendedDir)
+		{
+			const auto CurrentGridLocation = MovablePawn->GetGridLocation();
+			const auto NextGridLocation = CurrentGridLocation + IntendedMovement->Direction;
+			CurrentMovement = MakeShared<FMovement>(IntendedMovement->Direction,
+			                                        FMaybeGridLocation{true, NextGridLocation});
+		}
 	}
-
-
 }
 
 void AChompPlayerController::BeginPlay()
