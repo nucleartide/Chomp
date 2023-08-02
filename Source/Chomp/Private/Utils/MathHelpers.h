@@ -1,6 +1,6 @@
 #pragma once
 
-class MathHelpers
+class FMathHelpers
 {
 public:
 	// A version of std::fmod that treats negative numbers the way they should be treated.

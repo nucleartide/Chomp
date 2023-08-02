@@ -74,8 +74,8 @@ TSharedPtr<FMovement> NewMovement(
 void CheckThatPawnIsRightOnGrid(const AMovablePawn* Pawn)
 {
 	const auto Location = Pawn->GetActorLocation();
-	check(FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Location.X, 100.0), 0.0));
-	check(FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Location.Y, 100.0), 0.0));
+	check(FMath::IsNearlyEqual(FMathHelpers::NotStupidFmod(Location.X, 100.0), 0.0));
+	check(FMath::IsNearlyEqual(FMathHelpers::NotStupidFmod(Location.Y, 100.0), 0.0));
 	check(FMath::IsNearlyEqual(Location.Z, 0.0));
 }
 

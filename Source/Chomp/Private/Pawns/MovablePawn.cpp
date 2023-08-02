@@ -29,8 +29,8 @@ FVector2D AMovablePawn::MinDifferenceVector(FVector From, FVector To, const ULev
 	// If you draw out individual axes, it should make sense.
 	// We are shifting to a positive space, taking the modulo, then unshifting to the old space.
 	// Note that fmod does not work the same as % in C++, so we need to adjust the result.
-	const auto DiffX = MathHelpers::NotStupidFmod(To.X - From.X + LevelHeight * 0.5, LevelHeight) - LevelHeight * 0.5;
-	const auto IntermediateResult = MathHelpers::NotStupidFmod(To.Y - From.Y + LevelWidth * 0.5, LevelWidth);
+	const auto DiffX = FMathHelpers::NotStupidFmod(To.X - From.X + LevelHeight * 0.5, LevelHeight) - LevelHeight * 0.5;
+	const auto IntermediateResult = FMathHelpers::NotStupidFmod(To.Y - From.Y + LevelWidth * 0.5, LevelWidth);
 	const auto DiffY = IntermediateResult - LevelWidth * 0.5;
 	check(FMath::Abs(DiffY) < 2000.0f);
 	return FVector2D{DiffX, DiffY};
@@ -125,8 +125,8 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		// Grid alignment check.
 		const auto Loc = NewLocation;
 		check(
-			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
-			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
+			FMath::IsNearlyEqual(FMathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
+			FMath::IsNearlyEqual(FMathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
 		);
 	}
 
