@@ -58,6 +58,15 @@ struct FGridLocation
 	}
 
 	FGridLocation Modulo(const ULevelLoader* LevelInstance) const;
+
+	bool IsCardinalOrZero() const
+	{
+		return X == 0 && Y == -1 ||
+			X == 0 && Y == 1 ||
+			X == -1 && Y == 0 ||
+			X == 1 && Y == 0 ||
+			X == 0 && Y == 0;
+	}
 };
 
 // Implement hash function so we can put FGridLocation into an unordered_set.

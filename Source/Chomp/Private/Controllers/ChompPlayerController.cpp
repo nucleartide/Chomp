@@ -152,6 +152,7 @@ void AChompPlayerController::Tick(const float DeltaTime)
 		return;
 
 	IntendedMovement = UpdateIntendedMovement();
+		check(IntendedMovement->Direction.IsCardinalOrZero());
 
 	auto ShouldInvalidateTargetTile = false;
 
