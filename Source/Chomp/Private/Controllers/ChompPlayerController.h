@@ -43,10 +43,6 @@ class AChompPlayerController : public APlayerController
 	UPROPERTY(VisibleAnywhere)
 	FGridLocation DebugCurrentTargetTile;
 
-	// Whether to invalidate target tile on next CurrentMovement update.
-	UPROPERTY(VisibleAnywhere)
-	bool ShouldInvalidateTargetTile = false;
-
 	// Value for sanity checking.
 	UPROPERTY(VisibleAnywhere)
 	FVector OldLocation;
@@ -69,6 +65,4 @@ private:
 	TSharedPtr<FMovementIntention> UpdateIntendedMovement() const;
 
 	TSharedPtr<FMovement> UpdateCurrentMovement(const bool InvalidateTargetTile) const;
-
-	TSharedPtr<FMovement> ComputeMovementWithTargetTile(FGridLocation Direction) const;
 };

@@ -53,52 +53,82 @@ TSharedPtr<FMovementIntention> AChompPlayerController::UpdateIntendedMovement() 
 	return IntendedMovement;
 }
 
+TSharedPtr<FMovement> NewMovement(
+	const AMovablePawn* Pawn,
+	const FGridLocation& Direction,
+	const ULevelLoader* LevelInstance)
+{
+	const auto CurrentGridLocation = Pawn->GetGridLocation();
+	const auto NextGridLocation = (CurrentGridLocation + Direction).Modulo(LevelInstance);
+	return MakeShared<FMovement>(Direction, FMaybeGridLocation{true, NextGridLocation});
+}
+
+void CheckThatPawnIsRightOnGrid(const AMovablePawn* Pawn)
+{
+	const auto Location = Pawn->GetActorLocation();
+	check(FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Location.X, 100.0), 0.0));
+	check(FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Location.Y, 100.0), 0.0));
+	check(FMath::IsNearlyEqual(Location.Z, 0.0));
+}
+
 TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile = false) const
 {
-	// TODO: add logging to resolve this final issue.
-	if (!CurrentMovement.IsValid())
-		return ComputeMovementWithTargetTile(InitialMoveDirection);
+	// Grab reference to pawn.
+	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 
-	if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-		IntendedMovement->Direction.IsNonZero() &&
-		// IntendedMovement->Direction != CurrentMovement->Direction &&
+	// Case where current movement hasn't been set yet.
+	if (!CurrentMovement.IsValid())
+	{
+		CheckThatPawnIsRightOnGrid(Pawn);
+
+		if (Pawn->CanTravelInDirection(Pawn->GetActorLocation(), InitialMoveDirection))
+		{
+			DEBUG_LOG(TEXT("first"));
+			return NewMovement(Pawn, InitialMoveDirection, ULevelLoader::GetInstance(Level));
+		}
+
+		DEBUG_LOG(TEXT("second"));
+		return MakeShared<FMovement>(InitialMoveDirection, FMaybeGridLocation{false, FGridLocation{0, 0}});
+	}
+
+	// Case where we are doing a 180.
+	if (IntendedMovement->Direction.IsNonZero() &&
 		IntendedMovement->Direction.IsOppositeDirection(CurrentMovement->Direction) &&
 		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
 	{
-		const auto CurrentGridLocation = Pawn->GetGridLocation();
-		const auto NextGridLocation = (CurrentGridLocation + IntendedMovement->Direction).Modulo(ULevelLoader::GetInstance(Level));
-		return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
+		DEBUG_LOG(TEXT("third"));
+		return NewMovement(Pawn, IntendedMovement->Direction, ULevelLoader::GetInstance(Level));
 	}
 
-	if (!CurrentMovement->HasValidTargetTile() || InvalidateTargetTile)
+	// Case where we can compute a new target.
+	if (InvalidateTargetTile || !CurrentMovement->HasValidTargetTile())
 	{
-		if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-			IntendedMovement->Direction.IsNonZero() &&
+		// Case where we can move in intended movement direction.
+		if (IntendedMovement->Direction.IsNonZero() &&
 			IntendedMovement->Direction != CurrentMovement->Direction &&
 			Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
 		{
-			const auto CurrentGridLocation = Pawn->GetGridLocation();
-			const auto NextGridLocation = (CurrentGridLocation + IntendedMovement->Direction).Modulo(ULevelLoader::GetInstance(Level));
-			return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
+			DEBUG_LOG(TEXT("fourth"));
+			CheckThatPawnIsRightOnGrid(Pawn);
+			return NewMovement(Pawn, IntendedMovement->Direction, ULevelLoader::GetInstance(Level));
 		}
 
-		return ComputeMovementWithTargetTile(CurrentMovement->Direction);
+		// Case where we can continue moving in current direction.
+		if (Pawn->CanTravelInDirection(Pawn->GetActorLocation(), CurrentMovement->Direction))
+		{
+			DEBUG_LOG(TEXT("fifth"));
+			return NewMovement(Pawn, CurrentMovement->Direction, ULevelLoader::GetInstance(Level));
+		}
+
+		// Case where we can't move anywhere.
+		DEBUG_LOG(TEXT("sixth"));
+		CheckThatPawnIsRightOnGrid(Pawn);
+		return MakeShared<FMovement>(CurrentMovement->Direction, FMaybeGridLocation{false, FGridLocation{0, 0}});
 	}
 
+	// Default, return the current movement.
+	DEBUG_LOG(TEXT("default"));
 	return CurrentMovement;
-}
-
-TSharedPtr<FMovement> AChompPlayerController::ComputeMovementWithTargetTile(FGridLocation Direction) const
-{
-	if (const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), Direction))
-	{
-		const auto CurrentGridLocation = Pawn->GetGridLocation();
-		const auto NextGridLocation = (CurrentGridLocation + Direction).Modulo(ULevelLoader::GetInstance(Level));
-		return MakeShared<FMovement>(Direction, FMaybeGridLocation{true, NextGridLocation});
-	}
-
-	return MakeShared<FMovement>(Direction, FMaybeGridLocation{false, FGridLocation{0, 0}});
 }
 
 void AChompPlayerController::Tick(const float DeltaTime)
@@ -115,22 +145,9 @@ void AChompPlayerController::Tick(const float DeltaTime)
 
 	IntendedMovement = UpdateIntendedMovement();
 
-	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
-#if false
-	{
-		const auto OldCurrentMovement = CurrentMovement;
-		CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
-		if (OldCurrentMovement.IsValid() && OldCurrentMovement->HasValidTargetTile() && OldCurrentMovement->Direction.IsTurningCorner(CurrentMovement->Direction))
-		{
-			const auto CurrentLocation = MovablePawn->GetActorLocation();
-			const auto TargetWorld =
-				ULevelLoader::GetInstance(Level)->GridToWorld(OldCurrentMovement->TargetTile.GridLocation);
-			MovablePawn->SetActorLocation(FVector{TargetWorld.X, TargetWorld.Y, 0.0});
-		}
-	}
-#endif
+	auto ShouldInvalidateTargetTile = false;
 
-	if (CurrentMovement->HasValidTargetTile())
+	if (CurrentMovement.IsValid() && CurrentMovement->HasValidTargetTile())
 	{
 		const auto [NewLoc, NewRot, InvalidateTargetTile, CanTravelInIntendedDir] = MovablePawn->MoveInDirection(
 			CurrentMovement,
@@ -138,17 +155,9 @@ void AChompPlayerController::Tick(const float DeltaTime)
 			DeltaTime);
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
-
-#if false
-		if (CanTravelInIntendedDir)
-		{
-			const auto CurrentGridLocation = MovablePawn->GetGridLocation();
-			const auto NextGridLocation = CurrentGridLocation + IntendedMovement->Direction;
-			CurrentMovement = MakeShared<FMovement>(IntendedMovement->Direction,
-			                                        FMaybeGridLocation{true, NextGridLocation});
-		}
-#endif
 	}
+		
+	CurrentMovement = UpdateCurrentMovement(ShouldInvalidateTargetTile);
 
 	if (CurrentMovement.IsValid())
 	{

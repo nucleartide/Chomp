@@ -112,7 +112,7 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		CanTravelInIntendedDir
 			? TargetWorld // + AmountMovedPast * IntendedDir
 			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement->Direction)
-			? TargetWorld + AmountMovedPast * CurrentDir 
+			? WrappedLocation // TargetWorld + AmountMovedPast * CurrentDir 
 			: MovedPastTarget
 			? TargetWorld
 			: WrappedLocation;
@@ -178,11 +178,10 @@ bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Directio
 	// Prepare data needed for performing our sweep check.
 	// Diameter needs to be slightly less than 100.0f to avoid overlapping with adjacent wall tiles.
 	const auto [X, Y] = Direction;
-	constexpr auto ActorDiameter = 95.0f;
-	constexpr auto ActorRadius = ActorDiameter * 0.5f;
+	constexpr auto ActorRadius = 1.0f;
 	const auto ActorSphere = FCollisionShape::MakeSphere(ActorRadius);
 	const auto StartLocation = Location;
-	const auto EndLocation = Location + FVector{X * ActorDiameter, Y * ActorDiameter, 0.0f};
+	const auto EndLocation = Location + FVector{X * 100.0f, Y * 100.0f, 0.0f};
 	const auto WorldInstance = FSafeGet::World(this);
 
 	// Perform sweep check to see if we overlap with anything in Direction's way.
@@ -194,6 +193,7 @@ bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Directio
 		FQuat::Identity,
 		ECC_Visibility,
 		ActorSphere);
+	check(HitResults.Num() <= 1);
 
 	// If we overlapped with something, then we can't travel in Direction's way. Return nothing.
 	for (auto HitResult : HitResults)
