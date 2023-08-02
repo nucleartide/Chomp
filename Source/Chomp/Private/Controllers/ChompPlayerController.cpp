@@ -55,6 +55,7 @@ TSharedPtr<FMovementIntention> AChompPlayerController::UpdateIntendedMovement() 
 
 TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile = false) const
 {
+	// TODO: add logging to resolve this final issue.
 	if (!CurrentMovement.IsValid())
 		return ComputeMovementWithTargetTile(InitialMoveDirection);
 

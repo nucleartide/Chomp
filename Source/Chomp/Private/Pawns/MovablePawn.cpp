@@ -110,7 +110,7 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		CanTravelInDirection(TargetWorld, MovementIntention->Direction);
 	const auto NewLocation =
 		CanTravelInIntendedDir
-			? TargetWorld + AmountMovedPast * IntendedDir
+			? TargetWorld // + AmountMovedPast * IntendedDir
 			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement->Direction)
 			? TargetWorld + AmountMovedPast * CurrentDir 
 			: MovedPastTarget
