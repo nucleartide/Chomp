@@ -11,8 +11,9 @@ class AGhostPawn;
 template <class T>
 T* FSafeGet::Pawn(const AController* Controller)
 {
+	DEBUG_LOG(TEXT("safe getting pawn"));
 	auto Pawn = Controller->GetPawn<T>();
-	check(Pawn);
+	check(IsValid(Pawn));
 	return Pawn;
 }
 

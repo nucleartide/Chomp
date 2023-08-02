@@ -81,8 +81,13 @@ void CheckThatPawnIsRightOnGrid(const AMovablePawn* Pawn)
 
 TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTargetTile = false) const
 {
+	DEBUG_LOG(TEXT("updating current movement"));
+	
 	// Grab reference to pawn.
-	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+	// Pawn may be dead at this point, so we should return early if needed.
+	const auto Pawn = GetPawn<AMovablePawn>();
+	if (!Pawn)
+		return CurrentMovement;
 
 	// Case where current movement hasn't been set yet.
 	if (!CurrentMovement.IsValid())
@@ -148,8 +153,10 @@ void AChompPlayerController::Tick(const float DeltaTime)
 		return;
 
 	const auto MovablePawn = GetPawn<AMovablePawn>();
-	if (!MovablePawn)
+	if (!IsValid(MovablePawn))
 		return;
+
+	DEBUG_LOG(TEXT("beginning of tick"));
 
 	IntendedMovement = UpdateIntendedMovement();
 		check(IntendedMovement->Direction.IsCardinalOrZero());
