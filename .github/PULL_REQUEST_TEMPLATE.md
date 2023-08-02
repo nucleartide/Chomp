@@ -8,6 +8,7 @@
 
 * [ ] **First draft**. Implement a working first pass at the feature/problem.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
+* [ ] **debuggability**. ensure that all features can be debugged
 
 ## Presentation Checklist
 
