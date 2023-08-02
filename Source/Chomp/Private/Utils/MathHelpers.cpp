@@ -1,6 +1,6 @@
 #include "MathHelpers.h"
 
-double FMathHelpers::NotStupidFmod(const double A, const double B)
+double FMathHelpers::NegativeFriendlyFmod(const double A, const double B)
 {
 	if (A < 0.0)
 	{

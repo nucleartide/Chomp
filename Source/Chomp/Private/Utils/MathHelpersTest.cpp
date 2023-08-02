@@ -8,31 +8,37 @@ bool MathHelpersTest::RunTest(const FString& Parameters)
 {
 	{
 		constexpr auto Expected = 200.0;
-		const auto Actual = FMathHelpers::NotStupidFmod(-100.0, 300.0);
+		const auto Actual = FMathHelpers::NegativeFriendlyFmod(-100.0, 300.0);
 		TestEqual(TEXT("first"), Actual, Expected);
 	}
 
 	{
 		constexpr auto Expected = 200.0;
-		const auto Actual = FMathHelpers::NotStupidFmod(200.0, 300.0);
+		const auto Actual = FMathHelpers::NegativeFriendlyFmod(200.0, 300.0);
 		TestEqual(TEXT("second"), Actual, Expected);
 	}
 
 	{
 		constexpr auto Expected = 200.0;
-		const auto Actual = FMathHelpers::NotStupidFmod(500.0, 300.0);
+		const auto Actual = FMathHelpers::NegativeFriendlyFmod(500.0, 300.0);
 		TestEqual(TEXT("third"), Actual, Expected);
 	}
 
 	{
 		constexpr auto Expected = 200.0;
-		const auto Actual = FMathHelpers::NotStupidFmod(-400.0, 300.0);
+		const auto Actual = FMathHelpers::NegativeFriendlyFmod(-400.0, 300.0);
 		TestEqual(TEXT("fourth"), Actual, Expected);
 	}
 
 	{
 		constexpr auto Expected = 0.0;
-		const auto Actual = FMathHelpers::NotStupidFmod(-400.0, 100.0);
+		const auto Actual = FMathHelpers::NegativeFriendlyFmod(-400.0, 100.0);
+		TestEqual(TEXT("fifth"), Actual, Expected);
+	}
+
+	{
+		constexpr auto Expected = 2.0;
+		const auto Actual = FMathHelpers::NegativeFriendlyFmod(-4.0, 3.0);
 		TestEqual(TEXT("fifth"), Actual, Expected);
 	}
 
