@@ -12,6 +12,4 @@ public:
 	
 	template <typename T>
 	static T* GameState(const AActor *Actor);
-
-	static FVector ActuallyGetSafeNormal(const FVector& Input);
 };
