@@ -21,13 +21,15 @@ FVector2D AMovablePawn::MinDifferenceVector(FVector From, FVector To, const ULev
 	From = WrapAroundWorld(From, LevelInstance);
 	To = WrapAroundWorld(To, LevelInstance);
 
+	// Grab the world dimensions of the level.
 	const auto LevelHeight = LevelInstance->GetLevelHeight() * 100.0;
 	const auto LevelWidth = LevelInstance->GetLevelWidth() * 100.0;
 
 	// If you draw out individual axes, it should make sense.
 	// We are shifting to a positive space, taking the modulo, then unshifting to the old space.
 	// Note that fmod does not work the same as % in C++, so we need to adjust the result.
-	const auto DiffX = FMathHelpers::NegativeFriendlyFmod(To.X - From.X + LevelHeight * 0.5, LevelHeight) - LevelHeight * 0.5;
+	const auto DiffX =
+		FMathHelpers::NegativeFriendlyFmod(To.X - From.X + LevelHeight * 0.5, LevelHeight) - LevelHeight * 0.5;
 	const auto IntermediateResult = FMathHelpers::NegativeFriendlyFmod(To.Y - From.Y + LevelWidth * 0.5, LevelWidth);
 	const auto DiffY = IntermediateResult - LevelWidth * 0.5;
 	check(FMath::Abs(DiffY) < 2000.0f);
@@ -35,7 +37,7 @@ FVector2D AMovablePawn::MinDifferenceVector(FVector From, FVector To, const ULev
 }
 
 // Compute the dot product between MovementDirection and (Target - PostMovementLocation),
-// which determines whether we've moved past the target or not, and by how much.
+// which determines whether we moved past the target, and by how much.
 FPeriodicDotProductResult AMovablePawn::ComputeDotProduct(
 	const FGridLocation& MovementDirection,
 	const FVector& PostMovementLocation,
@@ -49,7 +51,7 @@ FPeriodicDotProductResult AMovablePawn::ComputeDotProduct(
 	const auto MinDiff = MinDifferenceVector(PostMovementLocation, TargetWorld, LevelInstance);
 	const auto DotProduct = FVector2D::DotProduct(Dir, MinDiff);
 
-	// Sanity check. Can't be more than 100 cm away from Target.
+	// Sanity check. Never >= than 150 cm away from TargetTile.
 	check(FMath::Abs(DotProduct) < 150.0f);
 
 	// Return results.
@@ -88,19 +90,9 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		ULevelLoader::GetInstance(Level)
 	);
 
-	// If we moved past the target,
+	// Compute the final location depending on whether we moved past the target tile.
 	const auto TargetWorld2D = ULevelLoader::GetInstance(Level)->GridToWorld(Movement->TargetTile.GridLocation);
 	const FVector TargetWorld{TargetWorld2D.X, TargetWorld2D.Y, 0.0};
-	const FVector IntendedDir{
-		static_cast<double>(MovementIntention->Direction.X),
-		static_cast<double>(MovementIntention->Direction.Y),
-		0.0
-	};
-	const FVector CurrentDir{
-		static_cast<double>(Movement->Direction.X),
-		static_cast<double>(Movement->Direction.Y),
-		0.0
-	};
 	const auto CanTravelInIntendedDir =
 		MovedPastTarget &&
 		MovementIntention->Direction.IsNonZero() &&
@@ -108,9 +100,9 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		CanTravelInDirection(TargetWorld, MovementIntention->Direction);
 	const auto NewLocation =
 		CanTravelInIntendedDir
-			? TargetWorld // + AmountMovedPast * IntendedDir
+			? TargetWorld
 			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement->Direction)
-			? WrappedLocation // TargetWorld + AmountMovedPast * CurrentDir 
+			? WrappedLocation
 			: MovedPastTarget
 			? TargetWorld
 			: WrappedLocation;
@@ -118,7 +110,6 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	// Finally, compute new rotation. Be cognizant of Pac-Man's wrap-around! May need to do modular arithmetic.
 	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), NewLocation, DeltaTime);
 
-	// too hard to fix
 	{
 		// Grid alignment check.
 		const auto Loc = NewLocation;
@@ -242,8 +233,10 @@ FVector AMovablePawn::WrapAroundWorld(FVector Location, const ULevelLoader* Leve
 	return Location;
 }
 
-FRotator AMovablePawn::ComputeNewRotation(const FVector& CurrentLocation, const FVector& NewLocation,
-                                          float DeltaTime) const
+FRotator AMovablePawn::ComputeNewRotation(
+	const FVector& CurrentLocation,
+	const FVector& NewLocation,
+	const float DeltaTime) const
 {
 	const auto Rotation = GetActorRotation();
 	const auto MinDiff2D = MinDifferenceVector(CurrentLocation, NewLocation, ULevelLoader::GetInstance(Level));
