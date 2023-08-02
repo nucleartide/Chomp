@@ -61,22 +61,22 @@ FPeriodicDotProductResult AMovablePawn::ComputeDotProduct(
 }
 
 FMoveInDirectionResult AMovablePawn::MoveInDirection(
-	TSharedPtr<FMovement> Movement,
-	TSharedPtr<FMovementIntention> MovementIntention,
+	const FMovement& Movement,
+	const FMovementIntention& MovementIntention,
 	const float DeltaTime) const
 {
 	// Movement's Direction should always be non-zero. Pacman is always moving.
-	check(Movement->Direction.IsNonZero());
-	check(Movement->HasValidTargetTile());
+	check(Movement.GetDirection().IsNonZero());
+	check(Movement.HasValidTargetTile());
 
 	// If we move more than 100 cm, we have a problem because we may have moved into a wall.
 	// In this case, reject moving until framerate is better.
 	if (MovementSpeed * DeltaTime > 100.0)
-		return FMoveInDirectionResult(GetActorLocation(), GetActorRotation(), false, false);
+		return FMoveInDirectionResult(GetActorLocation(), GetActorRotation(), false);
 
 	// Compute the new ActorLocation.
 	const auto OldLocation = GetActorLocation();
-	const auto DeltaLocation = MovementSpeed * DeltaTime * Movement->Direction.ToFVector();
+	const auto DeltaLocation = MovementSpeed * DeltaTime * Movement.GetDirection().ToFVector();
 	const auto WrappedLocation = WrapAroundWorld(
 		OldLocation + DeltaLocation,
 		ULevelLoader::GetInstance(Level)
@@ -84,24 +84,24 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 
 	// Check whether we moved past the target, and by how much.
 	const auto [MovedPastTarget, AmountMovedPast] = ComputeDotProduct(
-		Movement->Direction,
+		Movement.GetDirection(),
 		WrappedLocation,
-		Movement->TargetTile.GridLocation,
+		Movement.GetTargetTile().GridLocation,
 		ULevelLoader::GetInstance(Level)
 	);
 
 	// Compute the final location depending on whether we moved past the target tile.
-	const auto TargetWorld2D = ULevelLoader::GetInstance(Level)->GridToWorld(Movement->TargetTile.GridLocation);
+	const auto TargetWorld2D = ULevelLoader::GetInstance(Level)->GridToWorld(Movement.GetTargetTile().GridLocation);
 	const FVector TargetWorld{TargetWorld2D.X, TargetWorld2D.Y, 0.0};
 	const auto CanTravelInIntendedDir =
 		MovedPastTarget &&
-		MovementIntention->Direction.IsNonZero() &&
-		Movement->Direction != MovementIntention->Direction &&
-		CanTravelInDirection(TargetWorld, MovementIntention->Direction);
+		MovementIntention.GetDirection().IsNonZero() &&
+		Movement.GetDirection() != MovementIntention.GetDirection() &&
+		CanTravelInDirection(TargetWorld, MovementIntention.GetDirection());
 	const auto NewLocation =
 		CanTravelInIntendedDir
 			? TargetWorld
-			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement->Direction)
+			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement.GetDirection())
 			? WrappedLocation
 			: MovedPastTarget
 			? TargetWorld
@@ -120,7 +120,7 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	}
 
 	// And return the computed result.
-	return FMoveInDirectionResult(NewLocation, ActorRotation, MovedPastTarget, CanTravelInIntendedDir);
+	return FMoveInDirectionResult(NewLocation, ActorRotation, MovedPastTarget);
 }
 
 FGridLocation AMovablePawn::GetGridLocation() const
@@ -130,20 +130,20 @@ FGridLocation AMovablePawn::GetGridLocation() const
 }
 
 FMovementResult AMovablePawn::MoveAlongPath(
-	FMovementPath* MovementPath,
+	const UMovementPath& MovementPath,
 	const float DeltaTime) const
 {
 	// If we're already at the end, return a no-movement result. Note that no rotation takes place.
 	const auto Location = GetActorLocation();
 	const auto Rotation = GetActorRotation();
-	if (MovementPath->WasCompleted(Location))
+	if (MovementPath.WasCompleted(Location))
 		return FMovementResult{Location, Rotation};
 
 	// Else, compute the DeltaDistance.
 	const auto DeltaDistance = MovementSpeed * DeltaTime;
 
 	// Call out to MovementPath->MoveAlongPath(ActorLocation, DeltaDistance), which will return an FVector.
-	const auto NewLocation = MovementPath->MoveAlongPath(Location, DeltaDistance);
+	const auto NewLocation = MovementPath.MoveAlongPath(Location, DeltaDistance);
 
 	// Compute new rotation given the new position.
 	const auto Dir = (NewLocation - Location).GetSafeNormal();

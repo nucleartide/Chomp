@@ -1,18 +1,24 @@
 #pragma once
 
 #include <vector>
+#include <tuple>
+
 #include "GridLocation.h"
 #include "LevelGenerator/LevelLoader.h"
 #include "Utils/Debug.h"
 #include "GenericPlatform/GenericPlatformMath.h"
-#include <tuple>
 
-#include "Utils/SafeGet.h"
+#include "MovementPath.generated.h"
 
-class FMovementPath
+UCLASS()
+class UMovementPath : public UObject
 {
+	GENERATED_BODY()
+	
 	std::vector<FGridLocation> GridLocationPath;
 	std::vector<FVector> WorldLocationPath;
+
+	UPROPERTY()
 	const ULevelLoader* LevelInstance;
 
 	// bool: Whether ActorLocation is on path.
@@ -53,7 +59,7 @@ class FMovementPath
 	}
 
 public:
-	explicit FMovementPath(
+	explicit UMovementPath(
 		const FVector& ActorLocation,
 		const std::vector<FGridLocation>& NewLocationPath,
 		const ULevelLoader* LevelInstance) : LevelInstance(LevelInstance)
@@ -102,7 +108,7 @@ public:
 		DEBUG_LOG(TEXT("%s"), *DynamicString);
 	}
 
-	FVector MoveAlongPath(FVector ActorLocation, float DeltaDistance)
+	FVector MoveAlongPath(FVector ActorLocation, float DeltaDistance) const
 	{
 		FVector Direction{0, 0, 0};
 		FVector DestWorldLocation;
@@ -160,5 +166,22 @@ public:
 
 		// Finally, return the computed ActorLocation.
 		return ActorLocation;
+	}
+
+	UMovementPath& operator=(const UMovementPath& Other)
+	{
+		if (this == &Other)
+			return *this;
+		GridLocationPath = Other.GridLocationPath;
+		WorldLocationPath = Other.WorldLocationPath;
+		LevelInstance = Other.LevelInstance;
+		return *this;
+	}
+
+	bool IsValid() const
+	{
+		const auto GridLocationPathSize = GridLocationPath.size();
+		check(GridLocationPathSize == WorldLocationPath.size());
+		return GridLocationPathSize > 0;
 	}
 };

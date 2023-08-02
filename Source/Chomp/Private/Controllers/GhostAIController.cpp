@@ -7,6 +7,7 @@
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 #include "Pawns/MovablePawn.h"
+#include "Pawns/Movement/MovementResult.h"
 
 void AGhostAIController::BeginPlay()
 {
@@ -50,11 +51,10 @@ void AGhostAIController::Tick(float DeltaTime)
 
 	// Compute new location and rotation.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
-	check(MovementPath.IsValid());
-	const auto MovementPathPtr = MovementPath.Get();
 	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
-		MovementPathPtr,
-		DeltaTime);
+		MovementPath,
+		DeltaTime
+	);
 
 	// Apply new location.
 	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
@@ -62,14 +62,14 @@ void AGhostAIController::Tick(float DeltaTime)
 	// Compute a new movement path if conditions are met.
 	if (auto PlayingSubstate = GameState->GetPlayingSubstate();
 		PlayingSubstate == EChompGamePlayingSubstate::Scatter &&
-		MovementPath->WasCompleted(NewLocation))
+		MovementPath.WasCompleted(NewLocation))
 	{
 		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto Destination = Pawn->GetScatterDestination();
 		ComputeScatterForMovementPath(Destination);
 		SwapScatterOriginAndDestination();
 	}
-	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath->DidComplete(NewLocation, 1))
+	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.DidComplete(NewLocation, 1))
 	{
 		ComputeChaseForMovementPath();
 	}
@@ -167,11 +167,12 @@ bool AGhostAIController::CanStartMoving() const
 	return Threshold >= 0 &&
 		NumberOfDotsConsumed >= 0 &&
 		NumberOfDotsConsumed >= Threshold &&
-		!MovementPath->WasCompleted(Pawn->GetActorLocation());
+		!MovementPath.WasCompleted(Pawn->GetActorLocation());
 }
 
-void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
-                                    ULevelLoader* LevelInstance)
+void AGhostAIController::DebugAStar(
+	const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
+	ULevelLoader* LevelInstance)
 {
 	for (int X = LevelInstance->GetLevelHeight() - 1; X >= 0; X--)
 	{
@@ -204,20 +205,20 @@ void AGhostAIController::DebugAStar(const std::unordered_map<FGridLocation, FGri
 void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-	const auto WorldLocation = FVector(Pawn->GetActorLocation());
+	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
 	const auto GridLocation = Pawn->GetGridLocation();
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);
 
-	MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	MovementPath = UMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
 	check(MovementPath.IsValid());
-	MovementPath->DebugLog(TEXT("Scatter"));
+	MovementPath.DebugLog(TEXT("Scatter"));
 }
 
 void AGhostAIController::ComputeChaseForMovementPath()
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-	const auto WorldLocation = Pawn->GetActorLocation2D();
+	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
 	const auto GridLocation = Pawn->GetGridLocation();
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
@@ -228,9 +229,9 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
 	                              DebugAStarMap);
 
-	MovementPath = MakeShared<FMovementPath>(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	MovementPath = UMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
 	check(MovementPath.IsValid());
-	MovementPath->DebugLog(TEXT("Chase"));
+	MovementPath.DebugLog(TEXT("Chase"));
 }
 
 void AGhostAIController::ResetPawnPosition() const

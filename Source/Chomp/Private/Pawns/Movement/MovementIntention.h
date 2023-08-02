@@ -1,13 +1,19 @@
 #pragma once
 
-#include "Movement.h"
 #include "AStar/GridLocation.h"
 
+#include "MovementIntention.generated.h"
+
+USTRUCT()
 struct FMovementIntention
 {
-	const FGridLocation Direction;
-	const double TimeOfLastUpdate;
+	GENERATED_BODY()
 
+private:
+	FGridLocation Direction;
+	double TimeOfLastUpdate;
+
+public:
 	FMovementIntention(
 		const float VerticalAxisInput,
 		const float HorizontalAxisInput,
@@ -30,8 +36,33 @@ struct FMovementIntention
 	{
 	}
 
+	FMovementIntention& operator=(const FMovementIntention& Other)
+	{
+		if (this == &Other)
+			return *this;
+		Direction = Other.Direction;
+		TimeOfLastUpdate = Other.TimeOfLastUpdate;
+		return *this;
+	}
+
 	bool HasElapsedSinceLastUpdate(const double Duration, const UWorld* WorldInstance) const
 	{
 		return WorldInstance->GetRealTimeSeconds() > TimeOfLastUpdate + Duration;
+	}
+
+	[[nodiscard]] FGridLocation GetDirection() const
+	{
+		return Direction;
+	}
+
+	[[nodiscard]] double GetTimeOfLastUpdate() const
+	{
+		return TimeOfLastUpdate;
+	}
+
+	void Reset()
+	{
+		Direction = FGridLocation{0, 0};
+		TimeOfLastUpdate = 0.0;
 	}
 };

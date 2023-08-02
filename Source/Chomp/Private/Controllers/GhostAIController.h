@@ -25,10 +25,13 @@ class AGhostAIController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool IsTesting = false;
 
-	// TSharedPtr has the benefit of being automatically released when GhostAIController goes out of scope.
-	TSharedPtr<FMovementPath> MovementPath;
+	UPROPERTY(VisibleAnywhere)
+	UMovementPath MovementPath;
 
+	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterOrigin;
+
+	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterDestination;
 
 public:

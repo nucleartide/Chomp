@@ -39,8 +39,8 @@ class AMovablePawn : public APawn
 public:
 	// Move in a certain direction. Used by the player controller.
 	FMoveInDirectionResult MoveInDirection(
-		TSharedPtr<FMovement> Movement,
-		TSharedPtr<FMovementIntention> MovementIntention,
+		const FMovement& Movement,
+		const FMovementIntention& MovementIntention,
 		const float DeltaTime
 	) const;
 
@@ -49,7 +49,7 @@ public:
 
 	// Move along a path. Used by the AI controller.
 	FMovementResult MoveAlongPath(
-		FMovementPath* MovementPath,
+		const UMovementPath& MovementPath,
 		const float DeltaTime
 	) const;
 
