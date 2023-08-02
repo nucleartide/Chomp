@@ -14,7 +14,7 @@ UCLASS()
 class UMovementPath : public UObject
 {
 	GENERATED_BODY()
-	
+
 	std::vector<FGridLocation> GridLocationPath;
 	std::vector<FVector> WorldLocationPath;
 
@@ -43,10 +43,10 @@ class UMovementPath : public UObject
 
 		// If ActorLocation is within 50 axis-aligned units (inclusive) of the start node,
 		const auto WorldA = LevelInstance->GridToWorld(Path.at(0));
-		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) && FGenericPlatformMath::Abs(
-				ActorLocation.Y - WorldA.Y) <= 50.0f ||
-			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) && FGenericPlatformMath::Abs(
-				ActorLocation.X - WorldA.X) <= 50.0f)
+		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) &&
+			FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0f ||
+			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) &&
+			FGenericPlatformMath::Abs(ActorLocation.X - WorldA.X) <= 50.0f)
 			return std::make_tuple(true, 0);
 
 		// If ActorLocation is at the end node,
@@ -110,7 +110,7 @@ public:
 
 	FVector MoveAlongPath(FVector ActorLocation, float DeltaDistance) const
 	{
-		FVector Direction{0, 0, 0};
+		FVector Direction{0.0, 0.0, 0.0};
 		FVector DestWorldLocation;
 		{
 			// Sanity check.
@@ -124,6 +124,12 @@ public:
 			// Compute direction.
 			DestWorldLocation = WorldLocationPath.at(DestIndex);
 			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
+			check(
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) &&
+				FMath::IsNearlyEqual(Direction.Y, 0.0) ||
+				FMath::IsNearlyEqual(Direction.X, 0.0) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0)
+			);
 		}
 
 		// Apply movement.
