@@ -98,6 +98,11 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		static_cast<double>(MovementIntention->Direction.Y),
 		0.0
 	};
+	const FVector CurrentDir{
+		static_cast<double>(Movement->Direction.X),
+		static_cast<double>(Movement->Direction.Y),
+		0.0
+	};
 	const auto CanTravelInIntendedDir =
 		MovedPastTarget &&
 		MovementIntention->Direction.IsNonZero() &&
@@ -106,26 +111,29 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	const auto NewLocation =
 		CanTravelInIntendedDir
 			? TargetWorld + AmountMovedPast * IntendedDir
-			: MovedPastTarget && !CanTravelInDirection(TargetWorld, Movement->Direction)
+			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement->Direction)
+			? TargetWorld + AmountMovedPast * CurrentDir 
+			: MovedPastTarget
 			? TargetWorld
 			: WrappedLocation;
 
-#if false
 	// Finally, compute new rotation. Be cognizant of Pac-Man's wrap-around! May need to do modular arithmetic.
-	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), ActorLocation, DeltaTime);
-	return FMoveInDirectionResult{ActorLocation, ActorRotation, MovedPastTarget};
+	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), NewLocation, DeltaTime);
 
+#if false
+	// too hard to fix
+	{
+		// Grid alignment check.
+		const auto Loc = NewLocation;
+		check(
+			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
+			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
+		);
+	}
 #endif
-					{ // Grid alignment check.
-                		const auto Loc = NewLocation;
-                		check(
-                			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.X, 100.0), 0.0) ||
-                			FMath::IsNearlyEqual(MathHelpers::NotStupidFmod(Loc.Y, 100.0), 0.0)
-                		 );
-                	}
 
 	// And return the computed result.
-	return FMoveInDirectionResult(NewLocation, GetActorRotation(), MovedPastTarget, CanTravelInIntendedDir);
+	return FMoveInDirectionResult(NewLocation, ActorRotation, MovedPastTarget, CanTravelInIntendedDir);
 }
 
 FGridLocation AMovablePawn::GetGridLocation() const
@@ -247,11 +255,13 @@ FVector AMovablePawn::WrapAroundWorld(FVector Location, const ULevelLoader* Leve
 	return Location;
 }
 
-FRotator AMovablePawn::ComputeNewRotation(const FVector& Location, const FVector& NewLocation, float DeltaTime) const
+FRotator AMovablePawn::ComputeNewRotation(const FVector& CurrentLocation, const FVector& NewLocation,
+                                          float DeltaTime) const
 {
 	const auto Rotation = GetActorRotation();
-	const auto Dir = (NewLocation - Location).GetSafeNormal();
-	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
+	const auto MinDiff2D = MinDifferenceVector(CurrentLocation, NewLocation, ULevelLoader::GetInstance(Level));
+	const FVector MinDiff{MinDiff2D.X, MinDiff2D.Y, 0.0};
+	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(CurrentLocation, CurrentLocation + MinDiff);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 	return NewRotation;
 }

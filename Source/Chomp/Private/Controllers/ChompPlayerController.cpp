@@ -65,7 +65,7 @@ TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool I
 		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
 	{
 		const auto CurrentGridLocation = Pawn->GetGridLocation();
-		const auto NextGridLocation = CurrentGridLocation + IntendedMovement->Direction;
+		const auto NextGridLocation = (CurrentGridLocation + IntendedMovement->Direction).Modulo(ULevelLoader::GetInstance(Level));
 		return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
 	}
 
@@ -77,7 +77,7 @@ TSharedPtr<FMovement> AChompPlayerController::UpdateCurrentMovement(const bool I
 			Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement->Direction))
 		{
 			const auto CurrentGridLocation = Pawn->GetGridLocation();
-			const auto NextGridLocation = CurrentGridLocation + IntendedMovement->Direction;
+			const auto NextGridLocation = (CurrentGridLocation + IntendedMovement->Direction).Modulo(ULevelLoader::GetInstance(Level));
 			return MakeShared<FMovement>(IntendedMovement->Direction, FMaybeGridLocation{true, NextGridLocation});
 		}
 
@@ -93,7 +93,7 @@ TSharedPtr<FMovement> AChompPlayerController::ComputeMovementWithTargetTile(FGri
 		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), Direction))
 	{
 		const auto CurrentGridLocation = Pawn->GetGridLocation();
-		const auto NextGridLocation = CurrentGridLocation + Direction;
+		const auto NextGridLocation = (CurrentGridLocation + Direction).Modulo(ULevelLoader::GetInstance(Level));
 		return MakeShared<FMovement>(Direction, FMaybeGridLocation{true, NextGridLocation});
 	}
 
@@ -138,6 +138,7 @@ void AChompPlayerController::Tick(const float DeltaTime)
 		MovablePawn->SetActorLocationAndRotation(NewLoc, NewRot);
 		ShouldInvalidateTargetTile = InvalidateTargetTile;
 
+#if false
 		if (CanTravelInIntendedDir)
 		{
 			const auto CurrentGridLocation = MovablePawn->GetGridLocation();
@@ -145,6 +146,12 @@ void AChompPlayerController::Tick(const float DeltaTime)
 			CurrentMovement = MakeShared<FMovement>(IntendedMovement->Direction,
 			                                        FMaybeGridLocation{true, NextGridLocation});
 		}
+#endif
+	}
+
+	if (CurrentMovement.IsValid())
+	{
+		DebugCurrentTargetTile = CurrentMovement->TargetTile.GridLocation;
 	}
 }
 

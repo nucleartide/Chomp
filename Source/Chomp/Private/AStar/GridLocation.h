@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include <functional>
+
 #include "GridLocation.generated.h"
 
 class ULevelLoader;
@@ -55,6 +56,8 @@ struct FGridLocation
 		const auto IsSame = X == Other.X && Y == Other.Y;
 		return !IsSame && !IsOppositeDirection(Other);
 	}
+
+	FGridLocation Modulo(const ULevelLoader* LevelInstance) const;
 };
 
 // Implement hash function so we can put FGridLocation into an unordered_set.

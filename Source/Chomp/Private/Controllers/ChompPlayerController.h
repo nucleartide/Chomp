@@ -27,9 +27,11 @@ class AChompPlayerController : public APlayerController
 	FGridLocation InitialMoveDirection{0, 1};
 
 	// Vertical input that is read from keyboard.
+	UPROPERTY(VisibleAnywhere)
 	float VerticalAxisInput = 0.0f;
 
 	// Horizontal input that is read from keyboard.
+	UPROPERTY(VisibleAnywhere)
 	float HorizontalAxisInput = 0.0f;
 
 	// The next movement that is intended by the player.
@@ -38,10 +40,15 @@ class AChompPlayerController : public APlayerController
 	// The movement that is currently taking place.
 	TSharedPtr<FMovement> CurrentMovement;
 
+	UPROPERTY(VisibleAnywhere)
+	FGridLocation DebugCurrentTargetTile;
+
 	// Whether to invalidate target tile on next CurrentMovement update.
+	UPROPERTY(VisibleAnywhere)
 	bool ShouldInvalidateTargetTile = false;
 
 	// Value for sanity checking.
+	UPROPERTY(VisibleAnywhere)
 	FVector OldLocation;
 
 public:
