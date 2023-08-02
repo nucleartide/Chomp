@@ -14,7 +14,7 @@ struct FMovement
 		Direction(Direction),
 		TargetTile(TargetTile)
 	{
-		check(!TargetTile.IsValid || TargetTile.IsValid && Direction.IsNonZero());
+		check(!TargetTile.IsValid || HasValidTargetTile());
 	}
 
 	bool HasValidTargetTile() const
