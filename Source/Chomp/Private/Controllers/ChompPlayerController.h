@@ -37,6 +37,9 @@ class AChompPlayerController : public APlayerController
 	// Time when the horizontal input was last read.
 	UPROPERTY(VisibleAnywhere)
 	double TimeThatHorizontalAxisWasSet = 0.0f;
+	
+	UPROPERTY(VisibleAnywhere)
+	double TimeBeforeClearingIntendedMovement = 0.25f;
 
 	UPROPERTY(VisibleAnywhere)
 	FMovementIntention IntendedMovement;

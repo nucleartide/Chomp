@@ -15,13 +15,13 @@ struct FMovementPath
 	GENERATED_BODY()
 
 private:
-	UPROPERTY()	
+	UPROPERTY(VisibleAnywhere)
 	TArray<FGridLocation> GridLocationPath;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	TArray<FVector> WorldLocationPath;
 
-	UPROPERTY()
+	UPROPERTY(VisibleAnywhere)
 	const ULevelLoader* LevelInstance;
 
 	// bool: Whether ActorLocation is on path.

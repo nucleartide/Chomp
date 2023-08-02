@@ -57,6 +57,9 @@ FMovementIntention AChompPlayerController::UpdateIntendedMovement() const
 		return FMovementIntention(0.0, HorizontalAxisInput, WorldInstance);
 	}
 
+	if (IntendedMovement.HasElapsedSinceLastUpdate(TimeBeforeClearingIntendedMovement, WorldInstance))
+		return FMovementIntention(0.0, 0.0, WorldInstance);
+
 	return IntendedMovement;
 }
 
