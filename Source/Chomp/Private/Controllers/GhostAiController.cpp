@@ -1,6 +1,6 @@
 #include "Controllers/GhostAiController.h"
 
-#include "AGhostHouseQueue.h"
+#include "GhostHouseQueue.h"
 #include "Math/UnrealMathUtility.h"
 #include "AStar/AStar.h"
 #include "ChompGameState.h"
