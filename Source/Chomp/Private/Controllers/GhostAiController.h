@@ -73,4 +73,8 @@ private:
 	void ResetPawnPosition() const;
 
 	void SwapScatterOriginAndDestination();
+
+	bool IsStartingPositionInGhostHouse() const;
+
+	bool IsInGhostHouse() const;
 };

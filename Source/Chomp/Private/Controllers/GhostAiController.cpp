@@ -16,7 +16,8 @@ void AGhostAiController::BeginPlay()
 	Super::BeginPlay();
 
 	// Add this instance of AGhostAiController to our RuntimeSet.
-	GetGhostHouseQueue()->AddAndSort(this);
+	if (IsStartingPositionInGhostHouse())
+		GetGhostHouseQueue()->AddAndSort(this);
 
 	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
 	{
@@ -153,6 +154,10 @@ TArray<FGridLocation> AGhostAiController::ComputePath(
 
 bool AGhostAiController::CanStartMoving() const
 {
+	return true;
+
+#if false
+	// get threshold
 	int Threshold = -1;
 	{
 		auto GhostPawn = GetPawn<AGhostPawn>();
@@ -160,6 +165,7 @@ bool AGhostAiController::CanStartMoving() const
 		Threshold = GhostPawn->GetDotsConsumedMovementThreshold();
 	}
 
+	// get number of dots consumed
 	int NumberOfDotsConsumed = -1;
 	{
 		auto World = GetWorld();
@@ -168,11 +174,23 @@ bool AGhostAiController::CanStartMoving() const
 		NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
 	}
 
-	auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-	return Threshold >= 0 &&
-		NumberOfDotsConsumed >= 0 &&
-		NumberOfDotsConsumed >= Threshold &&
-		!MovementPath.WasCompleted(Pawn->GetActorLocation());
+	// TODO
+	// if the number of dots consumed has been exceeded,
+	// remove from ghost house
+
+	// TODO
+	// in chompgamestate,
+	// implement a "force remove" event if time since last dot consumed has been exceeded
+
+	// TODO
+	// if a "force remove event" has been received,
+	// remove from ghost house
+
+	// TODO
+    // update the condition below: shouldn't be in ghost house queue, and movement path shouldn't have been completed.
+	!MovementPath.WasCompleted(Pawn->GetActorLocation()) &&
+	!IsInGhostHouse();
+#endif
 }
 
 void AGhostAiController::DebugAStar(
@@ -254,6 +272,18 @@ void AGhostAiController::SwapScatterOriginAndDestination()
 	const FGridLocation Swap{CurrentScatterOrigin.X, CurrentScatterOrigin.Y};
 	CurrentScatterOrigin = CurrentScatterDestination;
 	CurrentScatterDestination = Swap;
+}
+
+bool AGhostAiController::IsStartingPositionInGhostHouse() const
+{
+	// TODO: implement.
+	return true;
+}
+
+bool AGhostAiController::IsInGhostHouse() const
+{
+	// TODO: implement
+	return true;
 }
 
 int AGhostAiController::GetLeaveGhostHousePriority() const

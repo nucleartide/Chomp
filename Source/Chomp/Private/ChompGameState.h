@@ -64,6 +64,9 @@ class AChompGameState : public AGameStateBase
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TArray<FWave> Waves;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	double TimeToForceGhostOutOfHouse = 5.0;
+
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnDotsClearedSignature OnDotsClearedDelegate;
