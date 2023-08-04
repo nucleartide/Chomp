@@ -13,7 +13,7 @@ class CHOMP_API ARuntimeSet : public AActor
 	GENERATED_BODY()
 
 protected:
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	TArray<const AActor*> Things;
 	
 public:
