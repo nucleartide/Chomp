@@ -39,7 +39,6 @@ class AGhostAiController : public AAIController
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
-	// TODO. Double check this.
 	int GetLeaveGhostHousePriority() const;
 
 protected:
