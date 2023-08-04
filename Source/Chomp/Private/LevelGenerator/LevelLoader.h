@@ -129,10 +129,10 @@ private:
 	/**
 	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
 	 */
-	std::unordered_set<FGridLocation> OnlyGoUpTiles;
+	std::unordered_set<FGridLocation> GateTiles;
 
 	/**
-	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
+	 * A set of FGridLocations that describe all the tiles within the ghost house in the level.
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
 

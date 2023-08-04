@@ -57,7 +57,7 @@ void ULevelLoader::LoadLevel()
 			}
 			else if (Character == '-')
 			{
-				OnlyGoUpTiles.insert(FGridLocation{X, Y});
+				GateTiles.insert(FGridLocation{X, Y});
 			}
 			else if (Character == 'G') // 'G' = inside ghost house
 			{
