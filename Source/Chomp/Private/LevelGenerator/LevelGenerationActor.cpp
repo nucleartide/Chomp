@@ -117,7 +117,7 @@ void ALevelGenerationActor::GenerateTiles()
 				Tiles.Add(ConsumableDotActor);
 				NumberOfDotsRemaining++;
 			}
-			else if (Character == 'x' || Character == 'o')
+			else if (Character == 'x' || Character == 'o' || Character == 'G')
 			{
 				// No-op.
 			}

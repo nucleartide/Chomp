@@ -16,6 +16,9 @@ class AGhostHouseQueue : public AActor
 
 	UPROPERTY(VisibleAnywhere)
 	TArray<AGhostAiController*> Things;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	double TimeToForceGhostOutOfHouse = 5.0;
 
 public:
 	void AddAndSort(AGhostAiController* Thing)
@@ -34,9 +37,21 @@ public:
 		return Things.Top() == Thing;
 	}
 
+	bool Contains(const AGhostAiController* Thing) const
+	{
+		return Things.Contains(Thing);
+	}
+
+protected:
+	AGhostHouseQueue();
+	virtual void Tick(float DeltaSeconds) override;
+
 private:
 	static bool Sort(const AGhostAiController& A, const AGhostAiController& B)
 	{
 		return A.GetLeaveGhostHousePriority() > B.GetLeaveGhostHousePriority();
 	}
+	
+	UFUNCTION()
+	void HandleDotsConsumedUpdated(int NewDotsConsumed);
 };

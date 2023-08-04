@@ -53,6 +53,43 @@ struct FWave
 	double Duration;
 };
 
+template <typename T>
+struct TFieldWithLastUpdatedTime
+{
+private:
+	T Value;
+	double LastUpdatedTime;
+
+public:
+	TFieldWithLastUpdatedTime(
+		const T Value,
+		const UWorld* WorldInstance
+	):
+		Value(Value),
+		LastUpdatedTime(WorldInstance ? WorldInstance->GetRealTimeSeconds() : 0.0)
+	{
+	}
+
+	TFieldWithLastUpdatedTime& operator=(const TFieldWithLastUpdatedTime& Other)
+	{
+		if (this == &Other)
+			return *this;
+		Value = Other.Value;
+		LastUpdatedTime = Other.LastUpdatedTime;
+		return *this;
+	}
+
+	T GetValue() const
+	{
+		return Value;
+	}
+
+	double GetLastUpdatedTime() const
+	{
+		return LastUpdatedTime;
+	}
+};
+
 UCLASS()
 class AChompGameState : public AGameStateBase
 {
@@ -63,9 +100,6 @@ class AChompGameState : public AGameStateBase
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TArray<FWave> Waves;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	double TimeToForceGhostOutOfHouse = 5.0;
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
@@ -89,47 +123,16 @@ public:
 	EChompGameState GetEnum() const;
 	int GetScore() const;
 	EChompGamePlayingSubstate GetPlayingSubstate() const;
-	int GetNumberOfDotsConsumed() const;
+	TFieldWithLastUpdatedTime<int> GetNumberOfDotsConsumed() const;
 	void LoseGame();
 	void StartGame();
+	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	template <typename T>
-	struct TFieldWithLastUpdatedTime
-	{
-	private:
-		T Value;
-		double LastUpdatedTime;
-
-	public:
-		TFieldWithLastUpdatedTime(
-			const T Value,
-			const UWorld* WorldInstance
-		):
-			Value(Value),
-			LastUpdatedTime(WorldInstance ? WorldInstance->GetRealTimeSeconds() : 0.0)
-		{
-		}
-
-		TFieldWithLastUpdatedTime& operator=(const TFieldWithLastUpdatedTime& Other)
-		{
-			if (this == &Other)
-				return *this;
-			Value = Other.Value;
-			LastUpdatedTime = Other.LastUpdatedTime;
-			return *this;
-		}
-
-		T GetValue() const
-		{
-			return Value;
-		}
-	};
-
 	int Score = 0;
 	int NumberOfDotsRemaining = 0;
 	TFieldWithLastUpdatedTime<int> NumberOfDotsConsumed = TFieldWithLastUpdatedTime(0, nullptr);
@@ -141,7 +144,6 @@ private:
 
 	void UpdateScore(int NewScore);
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
-	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 	float GetTimeSinceStart() const;
 	void TransitionTo(EChompGameState NewState);
 };

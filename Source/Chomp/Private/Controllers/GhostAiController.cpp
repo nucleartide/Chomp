@@ -31,7 +31,12 @@ void AGhostAiController::BeginPlay()
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
-			&AGhostAiController::HandleGamePlayingSubstateChanged);
+			&AGhostAiController::HandleGamePlayingSubstateChanged
+			);
+		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
+			this,
+			&AGhostAiController::HandleDotsConsumedUpdated
+		 );
 	}
 }
 
@@ -101,6 +106,17 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	}
 }
 
+void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
+{
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	if (const auto Threshold = Pawn->GetDotsConsumedMovementThreshold();
+		Threshold >= 0 && NewDotsConsumed >= Threshold)
+	{
+		const auto Queue = Pawn->GetGhostHouseQueue();
+		Queue->Remove(this);
+	}
+}
+
 /**
  * When the game starts playing, reset the position of the pawn.
  */
@@ -154,43 +170,8 @@ TArray<FGridLocation> AGhostAiController::ComputePath(
 
 bool AGhostAiController::CanStartMoving() const
 {
-	return true;
-
-#if false
-	// get threshold
-	int Threshold = -1;
-	{
-		auto GhostPawn = GetPawn<AGhostPawn>();
-		check(GhostPawn);
-		Threshold = GhostPawn->GetDotsConsumedMovementThreshold();
-	}
-
-	// get number of dots consumed
-	int NumberOfDotsConsumed = -1;
-	{
-		auto World = GetWorld();
-		check(World);
-		auto ChompGameState = World->GetGameState<AChompGameState>();
-		NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
-	}
-
-	// TODO
-	// if the number of dots consumed has been exceeded,
-	// remove from ghost house
-
-	// TODO
-	// in chompgamestate,
-	// implement a "force remove" event if time since last dot consumed has been exceeded
-
-	// TODO
-	// if a "force remove event" has been received,
-	// remove from ghost house
-
-	// TODO
-    // update the condition below: shouldn't be in ghost house queue, and movement path shouldn't have been completed.
-	!MovementPath.WasCompleted(Pawn->GetActorLocation()) &&
-	!IsInGhostHouse();
-#endif
+	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+	return !MovementPath.WasCompleted(Pawn->GetActorLocation()) && !IsInGhostHouse();
 }
 
 void AGhostAiController::DebugAStar(
@@ -276,14 +257,16 @@ void AGhostAiController::SwapScatterOriginAndDestination()
 
 bool AGhostAiController::IsStartingPositionInGhostHouse() const
 {
-	// TODO: implement.
-	return true;
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto StartingPosition = Pawn->GetStartingPosition();
+	return ULevelLoader::GetInstance(Level)->IsGhostHouse(StartingPosition);
 }
 
 bool AGhostAiController::IsInGhostHouse() const
 {
-	// TODO: implement
-	return true;
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto Queue = Pawn->GetGhostHouseQueue();
+	return Queue->Contains(this);
 }
 
 int AGhostAiController::GetLeaveGhostHousePriority() const

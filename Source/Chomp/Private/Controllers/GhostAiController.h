@@ -50,6 +50,9 @@ protected:
 private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
+	
+	UFUNCTION()
+	void HandleDotsConsumedUpdated(int NewDotsConsumed);
 
 	static TArray<FGridLocation> ComputePath(
 		ULevelLoader* LevelInstance,

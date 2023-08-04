@@ -84,6 +84,7 @@ public:
 
 	bool IsWall(const FGridLocation& Location) const;
 
+	bool IsGhostHouse(const FGridLocation& Location) const;
 
 	/**
 	 * Check whether a grid position is within the map boundaries.
@@ -129,6 +130,11 @@ private:
 	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
 	 */
 	std::unordered_set<FGridLocation> OnlyGoUpTiles;
+
+	/**
+	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
+	 */
+	std::unordered_set<FGridLocation> GhostHouseTiles;
 
 	/**
 	 * The cardinal directions.
