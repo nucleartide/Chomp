@@ -132,6 +132,9 @@ void AChompGameState::Tick(const float DeltaTime)
         // Afterward, save the new game playing state.
         LastKnownGamePlayingSubstate = CurrentWave;
     }
+
+    // TODO: if time since last dot consumed has exceeded, emit an event that ghost ai controllers can listen to
+    // TODO: need to provide ghost ai controller sequencing
 }
 
 float AChompGameState::GetTimeSinceStart() const
