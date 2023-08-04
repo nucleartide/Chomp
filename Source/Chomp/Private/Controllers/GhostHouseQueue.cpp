@@ -10,7 +10,7 @@ AGhostHouseQueue::AGhostHouseQueue()
 void AGhostHouseQueue::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-	
+
 	const auto World = FSafeGet::World(this);
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	const auto TimeSeconds = World->GetTimeSeconds();
@@ -20,7 +20,7 @@ void AGhostHouseQueue::Tick(const float DeltaTime)
 		TimeSeconds > NumberOfDotsConsumed.GetLastUpdatedTime() + TimeToForceGhostOutOfHouse &&
 		Things.Num() > 0)
 	{
-		 Things.Pop();
+		Things.Pop();
 		GameState->UpdateNumberOfDotsConsumed(NumberOfDotsConsumed.GetValue());
 	}
 }
