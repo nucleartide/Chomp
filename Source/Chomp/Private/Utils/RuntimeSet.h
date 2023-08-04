@@ -2,7 +2,6 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
-#include <functional>
 #include "RuntimeSet.generated.h"
 
 // ARuntimeSet is an implementation of the Runtime Set design pattern,
