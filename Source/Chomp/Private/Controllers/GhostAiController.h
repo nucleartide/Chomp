@@ -38,10 +38,9 @@ class AGhostAiController : public AAIController
 
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
-	
-	int GetLeaveGhostHousePriority() const;
 
-	AGhostHouseQueue* GetGhostHouseQueue() const;
+	// TODO. Double check this.
+	int GetLeaveGhostHousePriority() const;
 
 protected:
 	virtual void BeginPlay() override;
@@ -80,4 +79,6 @@ private:
 	bool IsStartingPositionInGhostHouse() const;
 
 	bool IsInGhostHouse() const;
+	
+	AGhostHouseQueue* GetGhostHouseQueue() const;
 };

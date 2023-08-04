@@ -32,11 +32,11 @@ void AGhostAiController::BeginPlay()
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
 			&AGhostAiController::HandleGamePlayingSubstateChanged
-			);
+		);
 		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
 			this,
 			&AGhostAiController::HandleDotsConsumedUpdated
-		 );
+		);
 	}
 }
 
@@ -109,7 +109,8 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-	if (const auto Threshold = Pawn->GetDotsConsumedMovementThreshold();
+	if (
+		const auto Threshold = Pawn->GetDotsConsumedMovementThreshold();
 		Threshold >= 0 && NewDotsConsumed >= Threshold)
 	{
 		const auto Queue = Pawn->GetGhostHouseQueue();
@@ -171,7 +172,7 @@ TArray<FGridLocation> AGhostAiController::ComputePath(
 bool AGhostAiController::CanStartMoving() const
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
-	return !MovementPath.WasCompleted(Pawn->GetActorLocation()) && !IsInGhostHouse();
+	return !IsInGhostHouse() && !MovementPath.WasCompleted(Pawn->GetActorLocation());
 }
 
 void AGhostAiController::DebugAStar(
