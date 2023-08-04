@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
-#include "Utils\IntFieldWithLastUpdatedTime.h"
+#include "Utils/IntFieldWithLastUpdatedTime.h"
 
 #include "ChompGameState.generated.h"
 
