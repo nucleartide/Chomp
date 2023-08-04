@@ -14,16 +14,16 @@ class CHOMP_API ARuntimeSet : public AActor
 
 protected:
 	UPROPERTY(VisibleAnywhere)
-	TArray<AActor*> Things;
+	TArray<const AActor*> Things;
 	
 public:
-	void AddAndSort(AActor* Thing, bool(*Comparator)(AActor*, AActor*))
+	void AddAndSort(const AActor* Thing, bool(*Comparator)(const AActor*, const AActor*))
 	{
 		Things.Add(Thing);
 		Algo::Sort(Things, Comparator);
 	}
 
-	void Remove(AActor* Thing)
+	void Remove(const AActor* Thing)
 	{
 		Things.Remove(Thing);
 	}

@@ -17,7 +17,7 @@ void AGhostAiController::BeginPlay()
 
 	// Add this instance of AGhostAiController to our RuntimeSet.
 	if (IsStartingPositionInGhostHouse())
-		GetGhostHouseQueue()->AddAndSort(this);
+		GetGhostHouseQueue()->Add(this);
 
 	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
 	{
