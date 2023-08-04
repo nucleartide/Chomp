@@ -44,6 +44,5 @@ int AGhostPawn::GetLeaveGhostHousePriority() const
 
 AGhostHouseQueue* AGhostPawn::GetGhostHouseQueue() const
 {
-	check(GhostHouseQueue);
 	return GhostHouseQueue;
 }
