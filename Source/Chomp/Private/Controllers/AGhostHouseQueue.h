@@ -51,7 +51,4 @@ private:
 	{
 		return A.GetLeaveGhostHousePriority() > B.GetLeaveGhostHousePriority();
 	}
-	
-	UFUNCTION()
-	void HandleDotsConsumedUpdated(int NewDotsConsumed);
 };
