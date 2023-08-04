@@ -1,4 +1,6 @@
-#include "Controllers/GhostAIController.h"
+#include "Controllers/GhostAiController.h"
+
+#include "GhostHouseQueue.h"
 #include "Math/UnrealMathUtility.h"
 #include "AStar/AStar.h"
 #include "ChompGameState.h"
@@ -9,9 +11,13 @@
 #include "Pawns/MovablePawn.h"
 #include "Pawns/Movement/MovementResult.h"
 
-void AGhostAIController::BeginPlay()
+void AGhostAiController::BeginPlay()
 {
 	Super::BeginPlay();
+
+	// Add this instance of AGhostAiController to our RuntimeSet.
+	if (IsStartingPositionInGhostHouse())
+		GetGhostHouseQueue()->Add(this);
 
 	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
 	{
@@ -25,11 +31,16 @@ void AGhostAIController::BeginPlay()
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
-			&AGhostAIController::HandleGamePlayingSubstateChanged);
+			&AGhostAiController::HandleGamePlayingSubstateChanged
+		);
+		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
+			this,
+			&AGhostAiController::HandleDotsConsumedUpdated
+		);
 	}
 }
 
-void AGhostAIController::Tick(float DeltaTime)
+void AGhostAiController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
@@ -79,7 +90,7 @@ void AGhostAIController::Tick(float DeltaTime)
  * Sync the GhostAIController with the playing sub-state of the game.
  */
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void AGhostAIController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState,
+void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState,
                                                           EChompGamePlayingSubstate NewState)
 {
 	check(OldState != NewState);
@@ -95,10 +106,22 @@ void AGhostAIController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	}
 }
 
+void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
+{
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	if (
+		const auto Threshold = Pawn->GetDotsConsumedMovementThreshold();
+		Threshold >= 0 && NewDotsConsumed >= Threshold)
+	{
+		const auto Queue = Pawn->GetGhostHouseQueue();
+		Queue->Remove(this);
+	}
+}
+
 /**
  * When the game starts playing, reset the position of the pawn.
  */
-void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
+void AGhostAiController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
 {
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
@@ -107,7 +130,7 @@ void AGhostAIController::HandleGameStateChanged(EChompGameState OldState, EChomp
 	}
 }
 
-TArray<FGridLocation> AGhostAIController::ComputePath(
+TArray<FGridLocation> AGhostAiController::ComputePath(
 	ULevelLoader* LevelInstance,
 	FVector2D CurrentWorldPosition,
 	FGridLocation StartGridPos,
@@ -146,31 +169,13 @@ TArray<FGridLocation> AGhostAIController::ComputePath(
 	return Path;
 }
 
-bool AGhostAIController::CanStartMoving() const
+bool AGhostAiController::CanStartMoving() const
 {
-	int Threshold = -1;
-	{
-		auto GhostPawn = GetPawn<AGhostPawn>();
-		check(GhostPawn);
-		Threshold = GhostPawn->GetDotsConsumedMovementThreshold();
-	}
-
-	int NumberOfDotsConsumed = -1;
-	{
-		auto World = GetWorld();
-		check(World);
-		auto ChompGameState = World->GetGameState<AChompGameState>();
-		NumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
-	}
-
-	auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-	return Threshold >= 0 &&
-		NumberOfDotsConsumed >= 0 &&
-		NumberOfDotsConsumed >= Threshold &&
-		!MovementPath.WasCompleted(Pawn->GetActorLocation());
+	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+	return !IsInGhostHouse() && !MovementPath.WasCompleted(Pawn->GetActorLocation());
 }
 
-void AGhostAIController::DebugAStar(
+void AGhostAiController::DebugAStar(
 	const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	ULevelLoader* LevelInstance)
 {
@@ -202,7 +207,7 @@ void AGhostAIController::DebugAStar(
 	}
 }
 
-void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
+void AGhostAiController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
@@ -215,7 +220,7 @@ void AGhostAIController::ComputeScatterForMovementPath(const FGridLocation& Scat
 	MovementPath.DebugLog(TEXT("Scatter"));
 }
 
-void AGhostAIController::ComputeChaseForMovementPath()
+void AGhostAiController::ComputeChaseForMovementPath()
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
@@ -234,7 +239,7 @@ void AGhostAIController::ComputeChaseForMovementPath()
 	MovementPath.DebugLog(TEXT("Chase"));
 }
 
-void AGhostAIController::ResetPawnPosition() const
+void AGhostAiController::ResetPawnPosition() const
 {
 	// Set the starting position of the pawn.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -244,9 +249,35 @@ void AGhostAIController::ResetPawnPosition() const
 	GetPawn()->SetActorLocation(StartingWorldPos);
 }
 
-void AGhostAIController::SwapScatterOriginAndDestination()
+void AGhostAiController::SwapScatterOriginAndDestination()
 {
 	const FGridLocation Swap{CurrentScatterOrigin.X, CurrentScatterOrigin.Y};
 	CurrentScatterOrigin = CurrentScatterDestination;
 	CurrentScatterDestination = Swap;
+}
+
+bool AGhostAiController::IsStartingPositionInGhostHouse() const
+{
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto StartingPosition = Pawn->GetStartingPosition();
+	return ULevelLoader::GetInstance(Level)->IsGhostHouse(StartingPosition);
+}
+
+bool AGhostAiController::IsInGhostHouse() const
+{
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto Queue = Pawn->GetGhostHouseQueue();
+	return Queue->Contains(this);
+}
+
+int AGhostAiController::GetLeaveGhostHousePriority() const
+{
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	return Pawn->GetLeaveGhostHousePriority();
+}
+
+AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
+{
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	return Pawn->GetGhostHouseQueue();
 }

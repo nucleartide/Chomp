@@ -57,7 +57,11 @@ void ULevelLoader::LoadLevel()
 			}
 			else if (Character == '-')
 			{
-				OnlyGoUpTiles.insert(FGridLocation{X, Y});
+				GateTiles.insert(FGridLocation{X, Y});
+			}
+			else if (Character == 'G') // 'G' = inside ghost house
+			{
+				GhostHouseTiles.insert(FGridLocation{X, Y});
 			}
 			else if (Character == ' ' || Character == 'o') // ' ' = dot, 'o' = no dot
 			{
@@ -151,6 +155,11 @@ bool ULevelLoader::Passable(const FGridLocation& FromLocation, const FGridLocati
 bool ULevelLoader::IsWall(const FGridLocation& Location) const
 {
 	return Walls.find(Location) != Walls.end();
+}
+
+bool ULevelLoader::IsGhostHouse(const FGridLocation& Location) const
+{
+	return GhostHouseTiles.find(Location) != GhostHouseTiles.end();
 }
 
 bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const

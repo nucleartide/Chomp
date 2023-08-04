@@ -4,16 +4,17 @@
 
 ...
 
-## Dev Checklist
+## Dev checklist
 
-* [ ] **First draft**. Implement a working first pass at the feature/problem.
+* [ ] **First draft**. Implement a working first pass at the feature.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
-* [ ] **Debuggability**. Ensure that all features within this pull request have debug views.
+* [ ] **Debuggability**. Ensure that all features within this pull request can be inspected in Unreal Editor. Most often this means slapping a `UPROPERTY(VisibleAnywhere)` on all data fields, but can also mean drawing debug geometry for trickier logic.
 * [ ] **Playtest**. Playtest through game to ensure everything works.
 * [ ] **Merge and release**. Merge into `master`, cut a new build in Unreal, and upload a GitHub release.
 
-## Next iteration
+## After a break
 
-* [ ] Consider discussion points to write about in readme.
-* [ ] Prioritize items in todo list.
-* [ ] Tee up next feature / pull request.
+* [ ] **Summary**. Collect changelog items.
+* [ ] **Writeup**. Do a CAR/STAR writeup within this pull request.
+* [ ] **Priorities**. Prioritize items on work board.
+* [ ] **Next task**. Tee up a pull request for the next feature.

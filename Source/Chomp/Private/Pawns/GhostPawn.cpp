@@ -13,6 +13,8 @@ void AGhostPawn::BeginPlay()
 
 	DEBUG_LOG(TEXT("Head component name: %s"), *HeadComponents[0]->GetReadableName());
 	DEBUG_LOG(TEXT("Body component name: %s"), *BodyComponents[0]->GetReadableName());
+
+	check(GhostHouseQueue);
 }
 
 FGridLocation AGhostPawn::GetStartingPosition() const
@@ -33,4 +35,14 @@ FGridLocation AGhostPawn::GetScatterOrigin() const
 FGridLocation AGhostPawn::GetScatterDestination() const
 {
 	return ScatterDestination;
+}
+
+int AGhostPawn::GetLeaveGhostHousePriority() const
+{
+	return LeaveGhostHousePriority;
+}
+
+AGhostHouseQueue* AGhostPawn::GetGhostHouseQueue() const
+{
+	return GhostHouseQueue;
 }

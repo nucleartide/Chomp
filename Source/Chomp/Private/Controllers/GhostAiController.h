@@ -7,10 +7,12 @@
 #include "ChompGameState.h"
 #include "AStar/MovementPath.h"
 #include "LevelGenerator/LevelLoader.h"
-#include "GhostAIController.generated.h"
+#include "GhostAiController.generated.h"
+
+class AGhostHouseQueue;
 
 UCLASS()
-class AGhostAIController : public AAIController
+class AGhostAiController : public AAIController
 {
 	GENERATED_BODY()
 
@@ -37,6 +39,8 @@ class AGhostAIController : public AAIController
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
+	int GetLeaveGhostHousePriority() const;
+
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaTime) override;
@@ -44,6 +48,9 @@ protected:
 private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
+	
+	UFUNCTION()
+	void HandleDotsConsumedUpdated(int NewDotsConsumed);
 
 	static TArray<FGridLocation> ComputePath(
 		ULevelLoader* LevelInstance,
@@ -67,4 +74,10 @@ private:
 	void ResetPawnPosition() const;
 
 	void SwapScatterOriginAndDestination();
+
+	bool IsStartingPositionInGhostHouse() const;
+
+	bool IsInGhostHouse() const;
+	
+	AGhostHouseQueue* GetGhostHouseQueue() const;
 };
