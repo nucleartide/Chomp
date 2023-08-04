@@ -1,5 +1,7 @@
 #include "ChompGameState.h"
 
+#include "Utils/SafeGet.h"
+
 AChompGameState::AChompGameState()
 {
     PrimaryActorTick.bCanEverTick = true;
@@ -16,7 +18,7 @@ void AChompGameState::ConsumeDot()
 {
     UpdateScore(Score + ScoreMultiplier);
     UpdateNumberOfDotsRemaining(NumberOfDotsRemaining - 1);
-    UpdateNumberOfDotsConsumed(NumberOfDotsConsumed + 1);
+    UpdateNumberOfDotsConsumed(NumberOfDotsConsumed.GetValue() + 1);
 }
 
 void AChompGameState::UpdateScore(const int NewScore)
@@ -37,7 +39,8 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 
 void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed)
 {
-    NumberOfDotsConsumed = NewNumberOfDotsConsumed;
+    const auto World = FSafeGet::World(this);
+    NumberOfDotsConsumed = TFieldWithLastUpdatedTime(NewNumberOfDotsConsumed, World);
     OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
@@ -140,5 +143,5 @@ float AChompGameState::GetTimeSinceStart() const
 
 int AChompGameState::GetNumberOfDotsConsumed() const
 {
-    return NumberOfDotsConsumed;
+    return NumberOfDotsConsumed.GetValue();
 }
