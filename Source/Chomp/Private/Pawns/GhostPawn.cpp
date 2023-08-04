@@ -34,3 +34,14 @@ FGridLocation AGhostPawn::GetScatterDestination() const
 {
 	return ScatterDestination;
 }
+
+int AGhostPawn::GetLeaveGhostHousePriority() const
+{
+	return LeaveGhostHousePriority;
+}
+
+AGhostHouseQueue* AGhostPawn::GetGhostHouseQueue() const
+{
+	check(GhostHouseQueue);
+	return GhostHouseQueue;
+}

@@ -7,7 +7,7 @@
 #include "AStar/GridLocation.h"
 #include "ChompGameState.h"
 #include "Controllers/ChompPlayerController.h"
-#include "Controllers/GhostAIController.h"
+#include "Controllers/GhostAiController.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pawns/ChompPawnManager.h"
 #include "Utils/Debug.h"
@@ -140,10 +140,10 @@ void ALevelGenerationActor::ResetStateOfEverything(const EChompGameState OldStat
 
 		// Then, reset the ghost positions.
 		TArray<AActor*> FoundActors;
-		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhostAIController::StaticClass(), FoundActors);
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhostAiController::StaticClass(), FoundActors);
 		for (const auto& Actor : FoundActors)
 		{
-			const auto Controller = Cast<AGhostAIController>(Actor);
+			const auto Controller = Cast<AGhostAiController>(Actor);
 			check(Controller);
 			Controller->HandleGameStateChanged(OldState, NewState);
 		}

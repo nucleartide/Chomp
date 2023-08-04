@@ -7,10 +7,12 @@
 #include "ChompGameState.h"
 #include "AStar/MovementPath.h"
 #include "LevelGenerator/LevelLoader.h"
-#include "GhostAIController.generated.h"
+#include "GhostAiController.generated.h"
+
+class AGhostHouseQueue;
 
 UCLASS()
-class AGhostAIController : public AAIController
+class AGhostAiController : public AAIController
 {
 	GENERATED_BODY()
 
@@ -36,6 +38,10 @@ class AGhostAIController : public AAIController
 
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+	
+	int GetLeaveGhostHousePriority() const;
+
+	AGhostHouseQueue* GetGhostHouseQueue() const;
 
 protected:
 	virtual void BeginPlay() override;
