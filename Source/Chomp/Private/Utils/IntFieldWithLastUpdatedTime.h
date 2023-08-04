@@ -1,7 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FieldWithLastUpdatedTime.generated.h"
+#include "IntFieldWithLastUpdatedTime.generated.h"
 
 USTRUCT(BlueprintType)
 struct FIntFieldWithLastUpdatedTime
