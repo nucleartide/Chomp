@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameStateBase.h"
+#include "Utils/FieldWithLastUpdatedTime.h"
 
 #include "ChompGameState.generated.h"
 
@@ -26,18 +27,6 @@ enum class EChompGamePlayingSubstate : uint8
 	Frightened,
 };
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdatedSignature, int, NewDotsConsumed);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature, EChompGameState, OldState, EChompGameState,
-                                             NewState);
-
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature, EChompGamePlayingSubstate,
-                                             OldSubstate, EChompGamePlayingSubstate, NewSubstate);
-
 /**
  * An FWave is a period of time during which a particular EChompGamePlayingSubstate is active.
  */
@@ -53,44 +42,21 @@ struct FWave
 	double Duration;
 };
 
-template <typename T>
-struct TFieldWithLastUpdatedTime
-{
-private:
-	T Value;
-	double LastUpdatedTime;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
 
-public:
-	TFieldWithLastUpdatedTime(
-		const T Value,
-		const UWorld* WorldInstance
-	):
-		Value(Value),
-		LastUpdatedTime(WorldInstance ? WorldInstance->GetRealTimeSeconds() : 0.0)
-	{
-	}
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score);
 
-	TFieldWithLastUpdatedTime& operator=(const TFieldWithLastUpdatedTime& Other)
-	{
-		if (this == &Other)
-			return *this;
-		Value = Other.Value;
-		LastUpdatedTime = Other.LastUpdatedTime;
-		return *this;
-	}
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdatedSignature, int, NewDotsConsumed);
 
-	T GetValue() const
-	{
-		return Value;
-	}
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature,
+                                             EChompGameState, OldState,
+                                             EChompGameState, NewState);
 
-	double GetLastUpdatedTime() const
-	{
-		return LastUpdatedTime;
-	}
-};
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature,
+                                             EChompGamePlayingSubstate, OldSubstate,
+                                             EChompGamePlayingSubstate, NewSubstate);
 
-UCLASS()
+UCLASS(Blueprintable)
 class AChompGameState : public AGameStateBase
 {
 	GENERATED_BODY()
@@ -100,6 +66,25 @@ class AChompGameState : public AGameStateBase
 
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TArray<FWave> Waves;
+
+	UPROPERTY(VisibleAnywhere)
+	int Score = 0;
+
+	UPROPERTY(VisibleAnywhere)
+	int NumberOfDotsRemaining = 0;
+
+	UPROPERTY(VisibleAnywhere)
+	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(0, nullptr);
+	
+	UPROPERTY(VisibleAnywhere)
+	EChompGameState GameState = EChompGameState::None;
+
+	UPROPERTY(VisibleAnywhere)
+	EChompGamePlayingSubstate LastKnownGamePlayingSubstate = EChompGamePlayingSubstate::None;
+
+	// The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
+	UPROPERTY(VisibleAnywhere)
+	float GameStartTime = 0.0f;
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
@@ -118,32 +103,36 @@ public:
 	FOnGamePlayingStateChangedSignature OnGamePlayingStateChangedDelegate;
 
 	AChompGameState();
+
 	void ResetDots(int NumberOfDots);
+
 	void ConsumeDot();
+
 	EChompGameState GetEnum() const;
+
 	int GetScore() const;
+
 	EChompGamePlayingSubstate GetPlayingSubstate() const;
-	TFieldWithLastUpdatedTime<int> GetNumberOfDotsConsumed() const;
+
+	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;
+
 	void LoseGame();
+
 	void StartGame();
+
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
 protected:
 	virtual void BeginPlay() override;
+
 	virtual void Tick(float DeltaTime) override;
 
 private:
-	int Score = 0;
-	int NumberOfDotsRemaining = 0;
-	TFieldWithLastUpdatedTime<int> NumberOfDotsConsumed = TFieldWithLastUpdatedTime(0, nullptr);
-	EChompGameState GameState = EChompGameState::None;
-	EChompGamePlayingSubstate LastKnownGamePlayingSubstate = EChompGamePlayingSubstate::None;
-
-	// The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
-	float GameStartTime = 0.0f;
-
 	void UpdateScore(int NewScore);
+
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
+
 	float GetTimeSinceStart() const;
+
 	void TransitionTo(EChompGameState NewState);
 };

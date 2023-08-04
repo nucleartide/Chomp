@@ -40,7 +40,7 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed)
 {
 	const auto World = FSafeGet::World(this);
-	NumberOfDotsConsumed = TFieldWithLastUpdatedTime(NewNumberOfDotsConsumed, World);
+	NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(NewNumberOfDotsConsumed, World);
 	OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
@@ -142,7 +142,7 @@ float AChompGameState::GetTimeSinceStart() const
 	return World->GetTimeSeconds() - GameStartTime;
 }
 
-TFieldWithLastUpdatedTime<int> AChompGameState::GetNumberOfDotsConsumed() const
+FIntFieldWithLastUpdatedTime AChompGameState::GetNumberOfDotsConsumed() const
 {
 	return NumberOfDotsConsumed;
 }

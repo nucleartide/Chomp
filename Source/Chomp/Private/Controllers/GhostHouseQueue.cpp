@@ -2,7 +2,7 @@
 
 #include "Utils/SafeGet.h"
 
-AGhostHouseQueue::AGhostHouseQueue(): AActor()
+AGhostHouseQueue::AGhostHouseQueue()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
