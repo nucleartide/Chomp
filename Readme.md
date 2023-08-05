@@ -99,6 +99,11 @@ TODO: Discuss the implementation of the techniques in:
 
 * Ideation, pre-prod, prod, post-prod, release, feedback & playtesting
 
+### More topics
+
+* Iteration loop for productivity
+* Using a Trello / Kanban board
+
 ## Contributing
 
 TODO.
