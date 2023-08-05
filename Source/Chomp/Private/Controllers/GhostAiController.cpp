@@ -77,12 +77,12 @@ void AGhostAiController::Tick(float DeltaTime)
 	{
 		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto Destination = Pawn->GetScatterDestination();
-		ComputeScatterForMovementPath(Destination);
+		UpdateMovementPathWhenInScatter(Destination);
 		SwapScatterOriginAndDestination();
 	}
 	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.DidComplete(NewLocation, 1))
 	{
-		ComputeChaseForMovementPath();
+		UpdateMovementPathWhenInChase();
 	}
 }
 
@@ -98,11 +98,11 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	{
 		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto Destination = Pawn->GetScatterDestination();
-		ComputeScatterForMovementPath(Destination);
+		UpdateMovementPathWhenInScatter(Destination);
 	}
 	else if (NewState == EChompGamePlayingSubstate::Chase)
 	{
-		ComputeChaseForMovementPath();
+		UpdateMovementPathWhenInChase();
 	}
 }
 
@@ -207,7 +207,7 @@ void AGhostAiController::DebugAStar(
 	}
 }
 
-void AGhostAiController::ComputeScatterForMovementPath(const FGridLocation& ScatterDestination)
+void AGhostAiController::UpdateMovementPathWhenInScatter(const FGridLocation& ScatterDestination)
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
@@ -220,20 +220,20 @@ void AGhostAiController::ComputeScatterForMovementPath(const FGridLocation& Scat
 	MovementPath.DebugLog(TEXT("Scatter"));
 }
 
-void AGhostAiController::ComputeChaseForMovementPath()
+void AGhostAiController::UpdateMovementPathWhenInChase()
 {
+	// Compute path.
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
-	const auto GridLocation = Pawn->GetGridLocation();
-	const auto PlayerController = FSafeGet::PlayerController(this, 0);
-	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
-	if (!PlayerPawn)
-		return;
-	const auto PlayerWorldPosition = PlayerPawn->GetActorLocation();
-	const auto PlayerGridLocation = PlayerPawn->GetGridLocation();
-	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, PlayerGridLocation,
-	                              DebugAStarMap);
+	const auto Path = ComputePath(
+		ULevelLoader::GetInstance(Level),
+		WorldLocation,
+		GetChaseStartGridPosition(),
+		GetChaseEndGridPosition(),
+		DebugAStarMap
+	);
 
+	// Update movement path.
 	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
 	check(MovementPath.IsValid());
 	MovementPath.DebugLog(TEXT("Chase"));
@@ -280,4 +280,26 @@ AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 	return Pawn->GetGhostHouseQueue();
+}
+
+FGridLocation AGhostAiController::GetChaseStartGridPosition() const
+{
+		// Get the pawn.
+    	// Get the world location.
+    	// Get the grid location.
+    	const auto GridLocation = Pawn->GetGridLocation();
+    	// Get the player controller.
+    	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+    	// Get the player pawn. If the player pawn is dead, do not proceed.
+    	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
+    	if (!PlayerPawn)
+    		return;
+	
+	// TODO: return maybe gridlocation to indicate whether or not this is valid
+}
+
+FGridLocation AGhostAiController::GetChaseEndGridPosition() const
+{
+	// TODO: return player grid location
+	// TODO: return maybe gridlocation to indicate whether or not this is valid
 }

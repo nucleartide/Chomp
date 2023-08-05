@@ -43,6 +43,7 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
+	
 	virtual void Tick(float DeltaTime) override;
 
 private:
@@ -67,9 +68,9 @@ private:
 		ULevelLoader* LevelInstance
 	);
 
-	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
+	void UpdateMovementPathWhenInScatter(const FGridLocation& ScatterDestination);
 
-	void ComputeChaseForMovementPath();
+	void UpdateMovementPathWhenInChase();
 
 	void ResetPawnPosition() const;
 
@@ -80,4 +81,10 @@ private:
 	bool IsInGhostHouse() const;
 	
 	AGhostHouseQueue* GetGhostHouseQueue() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Customizable AI Behavior")
+	FGridLocation GetChaseStartGridPosition() const;
+
+	UFUNCTION(BlueprintCallable, Category = "Customizable AI Behavior")
+	FGridLocation GetChaseEndGridPosition() const;
 };
