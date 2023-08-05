@@ -83,8 +83,8 @@ private:
 	AGhostHouseQueue* GetGhostHouseQueue() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Customizable AI Behavior")
-	FGridLocation GetChaseStartGridPosition() const;
+	FMaybeGridLocation GetChaseStartGridPosition() const;
 
 	UFUNCTION(BlueprintCallable, Category = "Customizable AI Behavior")
-	FGridLocation GetChaseEndGridPosition() const;
+	FMaybeGridLocation GetChaseEndGridPosition() const;
 };

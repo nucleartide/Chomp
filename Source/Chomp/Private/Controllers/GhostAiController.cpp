@@ -222,14 +222,24 @@ void AGhostAiController::UpdateMovementPathWhenInScatter(const FGridLocation& Sc
 
 void AGhostAiController::UpdateMovementPathWhenInChase()
 {
+	// Compute start position.
+	const auto StartPosition = GetChaseStartGridPosition();
+	if (!StartPosition.IsValid)
+		return;
+
+	// Compute end position.
+	const auto EndPosition = GetChaseEndGridPosition();
+	if (!EndPosition.IsValid)
+		return;
+	
 	// Compute path.
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
 	const auto Path = ComputePath(
 		ULevelLoader::GetInstance(Level),
 		WorldLocation,
-		GetChaseStartGridPosition(),
-		GetChaseEndGridPosition(),
+		StartPosition.GridLocation,
+		EndPosition.GridLocation,
 		DebugAStarMap
 	);
 
@@ -282,24 +292,18 @@ AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 	return Pawn->GetGhostHouseQueue();
 }
 
-FGridLocation AGhostAiController::GetChaseStartGridPosition() const
+FMaybeGridLocation AGhostAiController::GetChaseStartGridPosition() const
 {
-		// Get the pawn.
-    	// Get the world location.
-    	// Get the grid location.
-    	const auto GridLocation = Pawn->GetGridLocation();
-    	// Get the player controller.
-    	const auto PlayerController = FSafeGet::PlayerController(this, 0);
-    	// Get the player pawn. If the player pawn is dead, do not proceed.
-    	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
-    	if (!PlayerPawn)
-    		return;
-	
-	// TODO: return maybe gridlocation to indicate whether or not this is valid
+	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
+	return FMaybeGridLocation{true, Pawn->GetGridLocation()};
 }
 
-FGridLocation AGhostAiController::GetChaseEndGridPosition() const
+FMaybeGridLocation AGhostAiController::GetChaseEndGridPosition() const
 {
-	// TODO: return player grid location
-	// TODO: return maybe gridlocation to indicate whether or not this is valid
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
+	if (!PlayerPawn)
+		 return FMaybeGridLocation::Invalid();
+
+	return FMaybeGridLocation{true, PlayerPawn->GetGridLocation()};
 }
