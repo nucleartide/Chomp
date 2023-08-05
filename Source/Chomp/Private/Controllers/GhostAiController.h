@@ -82,9 +82,10 @@ private:
 	
 	AGhostHouseQueue* GetGhostHouseQueue() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Customizable AI Behavior")
+public:
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FMaybeGridLocation GetChaseStartGridPosition() const;
 
-	UFUNCTION(BlueprintCallable, Category = "Customizable AI Behavior")
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FMaybeGridLocation GetChaseEndGridPosition() const;
 };

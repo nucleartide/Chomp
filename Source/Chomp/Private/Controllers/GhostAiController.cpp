@@ -231,7 +231,7 @@ void AGhostAiController::UpdateMovementPathWhenInChase()
 	const auto EndPosition = GetChaseEndGridPosition();
 	if (!EndPosition.IsValid)
 		return;
-	
+
 	// Compute path.
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
@@ -292,18 +292,18 @@ AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 	return Pawn->GetGhostHouseQueue();
 }
 
-FMaybeGridLocation AGhostAiController::GetChaseStartGridPosition() const
+FMaybeGridLocation AGhostAiController::GetChaseStartGridPosition_Implementation() const
 {
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	return FMaybeGridLocation{true, Pawn->GetGridLocation()};
 }
 
-FMaybeGridLocation AGhostAiController::GetChaseEndGridPosition() const
+FMaybeGridLocation AGhostAiController::GetChaseEndGridPosition_Implementation() const
 {
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
 	if (!PlayerPawn)
-		 return FMaybeGridLocation::Invalid();
+		return FMaybeGridLocation::Invalid();
 
 	return FMaybeGridLocation{true, PlayerPawn->GetGridLocation()};
 }
