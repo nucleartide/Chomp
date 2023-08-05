@@ -7,7 +7,7 @@
 
 class ULevelLoader;
 
-USTRUCT(BlueprintType, Blueprintable)
+USTRUCT(BlueprintType)
 struct FGridLocation
 {
 	GENERATED_BODY()
@@ -80,9 +80,15 @@ struct std::hash<FGridLocation>
 	}
 };
 
+USTRUCT(BlueprintType)
 struct FMaybeGridLocation
 {
+	GENERATED_BODY()
+
+	UPROPERTY()
 	bool IsValid{false};
+
+	UPROPERTY()
 	FGridLocation GridLocation{0, 0};
 
 	static FMaybeGridLocation Invalid()
