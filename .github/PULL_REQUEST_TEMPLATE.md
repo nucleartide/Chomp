@@ -15,6 +15,6 @@
 ## After a break
 
 * [ ] **Summary**. Collect changelog items from `Files changed`.
-* [ ] (when it's appropriate to invest time) **Writeup**. Do a CAR/STAR writeup within this pull request.
+* [ ] **Writeup & networking**. Do a CAR/STAR writeup within this pull request, and share it with people.
 * [ ] **Priorities**. Prioritize items on work board.
 * [ ] **Next task**. Tee up a pull request for the next feature.
