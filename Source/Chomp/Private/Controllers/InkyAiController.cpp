@@ -38,7 +38,8 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 		{
 			const auto LocationToTest = FGridLocation{
 				PlayerGridAheadLocation.X + PlayerGridDirection.X,
-				PlayerGridAheadLocation.Y + PlayerGridDirection.Y};
+				PlayerGridAheadLocation.Y + PlayerGridDirection.Y
+			};
 			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->IsValid(LocationToTest))
 				PlayerGridAheadLocation = LocationToTest;
 		}
@@ -47,27 +48,41 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 	// Get the results of B - A.
 	// Name this vector C.
 	const auto C = PlayerGridAheadLocation.ToFVector() - BlinkyGridLocation.ToFVector();
+	const auto CMagnitude = C.Length();
 
 	// Then, double the vector above.
 	// Name this vector D.
-	const auto D = C * 2.0;
+	auto DMagnitude = 2.0 * CMagnitude;
+	auto D = DMagnitude * C;
 
 	// While the position is invalid and greater than the magnitude of C,
-	while (false)
+	auto PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
+	while (!ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos) && DMagnitude > 0.0)
 	{
 		// Decrement the magnitude of vector D by 1.
-		// ...
+		DMagnitude -= 1.0;
+
+		// Recompute D.
+		D = C * DMagnitude;
+
+		// Recompute PendingEndWorldPos.
+		PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
 	}
 
+	// If position is still invalid, just set to Blinky's position.
+	if (!ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos))
+		PendingEndWorldPos = BlinkyPawnRef->GetActorLocation();
+
 	// Once you are done decrementing, the resulting grid position is your final result.
-	// ...
+	const auto ResultGridPosition = ULevelLoader::GetInstance(Level)->WorldToGrid(FVector2D(PendingEndWorldPos));
+	check(ULevelLoader::GetInstance(Level)->IsValid(ResultGridPosition));
+	return FMaybeGridLocation{true, ResultGridPosition};
 
-	// === end point
-
-	// Also, visualize these start and end positions with debug spheres in the parent AGhostAIController.
-	// ...
-
-	return Super::GetChaseEndGridPosition_Implementation();
+	// TODO, after dinner:
+	// [ ] debug the implementation above
+	// [ ] visualize these start and end positions with debug spheres in the parent AGhostAIController.
+	// [ ] add implementations for the 2 other ghosts
+	// [ ] test the 2 other implementations
 }
 
 FMaybeGridLocation AInkyAiController::GetPlayerGridLocation() const

@@ -16,9 +16,6 @@ class AGhostAiController : public AAIController
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<ULevelLoader> Level;
-
 	// Whether to print out A* map info in the logs.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
@@ -35,6 +32,10 @@ class AGhostAiController : public AAIController
 
 	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterDestination;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<ULevelLoader> Level;
 
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);

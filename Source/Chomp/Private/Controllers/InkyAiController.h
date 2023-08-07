@@ -14,9 +14,6 @@ class CHOMP_API AInkyAiController : public AGhostAiController
 	UPROPERTY(VisibleAnywhere)
 	AGhostPawn* BlinkyPawnRef;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ULevelLoader> Level;
-
 public:
 	void Initialize(AGhostPawn* BlinkyPawn);
 

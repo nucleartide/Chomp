@@ -92,6 +92,8 @@ public:
 	bool InBounds(const FGridLocation& GridPosition) const;
 
 	bool IsValid(const FGridLocation& GridLocation) const;
+	
+	bool IsValid(const FVector& WorldLocation) const;
 
 	/**
 	 * Get the passable neighbor nodes of a node.
