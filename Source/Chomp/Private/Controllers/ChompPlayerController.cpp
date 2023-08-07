@@ -51,6 +51,11 @@ void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChom
 		ResetMovement();
 }
 
+FGridLocation AChompPlayerController::GetCurrentMovement() const
+{
+	return CurrentMovement.GetDirection();
+}
+
 void AChompPlayerController::OnMoveHorizontal(const float Input)
 {
 	HorizontalAxisInput = Input;

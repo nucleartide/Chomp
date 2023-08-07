@@ -170,6 +170,14 @@ bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 		&& GridPosition.Y < GetLevelWidth();
 }
 
+bool ULevelLoader::IsValid(const FGridLocation& GridLocation) const
+{
+	return InBounds(GridLocation) &&
+		Walls.find(GridLocation) == Walls.end() &&
+		GateTiles.find(GridLocation) == GateTiles.end() &&
+		GhostHouseTiles.find(GridLocation) == GhosthouseTiles.end();
+}
+
 std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
 	FGridLocation{1, 0}, // North
 	FGridLocation{-1, 0}, // South

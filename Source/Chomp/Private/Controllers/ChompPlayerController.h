@@ -54,6 +54,8 @@ public:
 	// Handle game restarts.
 	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
 
+	FGridLocation GetCurrentMovement() const;
+
 protected:
 	// Needed to attach some handlers.
 	virtual void BeginPlay() override;

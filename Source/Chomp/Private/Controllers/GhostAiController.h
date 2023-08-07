@@ -42,7 +42,7 @@ public:
 	int GetLeaveGhostHousePriority() const;
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
 	
 	virtual void Tick(float DeltaTime) override;
 
@@ -88,4 +88,8 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FMaybeGridLocation GetChaseEndGridPosition() const;
+	
+	virtual FMaybeGridLocation GetChaseStartGridPosition_Implementation() const;
+	
+	virtual FMaybeGridLocation GetChaseEndGridPosition_Implementation() const;
 };

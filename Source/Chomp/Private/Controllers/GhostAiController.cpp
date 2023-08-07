@@ -11,9 +11,9 @@
 #include "Pawns/MovablePawn.h"
 #include "Pawns/Movement/MovementResult.h"
 
-void AGhostAiController::BeginPlay()
+void AGhostAiController::OnPossess(APawn* InPawn)
 {
-	Super::BeginPlay();
+	Super::OnPossess(InPawn);
 
 	// Add this instance of AGhostAiController to our RuntimeSet.
 	if (IsStartingPositionInGhostHouse())

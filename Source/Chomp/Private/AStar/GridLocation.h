@@ -85,10 +85,10 @@ struct FMaybeGridLocation
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	bool IsValid{false};
 
-	UPROPERTY()
+	UPROPERTY(BlueprintReadWrite)
 	FGridLocation GridLocation{0, 0};
 
 	static FMaybeGridLocation Invalid()
