@@ -46,10 +46,11 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 
 	// Get the results of B - A.
 	// Name this vector C.
+	const auto C = PlayerGridAheadLocation.ToFVector() - BlinkyGridLocation.ToFVector();
 
 	// Then, double the vector above.
 	// Name this vector D.
-	// ...
+	const auto D = C * 2.0;
 
 	// While the position is invalid and greater than the magnitude of C,
 	while (false)
@@ -61,8 +62,7 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 	// Once you are done decrementing, the resulting grid position is your final result.
 	// ...
 
-	// End position.
-	// ===
+	// === end point
 
 	// Also, visualize these start and end positions with debug spheres in the parent AGhostAIController.
 	// ...
