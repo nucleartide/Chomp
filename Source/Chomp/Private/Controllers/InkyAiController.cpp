@@ -17,7 +17,8 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 
 	// Get the player's grid position.
 	const auto [IsValid, PlayerGridLocation] = GetPlayerGridLocation();
-	if (!IsValid) return FMaybeGridLocation::Invalid();
+	if (!IsValid)
+		return FMaybeGridLocation::Invalid();
 
 	// Get the player's grid direction.
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
@@ -70,24 +71,21 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 	}
 
 	// This should always be true.
-	check(ULevelLoader::GetInstance(Level)->CanAiMoveHere(PendingEndWorldPos));
+	checkf(
+		ULevelLoader::GetInstance(Level)->CanAiMoveHere(PendingEndWorldPos),
+		TEXT("PendingEndWorldPos can always fall back to the player's direct position.")
+	);
 
 	// Once you are done decrementing, the resulting grid position is your final result.
 	const auto ResultGridPosition = ULevelLoader::GetInstance(Level)->WorldToGrid(FVector2D(PendingEndWorldPos));
 	return FMaybeGridLocation{true, ResultGridPosition};
-
-	// TODO, after dinner:
-	// [x] debug the implementation above
-	// [ ] visualize these start and end positions with debug spheres in the parent AGhostAIController.
-	// [ ] add implementations for the 2 other ghosts
-	// [ ] test the 2 other implementations
 }
 
 FMaybeGridLocation AInkyAiController::GetPlayerGridLocation() const
 {
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
-	if (!PlayerPawn)
-		return FMaybeGridLocation::Invalid();
-	return FMaybeGridLocation::Valid(PlayerPawn->GetGridLocation());
+	return PlayerPawn
+		       ? FMaybeGridLocation::Valid(PlayerPawn->GetGridLocation())
+		       : FMaybeGridLocation::Invalid();
 }
