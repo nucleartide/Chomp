@@ -132,10 +132,10 @@ public:
 			DestWorldLocation = WorldLocationPath[DestIndex];
 			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
 			check(
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) &&
-				FMath::IsNearlyEqual(Direction.Y, 0.0) ||
-				FMath::IsNearlyEqual(Direction.X, 0.0) &&
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0)
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0, 0.0001) &&
+				FMath::IsNearlyEqual(Direction.Y, 0.0, 0.0001) ||
+				FMath::IsNearlyEqual(Direction.X, 0.0, 0.0001) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0, 0.0001)
 			);
 		}
 

@@ -17,8 +17,6 @@ class CHOMP_API AInkyAiController : public AGhostAiController
 public:
 	void Initialize(AGhostPawn* BlinkyPawn);
 
-	virtual FMaybeGridLocation GetChaseStartGridPosition_Implementation() const override;
-
 	virtual FMaybeGridLocation GetChaseEndGridPosition_Implementation() const override;
 
 private:

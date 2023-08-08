@@ -10,11 +10,6 @@ void AInkyAiController::Initialize(AGhostPawn* BlinkyPawn)
 	BlinkyPawnRef = BlinkyPawn;
 }
 
-FMaybeGridLocation AInkyAiController::GetChaseStartGridPosition_Implementation() const
-{
-	return GetPlayerGridLocation();
-}
-
 FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 {
 	// Get Blinky's grid position.
@@ -40,42 +35,45 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 				PlayerGridAheadLocation.X + PlayerGridDirection.X,
 				PlayerGridAheadLocation.Y + PlayerGridDirection.Y
 			};
+
 			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->IsValid(LocationToTest))
 				PlayerGridAheadLocation = LocationToTest;
+			else
+				break;
 		}
 	}
 
-	// Get the results of B - A.
+	// Get the the difference vector (world space) of the previous 2 results.
 	// Name this vector C.
-	const auto C = PlayerGridAheadLocation.ToFVector() - BlinkyGridLocation.ToFVector();
-	const auto CMagnitude = C.Length();
+	const auto C = (PlayerGridAheadLocation.ToFVector() - BlinkyGridLocation.ToFVector()) * 100.0;
+	double CMagnitude;
+	FVector CDirection;
+	C.ToDirectionAndLength(CDirection, CMagnitude);
 
 	// Then, double the vector above.
 	// Name this vector D.
 	auto DMagnitude = 2.0 * CMagnitude;
-	auto D = DMagnitude * C;
+	auto D = DMagnitude * CDirection;
 
 	// While the position is invalid and greater than the magnitude of C,
 	auto PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
-	while (!ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos) && DMagnitude > 0.0)
+	while (DMagnitude > CMagnitude && !ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos))
 	{
-		// Decrement the magnitude of vector D by 1.
-		DMagnitude -= 1.0;
+		// Decrement the magnitude of vector D by 100 cm.
+		DMagnitude -= 100.0;
 
 		// Recompute D.
-		D = C * DMagnitude;
+		D = DMagnitude > CMagnitude ? DMagnitude * CDirection : CMagnitude * CDirection;
 
 		// Recompute PendingEndWorldPos.
 		PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
 	}
 
-	// If position is still invalid, just set to Blinky's position.
-	if (!ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos))
-		PendingEndWorldPos = BlinkyPawnRef->GetActorLocation();
+	// This should always be true.
+	check(ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos));
 
 	// Once you are done decrementing, the resulting grid position is your final result.
 	const auto ResultGridPosition = ULevelLoader::GetInstance(Level)->WorldToGrid(FVector2D(PendingEndWorldPos));
-	check(ULevelLoader::GetInstance(Level)->IsValid(ResultGridPosition));
 	return FMaybeGridLocation{true, ResultGridPosition};
 
 	// TODO, after dinner:
