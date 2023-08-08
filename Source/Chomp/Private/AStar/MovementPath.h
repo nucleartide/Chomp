@@ -25,8 +25,7 @@ private:
 	TArray<FVector> WorldLocationPath;
 
 	// Note: if you are adding more properties, you should also update the overloaded copy assignment operator.
-	UPROPERTY(VisibleAnywhere)
-	const ULevelLoader* LevelInstance;
+	TSharedPtr<ILevelLoader> LevelInstance;
 
 	static std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation, TArray<FVector> WorldLocationPath)
 	{
@@ -86,7 +85,7 @@ public:
 	explicit FMovementPath(
 		const FVector& ActorLocation,
 		const TArray<FGridLocation>& NewLocationPath,
-		const ULevelLoader* LevelInstance) : LevelInstance(LevelInstance)
+		TSharedPtr<ILevelLoader> LevelInstance) : LevelInstance(LevelInstance)
 	{
 		// Initialize state.
 		GridLocationPath = NewLocationPath;
@@ -165,10 +164,10 @@ public:
 
 		// Compute the direction towards the StartNode.
 		const auto Dir = (WorldLocationPath[0] - ActorLocation).GetSafeNormal();
-		checkf(!Dir.IsNearlyZero(), TEXT("If this assertion is violated you may want to return WorldLocationPath[0] instead."));
 
-		// Then use the direction along with CurrentPathLocation to compute the new ActorLocation.
-		// Remember that NewPathLocation is negative.
+		// Then use the direction along with NewPathLocation to compute the new ActorLocation.
+		// Remember that NewPathLocation is negative here.
+		// Also note that if Dir is a zero vector, this result reduces to WorldLocationPath[0].
 		return WorldLocationPath[0] + Dir * NewPathLocation;
 	}
 

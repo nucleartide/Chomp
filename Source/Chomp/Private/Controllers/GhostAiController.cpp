@@ -244,7 +244,7 @@ void AGhostAiController::UpdateMovementPathWhenInScatter(const FGridLocation& Sc
 	const auto Path = ComputePath(ULevelLoader::GetInstance(Level), WorldLocation, GridLocation, ScatterDestination,
 	                              DebugAStarMap);
 
-	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, MakeShareable(ULevelLoader::GetInstance(Level)));
 	check(MovementPath.IsValid());
 	MovementPath.DebugLog(TEXT("Scatter"));
 }
@@ -273,7 +273,7 @@ void AGhostAiController::UpdateMovementPathWhenInChase()
 	);
 
 	// Update movement path.
-	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	MovementPath = FMovementPath(Pawn->GetActorLocation(), Path, MakeShareable(ULevelLoader::GetInstance(Level)));
 	check(MovementPath.IsValid());
 	MovementPath.DebugLog(TEXT("Chase"));
 }

@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <vector>
 #include "CoreMinimal.h"
+#include "ILevelLoader.h"
 #include "Math/IntPoint.h"
 #include "AStar/Graph.h"
 #include "AStar/GridLocation.h"
@@ -18,7 +19,7 @@
  * though that takes lower priority than implementing game mechanics and polishing the UX.
  */
 UCLASS(Blueprintable)
-class ULevelLoader : public UObject, public IGraph
+class ULevelLoader : public UObject, public IGraph, public ILevelLoader
 {
 	GENERATED_BODY()
 
@@ -61,7 +62,7 @@ public:
 	 *
 	 * Note that the grid origin (0,0) is at the bottom-left of the map.
 	 */
-	FVector2D GridToWorld(const FGridLocation& GridPosition) const;
+	virtual FVector2D GridToWorld(const FGridLocation& GridPosition) const override;
 
 	/**
 	 * Given world coordinates, convert them to grid coordinates.
@@ -82,7 +83,7 @@ public:
 	 */
 	bool Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const;
 
-	bool IsWall(const FGridLocation& Location) const;
+	virtual bool IsWall(const FGridLocation& Location) const override;
 
 	bool IsGhostHouse(const FGridLocation& Location) const;
 
