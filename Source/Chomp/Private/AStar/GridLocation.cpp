@@ -42,7 +42,7 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 	const auto WorldA = LevelInstance->GridToWorld(A);
 	const auto WorldB = LevelInstance->GridToWorld(B);
 
-	if (FMath::IsNearlyEqual(WorldA.X, WorldB.X, 0.01f) && FMath::IsNearlyEqual(Location.X, WorldA.X, 0.01f))
+	if (FMath::IsNearlyEqual(WorldA.X, WorldB.X) && FMath::IsNearlyEqual(Location.X, WorldA.X))
 	{
 		if (WorldA.Y < WorldB.Y && WorldA.Y <= Location.Y && Location.Y < WorldB.Y)
 			return true;
@@ -50,7 +50,7 @@ bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A,
 			return true;
 	}
 
-	if (FMath::IsNearlyEqual(WorldA.Y, WorldB.Y, 0.01f) && FMath::IsNearlyEqual(Location.Y, WorldA.Y, 0.01f))
+	if (FMath::IsNearlyEqual(WorldA.Y, WorldB.Y) && FMath::IsNearlyEqual(Location.Y, WorldA.Y))
 	{
 		if (WorldA.X < WorldB.X && WorldA.X <= Location.X && Location.X < WorldB.X)
 			return true;

@@ -31,11 +31,12 @@ private:
 		const TArray<FGridLocation>& Path,
 		const ULevelLoader* LevelInstance)
 	{
+		// Empty path case.
 		if (Path.Num() == 0)
 			return std::make_tuple(false, -1);
 
-		// If ActorLocation is on the path somewhere,
-		const FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
+		// Case where ActorLocation is on path.
+		const FVector2D ActorLocation2D(ActorLocation);
 		for (auto i = 0; i < Path.Num() - 1; i++)
 		{
 			auto CurrentNode = Path[i];
@@ -46,16 +47,16 @@ private:
 
 		// If ActorLocation is within 50 axis-aligned units (inclusive) of the start node,
 		const auto WorldA = LevelInstance->GridToWorld(Path[0]);
-		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X, 0.01f) &&
-			FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0f ||
-			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y, 0.01f) &&
-			FGenericPlatformMath::Abs(ActorLocation.X - WorldA.X) <= 50.0f)
+		if (FMath::IsNearlyEqual(ActorLocation.X, WorldA.X) &&
+			FGenericPlatformMath::Abs(ActorLocation.Y - WorldA.Y) <= 50.0 ||
+			FMath::IsNearlyEqual(ActorLocation.Y, WorldA.Y) &&
+			FGenericPlatformMath::Abs(ActorLocation.X - WorldA.X) <= 50.0)
 			return std::make_tuple(true, 0);
 
 		// If ActorLocation is at the end node,
 		const auto WorldLast = LevelInstance->GridToWorld(Path[Path.Num() - 1]);
-		if (FMath::IsNearlyEqual(ActorLocation.X, WorldLast.X, 0.01f) &&
-			FMath::IsNearlyEqual(ActorLocation.Y, WorldLast.Y, 0.01f))
+		if (FMath::IsNearlyEqual(ActorLocation.X, WorldLast.X) &&
+			FMath::IsNearlyEqual(ActorLocation.Y, WorldLast.Y))
 			return std::make_tuple(true, -1);
 
 		return std::make_tuple(false, -1);
@@ -117,45 +118,50 @@ public:
 
 	FVector MoveAlongPath(FVector ActorLocation, float DeltaDistance) const
 	{
-		FVector Direction{0.0, 0.0, 0.0};
-		FVector DestWorldLocation;
-		{
-			// Sanity check.
-			const auto [OnPath, DestIndex] = IsOnPath(ActorLocation, GridLocationPath, LevelInstance);
-			check(OnPath);
+		// TODO: replace with a Lerp implementation.
+		// ...
+		
+		// If we move 100+ cm, we have a problem because our algorithm is designed
+		// to work for a DeltaDistance of less than 100 cm.
+		//
+		// In this case, don't move at all.
+		if (DeltaDistance >= 100.0)
+			return ActorLocation;
 
-			// No movement if there is no destination node.
-			if (DestIndex == -1)
+		// Compute direction.
+		FVector DestWorldLocation;
+		FVector Direction{0.0, 0.0, 0.0};
+		{
+			const auto [OnPath, DestIndex] = IsOnPath(ActorLocation, GridLocationPath, LevelInstance);
+			if (!OnPath || DestIndex == -1)
 				return ActorLocation;
 
-			// Compute direction.
 			DestWorldLocation = WorldLocationPath[DestIndex];
-			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
-#if false
+			Direction = (DestWorldLocation - ActorLocation).GetUnsafeNormal();
 			check(
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0, 0.0001) &&
-				FMath::IsNearlyEqual(Direction.Y, 0.0, 0.0001) ||
-				FMath::IsNearlyEqual(Direction.X, 0.0, 0.0001) &&
-				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0, 0.0001)
+				!Direction.IsNearlyZero() &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0) &&
+				FMath::IsNearlyEqual(Direction.Y, 0.0) ||
+				FMath::IsNearlyEqual(Direction.X, 0.0) &&
+				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0)
 			);
-#endif
 		}
 
 		// Apply movement.
 		ActorLocation += DeltaDistance * Direction;
 
 		// Check if we overshot.
-		// We MovedPastTarget if MovementDotProduct is around -1.0f.
-		FVector2D Direction2D{Direction.X, Direction.Y};
-		FVector2D DestWorldLocation2D{DestWorldLocation.X, DestWorldLocation.Y};
-		FVector2D ActorLocation2D{ActorLocation.X, ActorLocation.Y};
-		const auto MovementDotProduct = FVector2D::DotProduct(
-			Direction2D,
-			(DestWorldLocation2D - ActorLocation2D).GetSafeNormal());
+		// We MovedPastTarget if MovementDotProduct is around -1.0.
+		const FVector2D Direction2D(Direction);
+		const FVector2D DestWorldLocation2D(DestWorldLocation);
+		const FVector2D ActorLocation2D(ActorLocation);
+		const auto MovementDotProduct = FVector::DotProduct(
+			Direction,
+			(DestWorldLocation - ActorLocation).GetUnsafeNormal());
 		const auto AmountDotProduct = FVector2D::DotProduct(
 			Direction2D,
 			DestWorldLocation2D - ActorLocation2D);
-		const auto MovedPastTarget = FMath::Abs(MovementDotProduct + 1.0f) < 0.1f;
+		const auto MovedPastTarget = FMath::Abs(MovementDotProduct + 1.0) < 0.1;
 		const auto AmountMovedPast = FMath::Abs(AmountDotProduct);
 
 		// If we overshot,
@@ -172,7 +178,7 @@ public:
 			{
 				// Compute next direction.
 				const auto NextDest = WorldLocationPath[DestIndex];
-				const auto NextDir = (NextDest - ActorLocation).GetSafeNormal();
+				const auto NextDir = (NextDest - ActorLocation).GetUnsafeNormal();
 
 				// And apply the remaining movement.
 				ActorLocation += AmountMovedPast * NextDir;
