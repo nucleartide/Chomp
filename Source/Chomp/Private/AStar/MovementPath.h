@@ -33,7 +33,6 @@ private:
 		auto CurrentPathLocation = 0.0;
 
 		// Traverse the path to see where the actor is currently on the path.
-		const FVector2D ActorLocation2D(ActorLocation);
 		for (auto i = 0; i < WorldLocationPath.Num() - 1; i++)
 		{
 			auto CurrentNode = WorldLocationPath[i];
