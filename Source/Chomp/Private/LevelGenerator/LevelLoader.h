@@ -129,21 +129,21 @@ private:
 	/**
 	 * A set of FGridLocations that describe all the wall tiles in the level.
 	 * 
-	 * Note: if you're updating this you should also update the IsValid() condition.
+	 * Note: if you're updating this you should also update the CanAiMoveHere() condition.
 	 */
 	std::unordered_set<FGridLocation> Walls;
 
 	/**
 	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
 	 * 
-	 * Note: if you're updating this you should also update the IsValid() condition.
+	 * Note: if you're updating this you should also update the CanAiMoveHere() condition.
 	 */
 	std::unordered_set<FGridLocation> GateTiles;
 
 	/**
 	 * A set of FGridLocations that describe all the tiles within the ghost house in the level.
 	 *
-	 * Note: if you're updating this you should also update the IsValid() condition.
+	 * Note: if you're updating this you should also update the CanAiMoveHere() condition.
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
 
