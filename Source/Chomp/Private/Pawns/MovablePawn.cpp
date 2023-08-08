@@ -144,7 +144,6 @@ FMovementResult AMovablePawn::MoveAlongPath(
 
 	// Call out to MovementPath->MoveAlongPath(ActorLocation, DeltaDistance), which will return an FVector.
 	const auto NewLocation = MovementPath.MoveAlongPath(Location, DeltaDistance);
-	DEBUG_LOG(TEXT("new location %s"), *NewLocation.ToString());
 
 	// Compute new rotation given the new position.
 	check(NewLocation != Location);
