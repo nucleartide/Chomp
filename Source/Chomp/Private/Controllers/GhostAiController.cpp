@@ -65,25 +65,26 @@ void AGhostAiController::Tick(float DeltaTime)
 #if WITH_EDITOR
 	// Draw end position for debugging.
 	// Call DrawDebugSphere in the constructor to draw a sphere at a specific location
-	if (const auto [IsValid, GridLocation] = MovementPath.GetEndNode(); IsValid)
+	if (const auto WorldLocationPath = MovementPath.GetWorldLocationPath(); WorldLocationPath.Num() >= 1)
 	{
-		const auto EndWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(GridLocation);
-		FVector SphereCenter(EndWorldPos.X, EndWorldPos.Y, 0.0); // Center of the sphere
-		float SphereRadius = 150.0f; // Radius of the sphere
-		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-		const auto SphereColor = Pawn->GetDebugColor().ToFColor(false);
+		for (const auto SphereCenter : WorldLocationPath)
+		{
+			float SphereRadius = 25.0f; // Radius of the sphere
+			const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+			const auto SphereColor = Pawn->GetDebugColor().ToFColor(false);
 
-		// Draw the debug sphere
-		DrawDebugSphere(
-			GetWorld(),
-			SphereCenter,
-			SphereRadius,
-			12,
-			SphereColor,
-			false,
-			-1.0,
-			0,
-			4.0);
+			// Draw the debug sphere
+			DrawDebugSphere(
+				GetWorld(),
+				SphereCenter,
+				SphereRadius,
+				12,
+				SphereColor,
+				false,
+				-1.0,
+				0,
+				4.0);
+		}
 	}
 #endif
 }

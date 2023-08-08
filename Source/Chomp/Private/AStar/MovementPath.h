@@ -50,9 +50,9 @@ private:
 			CurrentPathLocation += 100.0;
 		}
 
-		// If ActorLocation is at the end, then return the length of the path.
+		// If ActorLocation is at the end, then return the end PathLocation value.
 		if (ActorLocation.Equals(WorldLocationPath[WorldLocationPath.Num() - 1]))
-			return CurrentPathLocation;
+			return (WorldLocationPath.Num() - 1) * 100.0;
 
 		// However, if we reached the end of the path and the actor was not found,
 		// check to see if the actor is actually within 50 units (inclusive) of the start node.
@@ -187,12 +187,8 @@ public:
 		return GridLocationPathSize > 0;
 	}
 
-	FMaybeGridLocation GetEndNode() const
+	TArray<FVector> GetWorldLocationPath() const
 	{
-		const auto Path = GridLocationPath;
-		if (Path.Num() == 0)
-			return FMaybeGridLocation::Invalid();
-
-		return FMaybeGridLocation::Valid(Path[Path.Num() - 1]);
+		return WorldLocationPath;
 	}
 };
