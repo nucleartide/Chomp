@@ -114,7 +114,7 @@ public:
 	bool DidComplete(const FVector& ActorLocation, const int Index) const
 	{
 		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation, WorldLocationPath);
-		return CurrentPathLocation.has_value() && CurrentPathLocation > static_cast<double>(Index);
+		return CurrentPathLocation.has_value() && CurrentPathLocation >= static_cast<double>(Index);
 	}
 
 	void DebugLog(const FString Label) const
@@ -149,7 +149,7 @@ public:
 		const auto NewPathLocation = CurrentPathLocation.value() + DeltaDistance;
 
 		// If we surpassed the length of the path, clamp to the length of the path.
-		if (const double PathLen = WorldLocationPath.Num() * 100.0; NewPathLocation >= PathLen)
+		if (const double PathLen = (WorldLocationPath.Num() - 1) * 100.0; NewPathLocation >= PathLen)
 			return WorldLocationPath[WorldLocationPath.Num() - 1];
 
 		// From that single value, convert back to an ActorLocation that is along the path,
