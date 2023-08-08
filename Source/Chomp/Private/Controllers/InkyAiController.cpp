@@ -36,7 +36,7 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 				PlayerGridAheadLocation.Y + PlayerGridDirection.Y
 			};
 
-			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->IsValid(LocationToTest))
+			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->CanAiMoveHere(LocationToTest))
 				PlayerGridAheadLocation = LocationToTest;
 			else
 				break;
@@ -57,7 +57,7 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 
 	// While the position is invalid and greater than the magnitude of C,
 	auto PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
-	while (DMagnitude > CMagnitude && !ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos))
+	while (DMagnitude > CMagnitude && !ULevelLoader::GetInstance(Level)->CanAiMoveHere(PendingEndWorldPos))
 	{
 		// Decrement the magnitude of vector D by 100 cm.
 		DMagnitude -= 100.0;
@@ -70,7 +70,7 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 	}
 
 	// This should always be true.
-	check(ULevelLoader::GetInstance(Level)->IsValid(PendingEndWorldPos));
+	check(ULevelLoader::GetInstance(Level)->CanAiMoveHere(PendingEndWorldPos));
 
 	// Once you are done decrementing, the resulting grid position is your final result.
 	const auto ResultGridPosition = ULevelLoader::GetInstance(Level)->WorldToGrid(FVector2D(PendingEndWorldPos));
