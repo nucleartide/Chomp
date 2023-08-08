@@ -147,7 +147,10 @@ FMovementResult AMovablePawn::MoveAlongPath(
 	DEBUG_LOG(TEXT("new location %s"), *NewLocation.ToString());
 
 	// Compute new rotation given the new position.
-	const auto Dir = (NewLocation - Location).GetUnsafeNormal();
+	check(NewLocation != Location);
+	check(DeltaDistance > 0.0);
+	const auto Dir = (NewLocation - Location).GetSafeNormal();
+	check(Dir.SquaredLength() > 0.0);
 	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 

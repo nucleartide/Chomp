@@ -39,10 +39,12 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Compute new location and rotation.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
+	const auto OldLocation = MovablePawn->GetActorLocation();
 	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
 		MovementPath,
 		DeltaTime
 	);
+	check(OldLocation != NewLocation);
 
 	// Apply new location.
 	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);

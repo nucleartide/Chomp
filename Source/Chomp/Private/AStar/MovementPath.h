@@ -165,8 +165,10 @@ public:
 
 		// Compute the direction towards the StartNode.
 		const auto Dir = (WorldLocationPath[0] - ActorLocation).GetSafeNormal();
+		checkf(!Dir.IsNearlyZero(), TEXT("If this assertion is violated you may want to return WorldLocationPath[0] instead."));
 
 		// Then use the direction along with CurrentPathLocation to compute the new ActorLocation.
+		// Remember that NewPathLocation is negative.
 		return WorldLocationPath[0] + Dir * NewPathLocation;
 	}
 
