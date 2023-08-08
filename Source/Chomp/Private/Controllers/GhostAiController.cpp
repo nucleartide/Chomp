@@ -57,7 +57,13 @@ void AGhostAiController::Tick(float DeltaTime)
 		UpdateMovementPathWhenInScatter(Destination);
 		SwapScatterOriginAndDestination();
 	}
-	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase && MovementPath.DidComplete(NewLocation, 1))
+	else if (
+		PlayingSubstate == EChompGamePlayingSubstate::Chase &&
+		(
+			MovementPath.GetWorldLocationPath().Num() >= 2 && MovementPath.DidComplete(NewLocation, 1) ||
+			MovementPath.GetWorldLocationPath().Num() == 1 && MovementPath.WasCompleted(NewLocation)
+		)
+	)
 	{
 		UpdateMovementPathWhenInChase();
 	}
