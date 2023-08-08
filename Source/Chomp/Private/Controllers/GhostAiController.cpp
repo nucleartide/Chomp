@@ -14,30 +14,7 @@
 void AGhostAiController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-
-	// Add this instance of AGhostAiController to our RuntimeSet.
-	if (IsStartingPositionInGhostHouse())
-		GetGhostHouseQueue()->Add(this);
-
-	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
-	{
-		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-		CurrentScatterOrigin = Pawn->GetScatterOrigin();
-		CurrentScatterDestination = Pawn->GetScatterDestination();
-	}
-
-	// Attach some handlers for when game state changes.
-	{
-		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
-			this,
-			&AGhostAiController::HandleGamePlayingSubstateChanged
-		);
-		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
-			this,
-			&AGhostAiController::HandleDotsConsumedUpdated
-		);
-	}
+	Reset();
 }
 
 void AGhostAiController::Tick(float DeltaTime)
@@ -84,6 +61,49 @@ void AGhostAiController::Tick(float DeltaTime)
 	{
 		UpdateMovementPathWhenInChase();
 	}
+
+#if WITH_EDITOR
+	// Draw end position for debugging.
+	// Call DrawDebugSphere in the constructor to draw a sphere at a specific location
+	if (const auto [IsValid, GridLocation] = MovementPath.GetEndNode(); IsValid)
+	{
+		const auto EndWorldPos = ULevelLoader::GetInstance(Level)->GridToWorld(GridLocation);
+		FVector SphereCenter(EndWorldPos.X, EndWorldPos.Y, 0.0); // Center of the sphere
+		float SphereRadius = 150.0f; // Radius of the sphere
+		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		const auto SphereColor = Pawn->GetDebugColor().ToFColor(false);
+
+		// Draw the debug sphere
+		DrawDebugSphere(
+			GetWorld(),
+			SphereCenter,
+			SphereRadius,
+			12,
+			SphereColor,
+			false,
+			-1.0,
+			0,
+			4.0);
+	}
+#endif
+}
+
+void AGhostAiController::BeginPlay()
+{
+	Super::BeginPlay();
+
+	// Attach some handlers for when game state changes.
+	{
+		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+			this,
+			&AGhostAiController::HandleGamePlayingSubstateChanged
+		);
+		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
+			this,
+			&AGhostAiController::HandleDotsConsumedUpdated
+		);
+	}
 }
 
 /**
@@ -126,7 +146,7 @@ void AGhostAiController::HandleGameStateChanged(EChompGameState OldState, EChomp
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
 	{
-		ResetPawnPosition();
+		Reset();
 	}
 }
 
@@ -249,7 +269,7 @@ void AGhostAiController::UpdateMovementPathWhenInChase()
 	MovementPath.DebugLog(TEXT("Chase"));
 }
 
-void AGhostAiController::ResetPawnPosition() const
+void AGhostAiController::Reset()
 {
 	// Set the starting position of the pawn.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -257,6 +277,19 @@ void AGhostAiController::ResetPawnPosition() const
 	const auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
 	const FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
 	GetPawn()->SetActorLocation(StartingWorldPos);
+
+	// Add this instance of AGhostAiController to our RuntimeSet if not added already.
+	if (IsStartingPositionInGhostHouse() && !GetGhostHouseQueue()->Contains(this))
+	{
+		GetGhostHouseQueue()->Add(this);
+	}
+
+	// Initialize CurrentScatterOrigin and CurrentScatterDestination from Pawn.
+	{
+		const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+		CurrentScatterOrigin = Pawn->GetScatterOrigin();
+		CurrentScatterDestination = Pawn->GetScatterDestination();
+	}
 }
 
 void AGhostAiController::SwapScatterOriginAndDestination()

@@ -77,7 +77,7 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 	return FMaybeGridLocation{true, ResultGridPosition};
 
 	// TODO, after dinner:
-	// [ ] debug the implementation above
+	// [x] debug the implementation above
 	// [ ] visualize these start and end positions with debug spheres in the parent AGhostAIController.
 	// [ ] add implementations for the 2 other ghosts
 	// [ ] test the 2 other implementations

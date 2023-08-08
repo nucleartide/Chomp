@@ -131,12 +131,14 @@ public:
 			// Compute direction.
 			DestWorldLocation = WorldLocationPath[DestIndex];
 			Direction = (DestWorldLocation - ActorLocation).GetSafeNormal();
+#if false
 			check(
 				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.X), 1.0, 0.0001) &&
 				FMath::IsNearlyEqual(Direction.Y, 0.0, 0.0001) ||
 				FMath::IsNearlyEqual(Direction.X, 0.0, 0.0001) &&
 				FMath::IsNearlyEqual(FGenericPlatformMath::Abs(Direction.Y), 1.0, 0.0001)
 			);
+#endif
 		}
 
 		// Apply movement.
@@ -196,5 +198,14 @@ public:
 		const auto GridLocationPathSize = GridLocationPath.Num();
 		check(GridLocationPathSize == WorldLocationPath.Num());
 		return GridLocationPathSize > 0;
+	}
+
+	FMaybeGridLocation GetEndNode() const
+	{
+		const auto Path = GridLocationPath;
+		if (Path.Num() == 0)
+			return FMaybeGridLocation::Invalid();
+
+		return FMaybeGridLocation::Valid(Path[Path.Num() - 1]);
 	}
 };

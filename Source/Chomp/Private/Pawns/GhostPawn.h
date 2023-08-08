@@ -33,6 +33,9 @@ class AGhostPawn : public AMovablePawn
 	UPROPERTY(EditAnywhere, Category = "Custom Settings")
 	AGhostHouseQueue* GhostHouseQueue;
 
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
+	FLinearColor DebugColor = FLinearColor::Red;
+
 public:
 	FGridLocation GetStartingPosition() const;
 	int GetDotsConsumedMovementThreshold() const;
@@ -40,6 +43,7 @@ public:
 	FGridLocation GetScatterDestination() const;
 	int GetLeaveGhostHousePriority() const;
 	AGhostHouseQueue* GetGhostHouseQueue() const;
+	FLinearColor GetDebugColor() const;
 
 protected:
 	virtual void BeginPlay() override;

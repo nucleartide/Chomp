@@ -47,6 +47,8 @@ protected:
 	
 	virtual void Tick(float DeltaTime) override;
 
+	virtual void BeginPlay() override;
+
 private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
@@ -73,7 +75,7 @@ private:
 
 	void UpdateMovementPathWhenInChase();
 
-	void ResetPawnPosition() const;
+	void Reset();
 
 	void SwapScatterOriginAndDestination();
 
