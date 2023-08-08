@@ -10,3 +10,12 @@ double FMathHelpers::NegativeFriendlyFmod(const double A, const double B)
 
 	return std::fmod(A, B);
 }
+
+FVector FMathHelpers::Lerp(const FVector& A, const FVector& B, const double T)
+{
+	return FVector{
+		FMath::Lerp(A.X, B.X, T),
+		FMath::Lerp(A.Y, B.Y, T),
+		FMath::Lerp(A.Z, B.Z, T),
+	};
+}

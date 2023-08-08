@@ -75,7 +75,7 @@ private:
 
 	void UpdateMovementPathWhenInChase();
 
-	void Reset();
+	void ResetGhostState();
 
 	void SwapScatterOriginAndDestination();
 

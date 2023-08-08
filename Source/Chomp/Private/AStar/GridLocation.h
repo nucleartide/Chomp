@@ -26,8 +26,7 @@ struct FGridLocation
 
 	FGridLocation operator+(const FGridLocation& IntendedDir) const;
 
-	static bool IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B,
-	                        const ULevelLoader* LevelInstance);
+	static std::optional<double> IsInBetween(const FVector& Location, const FVector& WorldA, const FVector& WorldB);
 
 	// Copy assignment operator.
 	FGridLocation& operator=(const FGridLocation& Other)

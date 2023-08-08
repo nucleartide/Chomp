@@ -14,7 +14,7 @@
 void AGhostAiController::OnPossess(APawn* InPawn)
 {
 	Super::OnPossess(InPawn);
-	Reset();
+	ResetGhostState();
 }
 
 void AGhostAiController::Tick(float DeltaTime)
@@ -146,7 +146,7 @@ void AGhostAiController::HandleGameStateChanged(EChompGameState OldState, EChomp
 	check(OldState != NewState);
 	if (NewState == EChompGameState::Playing)
 	{
-		Reset();
+		ResetGhostState();
 	}
 }
 
@@ -269,7 +269,7 @@ void AGhostAiController::UpdateMovementPathWhenInChase()
 	MovementPath.DebugLog(TEXT("Chase"));
 }
 
-void AGhostAiController::Reset()
+void AGhostAiController::ResetGhostState()
 {
 	// Set the starting position of the pawn.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);

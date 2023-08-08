@@ -7,4 +7,6 @@ public:
 	//
 	// Example: NegativeFriendlyFmod(-4.0, 3.0) ~= 2.0
 	static double NegativeFriendlyFmod(const double A, const double B);
+
+	static FVector Lerp(const FVector& A, const FVector& B, const double T);
 };
