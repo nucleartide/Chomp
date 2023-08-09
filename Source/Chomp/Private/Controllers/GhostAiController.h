@@ -51,7 +51,7 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	FMovementPath MovementPath;
 	
 	UPROPERTY(VisibleInstanceOnly)
