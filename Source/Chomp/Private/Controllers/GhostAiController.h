@@ -64,8 +64,6 @@ private:
 		bool Debug
 	);
 
-	bool CanStartMoving() const;
-
 	static void DebugAStar(
 		const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 		ULevelLoader* LevelInstance
@@ -73,7 +71,7 @@ private:
 
 	void UpdateMovementPathWhenInScatter(const FGridLocation& ScatterDestination);
 
-	void UpdateMovementPathWhenInChase();
+	bool UpdateMovementPathWhenInChase();
 
 	void ResetGhostState();
 

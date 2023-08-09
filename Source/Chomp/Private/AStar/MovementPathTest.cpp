@@ -28,7 +28,8 @@ bool MovementPathTest::RunTest(const FString& Parameters)
 		}
 	};
 
-	const auto TestLevelLoader = MakeShared<FTestLevelLoader>();
+	const auto TestLevelLoader = new FTestLevelLoader;
+	const TSharedPtr<FTestLevelLoader> TestLevelLoaderShared = MakeShareable(TestLevelLoader);
 	{
 		const auto Actual = TestLevelLoader->GridToWorld(FGridLocation{0, 0});
 		TestEqual(TEXT("GridToWorld works"), Actual, FVector2D{-1400.0, -1500.0});

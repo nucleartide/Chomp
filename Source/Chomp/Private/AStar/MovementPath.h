@@ -25,7 +25,7 @@ private:
 	TArray<FVector> WorldLocationPath;
 
 	// Note: if you are adding more properties, you should also update the overloaded copy assignment operator.
-	TSharedPtr<ILevelLoader> LevelInstance;
+	ILevelLoader* LevelInstance;
 
 	static std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation, TArray<FVector> WorldLocationPath)
 	{
@@ -84,7 +84,7 @@ public:
 	explicit FMovementPath(
 		const FVector& ActorLocation,
 		const TArray<FGridLocation>& NewLocationPath,
-		TSharedPtr<ILevelLoader> LevelInstance) : LevelInstance(LevelInstance)
+		ILevelLoader* LevelInstance) : LevelInstance(LevelInstance)
 	{
 		// Initialize state.
 		GridLocationPath = NewLocationPath;
