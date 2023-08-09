@@ -116,7 +116,7 @@ FGridLocation AGhostAiController::GetPlayerGridLocation() const
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
 	checkf(PlayerPawn,
-	       TEXT("Player must be alive, otherwise we wouldn't be recomputing paths because game isn't playing"));
+	       TEXT("Player must be alive, otherwise we wouldn't be recomputing paths."));
 	return PlayerPawn->GetGridLocation();
 }
 
@@ -134,7 +134,7 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
 	checkf(PlayerPawn,
-	       TEXT("Player must be alive, otherwise we wouldn't be be recomputing paths because game isn't playing"));
+	       TEXT("Player must be alive, otherwise we wouldn't be be recomputing paths."));
 	return PlayerPawn->GetActorLocation();
 }
 
@@ -403,7 +403,7 @@ bool AGhostAiController::IsPlayerAlive() const
 	return PlayerPawn != nullptr;
 }
 
-void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation)
+void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const FVector NewLocation)
 {
 	if (
 		MovementPath.GetWorldLocationPath().Num() >= 2 && MovementPath.DidComplete(NewLocation, 1) ||

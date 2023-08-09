@@ -4,7 +4,7 @@
 #include "Pawns/MovablePawn.h"
 #include "Utils/SafeGet.h"
 
-void AClydeAiController::DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation)
+void AClydeAiController::DecideToUpdateMovementPathInChase_Implementation(const FVector NewLocation)
 {
 	// Get the current world location of Pacman.
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
@@ -50,7 +50,6 @@ void AClydeAiController::DecideToUpdateMovementPathInChase_Implementation(FVecto
 	)
 	{
 		MovementPath = UpdateMovementPathWhenInScatter();
-		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
 	}
 
 	// Update bookkeeping.
