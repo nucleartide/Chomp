@@ -47,6 +47,8 @@ class AGhostAiController : public AAIController
 
 	AGhostHouseQueue* GetGhostHouseQueue() const;
 
+	bool IsPlayerAlive() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;

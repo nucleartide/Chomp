@@ -36,6 +36,10 @@ void AGhostAiController::Tick(float DeltaTime)
 	if (!MovementPath.IsValid())
 		return;
 
+	// Early return if player is dead.
+	if (!IsPlayerAlive())
+		return;
+
 	// Preconditions.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
 	checkf(!MovementPath.WasCompleted(MovablePawn->GetActorLocation()), TEXT("Movement path mustn't be complete."));
@@ -358,6 +362,13 @@ AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 	return Pawn->GetGhostHouseQueue();
+}
+
+bool AGhostAiController::IsPlayerAlive() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
+	return PlayerPawn != nullptr;
 }
 
 void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation)
