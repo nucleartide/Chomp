@@ -7,7 +7,7 @@
 
 class ULevelLoader;
 
-USTRUCT(BlueprintType, Blueprintable)
+USTRUCT(BlueprintType)
 struct FGridLocation
 {
 	GENERATED_BODY()
@@ -26,8 +26,7 @@ struct FGridLocation
 
 	FGridLocation operator+(const FGridLocation& IntendedDir) const;
 
-	static bool IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B,
-	                        const ULevelLoader* LevelInstance);
+	static std::optional<double> IsInBetween(const FVector& Location, const FVector& WorldA, const FVector& WorldB);
 
 	// Copy assignment operator.
 	FGridLocation& operator=(const FGridLocation& Other)
@@ -80,9 +79,15 @@ struct std::hash<FGridLocation>
 	}
 };
 
+USTRUCT(BlueprintType)
 struct FMaybeGridLocation
 {
+	GENERATED_BODY()
+
+	UPROPERTY(BlueprintReadWrite)
 	bool IsValid{false};
+
+	UPROPERTY(BlueprintReadWrite)
 	FGridLocation GridLocation{0, 0};
 
 	static FMaybeGridLocation Invalid()

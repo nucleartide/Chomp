@@ -36,29 +36,39 @@ FGridLocation FGridLocation::operator+(const FGridLocation& IntendedDir) const
 	return FGridLocation{X + IntendedDir.X, Y + IntendedDir.Y};
 }
 
-bool FGridLocation::IsInBetween(const FVector& Location, const FGridLocation& A, const FGridLocation& B,
-                                const ULevelLoader* LevelInstance)
+// Return whether a Location is in the range [WorldA, WorldB), and by how much.
+std::optional<double> FGridLocation::IsInBetween(
+	const FVector& Location,
+	const FVector& WorldA,
+	const FVector& WorldB)
 {
-	const auto WorldA = LevelInstance->GridToWorld(A);
-	const auto WorldB = LevelInstance->GridToWorld(B);
-
-	if (FMath::IsNearlyEqual(WorldA.X, WorldB.X, 0.01f) && FMath::IsNearlyEqual(Location.X, WorldA.X, 0.01f))
+	if (const auto IsMovingOnXAxis =
+		FMath::IsNearlyEqual(WorldA.X, WorldB.X) &&
+		FMath::IsNearlyEqual(Location.X, WorldA.X))
 	{
-		if (WorldA.Y < WorldB.Y && WorldA.Y <= Location.Y && Location.Y < WorldB.Y)
-			return true;
-		if (WorldB.Y < WorldA.Y && WorldB.Y < Location.Y && Location.Y <= WorldA.Y)
-			return true;
+		if (WorldA.Y < WorldB.Y &&
+			WorldA.Y <= Location.Y && Location.Y < WorldB.Y)
+			return Location.Y - WorldA.Y;
+	
+		if (WorldB.Y < WorldA.Y &&
+			WorldB.Y < Location.Y && Location.Y <= WorldA.Y)
+			return WorldA.Y - Location.Y;
 	}
 
-	if (FMath::IsNearlyEqual(WorldA.Y, WorldB.Y, 0.01f) && FMath::IsNearlyEqual(Location.Y, WorldA.Y, 0.01f))
+	if (const auto IsMovingOnYAxis =
+		FMath::IsNearlyEqual(WorldA.Y, WorldB.Y) &&
+		FMath::IsNearlyEqual(Location.Y, WorldA.Y))
 	{
-		if (WorldA.X < WorldB.X && WorldA.X <= Location.X && Location.X < WorldB.X)
-			return true;
-		if (WorldB.X < WorldA.X && WorldB.X < Location.X && Location.X <= WorldA.X)
-			return true;
+		if (WorldA.X < WorldB.X &&
+			WorldA.X <= Location.X && Location.X < WorldB.X)
+			return Location.X - WorldA.X;
+		
+		if (WorldB.X < WorldA.X &&
+			WorldB.X < Location.X && Location.X <= WorldA.X)
+			return WorldA.X - Location.X;
 	}
 
-	return false;
+	return std::nullopt;
 }
 
 FGridLocation FGridLocation::Modulo(const ULevelLoader* LevelInstance) const

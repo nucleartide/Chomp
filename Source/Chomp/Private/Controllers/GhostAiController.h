@@ -16,9 +16,6 @@ class AGhostAiController : public AAIController
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<ULevelLoader> Level;
-
 	// Whether to print out A* map info in the logs.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
@@ -36,14 +33,21 @@ class AGhostAiController : public AAIController
 	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterDestination;
 
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<ULevelLoader> Level;
+
 public:
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
 	int GetLeaveGhostHousePriority() const;
 
 protected:
-	virtual void BeginPlay() override;
+	virtual void OnPossess(APawn* InPawn) override;
+	
 	virtual void Tick(float DeltaTime) override;
+
+	virtual void BeginPlay() override;
 
 private:
 	UFUNCTION()
@@ -60,18 +64,16 @@ private:
 		bool Debug
 	);
 
-	bool CanStartMoving() const;
-
 	static void DebugAStar(
 		const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 		ULevelLoader* LevelInstance
 	);
 
-	void ComputeScatterForMovementPath(const FGridLocation& ScatterDestination);
+	void UpdateMovementPathWhenInScatter(const FGridLocation& ScatterDestination);
 
-	void ComputeChaseForMovementPath();
+	bool UpdateMovementPathWhenInChase();
 
-	void ResetPawnPosition() const;
+	void ResetGhostState();
 
 	void SwapScatterOriginAndDestination();
 
@@ -80,4 +82,15 @@ private:
 	bool IsInGhostHouse() const;
 	
 	AGhostHouseQueue* GetGhostHouseQueue() const;
+
+public:
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
+	FMaybeGridLocation GetChaseStartGridPosition() const;
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
+	FMaybeGridLocation GetChaseEndGridPosition() const;
+	
+	virtual FMaybeGridLocation GetChaseStartGridPosition_Implementation() const;
+	
+	virtual FMaybeGridLocation GetChaseEndGridPosition_Implementation() const;
 };

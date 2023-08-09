@@ -170,6 +170,21 @@ bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 		&& GridPosition.Y < GetLevelWidth();
 }
 
+bool ULevelLoader::CanAiMoveHere(const FGridLocation& GridLocation) const
+{
+	return InBounds(GridLocation) &&
+		Walls.find(GridLocation) == Walls.end() &&
+		GateTiles.find(GridLocation) == GateTiles.end() &&
+		GhostHouseTiles.find(GridLocation) == GhostHouseTiles.end();
+}
+
+bool ULevelLoader::CanAiMoveHere(const FVector& WorldLocation) const
+{
+	const FVector2D WorldLocation2D{WorldLocation.X, WorldLocation.Y};
+	const auto GridLocation = WorldToGrid(WorldLocation2D);
+	return CanAiMoveHere(GridLocation);
+}
+
 std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
 	FGridLocation{1, 0}, // North
 	FGridLocation{-1, 0}, // South

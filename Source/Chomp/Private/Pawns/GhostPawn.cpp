@@ -46,3 +46,8 @@ AGhostHouseQueue* AGhostPawn::GetGhostHouseQueue() const
 {
 	return GhostHouseQueue;
 }
+
+FLinearColor AGhostPawn::GetDebugColor() const
+{
+	return DebugColor;
+}
