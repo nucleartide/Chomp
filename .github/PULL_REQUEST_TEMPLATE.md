@@ -7,8 +7,8 @@
 ## Dev checklist
 
 * [ ] **First draft**. Implement a working first pass at the feature.
+* [ ] **Scientific debugging immediately after first draft**. Ensure that all features within this pull request have been [scientifically debugged](https://cseweb.ucsd.edu/classes/wi10/cse15L/c/method.php). For experimental observations, you can slap a `UPROPERTY(VisibleAnywhere)` on all data fields, but you can also draw debug geometry for trickier logic.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
-* [ ] **Scientific debugging**. Ensure that all features within this pull request have been [scientifically debugged](https://cseweb.ucsd.edu/classes/wi10/cse15L/c/method.php). For experimental observations, you can slap a `UPROPERTY(VisibleAnywhere)` on all data fields, but you can also draw debug geometry for trickier logic.
 * [ ] **Playtest**. Playtest through game to ensure everything works.
 * [ ] **Merge and release**. Merge into `master`, cut a new build in Unreal, and upload a GitHub release.
 
