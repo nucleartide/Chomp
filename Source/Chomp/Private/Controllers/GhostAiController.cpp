@@ -36,7 +36,7 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Preconditions.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
-	check(!MovementPath.WasCompleted(MovablePawn->GetActorLocation()));
+	checkf(!MovementPath.WasCompleted(MovablePawn->GetActorLocation()), TEXT("Movement path mustn't be complete."));
 
 	// Compute new location and rotation.
 	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
@@ -70,6 +70,7 @@ void AGhostAiController::Tick(float DeltaTime)
 		const auto DebugC = FSafeGet::PlayerController(this, 0);
 		const auto DebugD = DebugC->GetPawn<AMovablePawn>();
 		const auto DidUpdate = UpdateMovementPathWhenInChase();
+		checkf(DidUpdate, TEXT("If false, check whether the player pawn is destroyed."));
 	}
 
 #if WITH_EDITOR
