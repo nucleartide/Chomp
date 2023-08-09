@@ -76,7 +76,7 @@ protected:
 
 	FMovementPath UpdateMovementPathWhenInChase() const;
 	
-	FMovementPath UpdateMovementPathWhenInScatter() const;
+	FMovementPath UpdateMovementPathWhenInScatter();
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")

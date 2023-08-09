@@ -42,7 +42,10 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Preconditions.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
-	checkf(!MovementPath.WasCompleted(MovablePawn->GetActorLocation()), TEXT("Movement path mustn't be complete."));
+	{
+		const auto ActorLocation = MovablePawn->GetActorLocation();
+		checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
+	}
 
 	// Compute new location and rotation.
 	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
@@ -59,7 +62,6 @@ void AGhostAiController::Tick(float DeltaTime)
 		MovementPath.WasCompleted(NewLocation))
 	{
 		MovementPath = UpdateMovementPathWhenInScatter();
-		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
 	}
 	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase)
 	{
@@ -252,11 +254,28 @@ void AGhostAiController::DebugAStar(
 	}
 }
 
-FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter() const
+FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 {
+	// Grab some values.
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
 	const auto GridLocation = Pawn->GetGridLocation();
+
+	// If we are on the CurrentScatterDestination, swap so we don't compute a 1-node path.
+	if (GridLocation == CurrentScatterDestination)
+		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
+	
+	// If we are computing the same path, then return early to avoid the post-condition check.
+	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		GridLocationPath.Num() > 0)
+	{
+		const auto First = GridLocationPath[0];
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto Last = GridLocationPath[GridLocationPath.Num() - 1];
+		if (First == GridLocation && Last == CurrentScatterDestination)
+			return MovementPath;
+	}
+
 	const auto Path = ComputePath(
 		ULevelLoader::GetInstance(Level),
 		WorldLocation,
@@ -271,6 +290,9 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter() const
 	// Post-conditions.
 	check(NewMovementPath.IsValid());
 	check(NewMovementPath != MovementPath);
+
+	// Swap the scatter origin and destination for the next time.
+	std::swap(CurrentScatterOrigin, CurrentScatterDestination);
 
 	return NewMovementPath;
 }
@@ -293,6 +315,17 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 		EndPosition == GridLocationPath[GridLocationPath.Num() - 1])
 		EndPosition = PlayerPawn->GetGridLocation();
 
+	// If we are computing the same path, then return early to avoid the post-condition check.
+	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		GridLocationPath.Num() > 0)
+	{
+		const auto First = GridLocationPath[0];
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto Last = GridLocationPath[GridLocationPath.Num() - 1];
+		if (First == StartPosition && Last == EndPosition)
+			return MovementPath;
+	}
+
 	// Compute path.
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
 	const auto Path = ComputePath(
@@ -309,7 +342,6 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 
 	// Post-conditions.
 	check(NewMovementPath.IsValid());
-	// paths are equal because if you haven't reached 0 yet and you recompute, you will reach the same path
 	check(NewMovementPath != MovementPath);
 
 	return NewMovementPath;
