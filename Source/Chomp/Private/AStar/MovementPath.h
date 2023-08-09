@@ -10,7 +10,7 @@
 
 #include "MovementPath.generated.h"
 
-USTRUCT()
+USTRUCT(BlueprintType)
 struct FMovementPath
 {
 	GENERATED_BODY()

@@ -4,7 +4,9 @@
 #include "Math/UnrealMathUtility.h"
 #include "AStar/AStar.h"
 #include "ChompGameState.h"
+#include "ChompPlayerController.h"
 #include "LevelGenerator/LevelLoader.h"
+#include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
@@ -34,9 +36,16 @@ void AGhostAiController::Tick(float DeltaTime)
 	if (!MovementPath.IsValid())
 		return;
 
+	// Early return if player is dead.
+	if (!IsPlayerAlive())
+		return;
+
 	// Preconditions.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
-	checkf(!MovementPath.WasCompleted(MovablePawn->GetActorLocation()), TEXT("Movement path mustn't be complete."));
+	{
+		const auto ActorLocation = MovablePawn->GetActorLocation();
+		checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
+	}
 
 	// Compute new location and rotation.
 	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
@@ -53,20 +62,10 @@ void AGhostAiController::Tick(float DeltaTime)
 		MovementPath.WasCompleted(NewLocation))
 	{
 		MovementPath = UpdateMovementPathWhenInScatter();
-		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
 	}
-	else if (
-		PlayingSubstate == EChompGamePlayingSubstate::Chase &&
-		(
-			MovementPath.GetWorldLocationPath().Num() >= 2 && MovementPath.DidComplete(NewLocation, 1) ||
-			MovementPath.GetWorldLocationPath().Num() == 1 && MovementPath.WasCompleted(NewLocation)
-		)
-	)
+	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase)
 	{
-		const auto DebugA = MovementPath.GetWorldLocationPath().Num();
-		const auto DebugB = MovementPath.DidComplete(NewLocation, 1);
-		const auto DebugC = MovementPath.WasCompleted(NewLocation);
-		MovementPath = UpdateMovementPathWhenInChase();
+		DecideToUpdateMovementPathInChase(NewLocation);
 	}
 
 #if WITH_EDITOR
@@ -112,6 +111,33 @@ void AGhostAiController::BeginPlay()
 	}
 }
 
+FGridLocation AGhostAiController::GetPlayerGridLocation() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
+	checkf(PlayerPawn,
+	       TEXT("Player must be alive, otherwise we wouldn't be recomputing paths."));
+	return PlayerPawn->GetGridLocation();
+}
+
+FGridLocation AGhostAiController::GetPlayerGridDirection() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController);
+	check(ChompPlayerController);
+	const auto PlayerGridDirection = ChompPlayerController->GetCurrentMovement();
+	return PlayerGridDirection;
+}
+
+FVector AGhostAiController::GetPlayerWorldLocation() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
+	checkf(PlayerPawn,
+	       TEXT("Player must be alive, otherwise we wouldn't be be recomputing paths."));
+	return PlayerPawn->GetActorLocation();
+}
+
 /**
  * Sync the GhostAIController with the playing sub-state of the game.
  */
@@ -122,8 +148,6 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	check(OldState != NewState);
 	if (NewState == EChompGamePlayingSubstate::Scatter)
 	{
-		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
-		auto Destination = Pawn->GetScatterDestination();
 		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInScatter();
 	}
@@ -134,6 +158,7 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	}
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -229,17 +254,33 @@ void AGhostAiController::DebugAStar(
 	}
 }
 
-FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter() const
+FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 {
+	// Grab some values.
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
 	const auto GridLocation = Pawn->GetGridLocation();
-	const auto ScatterDestination = Pawn->GetScatterDestination();
+
+	// If we are on the CurrentScatterDestination, swap so we don't compute a 1-node path.
+	if (GridLocation == CurrentScatterDestination)
+		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
+	
+	// If we are computing the same path, then return early to avoid the post-condition check.
+	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		GridLocationPath.Num() > 0)
+	{
+		const auto First = GridLocationPath[0];
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto Last = GridLocationPath[GridLocationPath.Num() - 1];
+		if (First == GridLocation && Last == CurrentScatterDestination)
+			return MovementPath;
+	}
+
 	const auto Path = ComputePath(
 		ULevelLoader::GetInstance(Level),
 		WorldLocation,
 		GridLocation,
-		ScatterDestination,
+		CurrentScatterDestination,
 		DebugAStarMap
 	);
 
@@ -250,6 +291,9 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter() const
 	check(NewMovementPath.IsValid());
 	check(NewMovementPath != MovementPath);
 
+	// Swap the scatter origin and destination for the next time.
+	std::swap(CurrentScatterOrigin, CurrentScatterDestination);
+
 	return NewMovementPath;
 }
 
@@ -259,17 +303,28 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
 	checkf(PlayerPawn, TEXT("Player is alive"));
-	
+
 	// Compute start position.
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto StartPosition = Pawn->GetGridLocation();
-	
+
 	// Compute end position.
 	// If it's the same as the current end position, then force the end position to be the player instead.
 	auto EndPosition = GetChaseEndGridPosition();
 	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
 		EndPosition == GridLocationPath[GridLocationPath.Num() - 1])
 		EndPosition = PlayerPawn->GetGridLocation();
+
+	// If we are computing the same path, then return early to avoid the post-condition check.
+	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		GridLocationPath.Num() > 0)
+	{
+		const auto First = GridLocationPath[0];
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto Last = GridLocationPath[GridLocationPath.Num() - 1];
+		if (First == StartPosition && Last == EndPosition)
+			return MovementPath;
+	}
 
 	// Compute path.
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
@@ -287,9 +342,8 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 
 	// Post-conditions.
 	check(NewMovementPath.IsValid());
-	// paths are equal because if you haven't reached 0 yet and you recompute, you will reach the same path
 	check(NewMovementPath != MovementPath);
-	
+
 	return NewMovementPath;
 }
 
@@ -340,6 +394,27 @@ AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 	return Pawn->GetGhostHouseQueue();
+}
+
+bool AGhostAiController::IsPlayerAlive() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
+	return PlayerPawn != nullptr;
+}
+
+void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const FVector NewLocation)
+{
+	if (
+		MovementPath.GetWorldLocationPath().Num() >= 2 && MovementPath.DidComplete(NewLocation, 1) ||
+		MovementPath.GetWorldLocationPath().Num() == 1 && MovementPath.WasCompleted(NewLocation)
+	)
+	{
+		const auto DebugA = MovementPath.GetWorldLocationPath().Num();
+		const auto DebugB = MovementPath.DidComplete(NewLocation, 1);
+		const auto DebugC = MovementPath.WasCompleted(NewLocation);
+		MovementPath = UpdateMovementPathWhenInChase();
+	}
 }
 
 FGridLocation AGhostAiController::GetChaseEndGridPosition_Implementation() const

@@ -20,39 +20,9 @@ class AGhostAiController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
-	// Whether we are currently running test code for the sake of debugging.
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	bool IsTesting = false;
-
-	UPROPERTY(VisibleAnywhere)
-	FMovementPath MovementPath;
-
-	UPROPERTY(VisibleAnywhere)
-	FGridLocation CurrentScatterOrigin;
-
-	UPROPERTY(VisibleAnywhere)
-	FGridLocation CurrentScatterDestination;
-
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<ULevelLoader> Level;
-
-public:
-	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
-
-	int GetLeaveGhostHousePriority() const;
-
-protected:
-	virtual void OnPossess(APawn* InPawn) override;
-	
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void BeginPlay() override;
-
-private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
-	
+
 	UFUNCTION()
 	void HandleDotsConsumedUpdated(int NewDotsConsumed);
 
@@ -69,21 +39,57 @@ private:
 		ULevelLoader* LevelInstance
 	);
 
-	FMovementPath UpdateMovementPathWhenInScatter() const;
-
-	FMovementPath UpdateMovementPathWhenInChase() const;
-
 	void ResetGhostState();
 
 	bool IsStartingPositionInGhostHouse() const;
 
 	bool IsInGhostHouse() const;
-	
+
 	AGhostHouseQueue* GetGhostHouseQueue() const;
+
+	bool IsPlayerAlive() const;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<ULevelLoader> Level;
+
+	UPROPERTY(VisibleInstanceOnly)
+	FMovementPath MovementPath;
+	
+	UPROPERTY(VisibleInstanceOnly)
+	FGridLocation CurrentScatterOrigin;
+
+	UPROPERTY(VisibleInstanceOnly)
+	FGridLocation CurrentScatterDestination;
+
+	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void BeginPlay() override;
+
+	virtual FGridLocation GetPlayerGridLocation() const;
+
+	virtual FGridLocation GetPlayerGridDirection() const;
+
+	virtual FVector GetPlayerWorldLocation() const;
+
+	FMovementPath UpdateMovementPathWhenInChase() const;
+	
+	FMovementPath UpdateMovementPathWhenInScatter();
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
 	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
+	void DecideToUpdateMovementPathInChase(FVector NewLocation);
+
 	virtual FGridLocation GetChaseEndGridPosition_Implementation() const;
+	
+	virtual void DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation);
+
+	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+
+	int GetLeaveGhostHousePriority() const;
 };
