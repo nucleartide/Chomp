@@ -11,7 +11,7 @@ class CHOMP_API AInkyAiController : public AGhostAiController
 {
 	GENERATED_BODY()
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	AGhostPawn* BlinkyPawnRef;
 	
 protected:
