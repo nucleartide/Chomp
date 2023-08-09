@@ -63,6 +63,9 @@ void AGhostAiController::Tick(float DeltaTime)
 		)
 	)
 	{
+		const auto DebugA = MovementPath.GetWorldLocationPath().Num();
+		const auto DebugB = MovementPath.DidComplete(NewLocation, 1);
+		const auto DebugC = MovementPath.WasCompleted(NewLocation);
 		MovementPath = UpdateMovementPathWhenInChase();
 	}
 
@@ -121,10 +124,12 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	{
 		auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 		auto Destination = Pawn->GetScatterDestination();
+		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInScatter();
 	}
 	else if (NewState == EChompGamePlayingSubstate::Chase)
 	{
+		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInChase();
 	}
 }
@@ -282,6 +287,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 
 	// Post-conditions.
 	check(NewMovementPath.IsValid());
+	// paths are equal because if you haven't reached 0 yet and you recompute, you will reach the same path
 	check(NewMovementPath != MovementPath);
 	
 	return NewMovementPath;

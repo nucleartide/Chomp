@@ -127,7 +127,7 @@ FMovement AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTar
 	}
 
 	// Default, return the current movement.
-	DEBUG_LOG(TEXT("Continuing to move in current direction with old target tile"));
+	DEBUG_LOG(TEXT("Player: Continuing to move in current direction with old target tile"));
 	return CurrentMovement;
 }
 

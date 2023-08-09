@@ -127,7 +127,7 @@ public:
 			-50.0 <= CurrentPathLocation.value() &&
 			CurrentPathLocation.value() <= (GridLocationPath.Num() - 1) * 100.0
 		);
-		return CurrentPathLocation >= static_cast<double>(Index);
+		return CurrentPathLocation >= (static_cast<double>(Index) * 100.0);
 	}
 
 	void DebugLog(const FString Label) const
