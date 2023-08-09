@@ -15,6 +15,16 @@ struct FMovementPath
 {
 	GENERATED_BODY()
 
+	friend bool operator==(const FMovementPath& Lhs, const FMovementPath& RHS)
+	{
+		return Lhs.GridLocationPath == RHS.GridLocationPath;
+	}
+
+	friend bool operator!=(const FMovementPath& Lhs, const FMovementPath& RHS)
+	{
+		return !(Lhs == RHS);
+	}
+
 private:
 	// Note: if you are adding more properties, you should also update the overloaded copy assignment operator.
 	UPROPERTY(VisibleAnywhere)
@@ -112,7 +122,12 @@ public:
 	bool DidComplete(const FVector& ActorLocation, const int Index) const
 	{
 		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation, WorldLocationPath);
-		return CurrentPathLocation.has_value() && CurrentPathLocation >= static_cast<double>(Index);
+		check(CurrentPathLocation.has_value());
+		check(
+			-50.0 <= CurrentPathLocation.value() &&
+			CurrentPathLocation.value() <= (GridLocationPath.Num() - 1) * 100.0
+		);
+		return CurrentPathLocation >= static_cast<double>(Index);
 	}
 
 	void DebugLog(const FString Label) const
@@ -142,7 +157,7 @@ public:
 			check(false);
 			return ActorLocation;
 		}
-		
+
 		// Compute NewPathLocation.
 		const auto NewPathLocation = CurrentPathLocation.value() + DeltaDistance;
 
@@ -190,5 +205,10 @@ public:
 	TArray<FVector> GetWorldLocationPath() const
 	{
 		return WorldLocationPath;
+	}
+
+	TArray<FGridLocation> GetGridLocationPath() const
+	{
+		return GridLocationPath;
 	}
 };

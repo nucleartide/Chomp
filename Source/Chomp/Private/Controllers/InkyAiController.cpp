@@ -10,15 +10,13 @@ void AInkyAiController::Initialize(AGhostPawn* BlinkyPawn)
 	BlinkyPawnRef = BlinkyPawn;
 }
 
-FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
+FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 {
 	// Get Blinky's grid position.
 	const auto BlinkyGridLocation = BlinkyPawnRef->GetGridLocation();
 
 	// Get the player's grid position.
-	const auto [IsValid, PlayerGridLocation] = GetPlayerGridLocation();
-	if (!IsValid)
-		return FMaybeGridLocation::Invalid();
+	const auto PlayerGridLocation = GetPlayerGridLocation();
 
 	// Get the player's grid direction.
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
@@ -56,7 +54,8 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 	auto DMagnitude = 2.0 * CMagnitude;
 	auto D = DMagnitude * CDirection;
 
-	// While the position is invalid and greater than the magnitude of C,
+	// Inch backward until we have a valid grid position.
+	// If we can't find *any* valid grid position, then default to the PlayerGridAheadLocation.
 	auto PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
 	while (DMagnitude > CMagnitude && !ULevelLoader::GetInstance(Level)->CanAiMoveHere(PendingEndWorldPos))
 	{
@@ -78,14 +77,13 @@ FMaybeGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() c
 
 	// Once you are done decrementing, the resulting grid position is your final result.
 	const auto ResultGridPosition = ULevelLoader::GetInstance(Level)->WorldToGrid(FVector2D(PendingEndWorldPos));
-	return FMaybeGridLocation{true, ResultGridPosition};
+	return ResultGridPosition;
 }
 
-FMaybeGridLocation AInkyAiController::GetPlayerGridLocation() const
+FGridLocation AInkyAiController::GetPlayerGridLocation() const
 {
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
-	return PlayerPawn
-		       ? FMaybeGridLocation::Valid(PlayerPawn->GetGridLocation())
-		       : FMaybeGridLocation::Invalid();
+	checkf(PlayerPawn, TEXT("Player must be alive, otherwise we wouldn't be calling this method"));
+	return PlayerPawn->GetGridLocation();
 }

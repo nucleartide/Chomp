@@ -69,13 +69,11 @@ private:
 		ULevelLoader* LevelInstance
 	);
 
-	void UpdateMovementPathWhenInScatter(const FGridLocation& ScatterDestination);
+	FMovementPath UpdateMovementPathWhenInScatter() const;
 
-	bool UpdateMovementPathWhenInChase();
+	FMovementPath UpdateMovementPathWhenInChase() const;
 
 	void ResetGhostState();
-
-	void SwapScatterOriginAndDestination();
 
 	bool IsStartingPositionInGhostHouse() const;
 
@@ -85,12 +83,7 @@ private:
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
-	FMaybeGridLocation GetChaseStartGridPosition() const;
-
-	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
-	FMaybeGridLocation GetChaseEndGridPosition() const;
+	FGridLocation GetChaseEndGridPosition() const;
 	
-	virtual FMaybeGridLocation GetChaseStartGridPosition_Implementation() const;
-	
-	virtual FMaybeGridLocation GetChaseEndGridPosition_Implementation() const;
+	virtual FGridLocation GetChaseEndGridPosition_Implementation() const;
 };
