@@ -20,15 +20,6 @@ class AGhostAiController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
-	UPROPERTY(VisibleAnywhere)
-	FMovementPath MovementPath;
-
-	UPROPERTY(VisibleAnywhere)
-	FGridLocation CurrentScatterOrigin;
-
-	UPROPERTY(VisibleAnywhere)
-	FGridLocation CurrentScatterDestination;
-
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
 
@@ -48,10 +39,6 @@ class AGhostAiController : public AAIController
 		ULevelLoader* LevelInstance
 	);
 
-	FMovementPath UpdateMovementPathWhenInScatter() const;
-
-	FMovementPath UpdateMovementPathWhenInChase() const;
-
 	void ResetGhostState();
 
 	bool IsStartingPositionInGhostHouse() const;
@@ -64,6 +51,15 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
 
+	UPROPERTY(VisibleAnywhere)
+	FMovementPath MovementPath;
+	
+	UPROPERTY(VisibleInstanceOnly)
+	FGridLocation CurrentScatterOrigin;
+
+	UPROPERTY(VisibleInstanceOnly)
+	FGridLocation CurrentScatterDestination;
+
 	virtual void OnPossess(APawn* InPawn) override;
 
 	virtual void Tick(float DeltaTime) override;
@@ -74,12 +70,23 @@ protected:
 
 	virtual FGridLocation GetPlayerGridDirection() const;
 
+	virtual FVector GetPlayerWorldLocation() const;
+
+	FMovementPath UpdateMovementPathWhenInChase() const;
+	
+	FMovementPath UpdateMovementPathWhenInScatter() const;
+
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
+	
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
+	void DecideToUpdateMovementPathInChase(FVector NewLocation);
 
 	virtual FGridLocation GetChaseEndGridPosition_Implementation() const;
 	
+	virtual void DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation);
+
 	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
 
 	int GetLeaveGhostHousePriority() const;
