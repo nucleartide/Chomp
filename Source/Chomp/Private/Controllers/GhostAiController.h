@@ -20,10 +20,6 @@ class AGhostAiController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
-	// Whether we are currently running test code for the sake of debugging.
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	bool IsTesting = false;
-
 	UPROPERTY(VisibleAnywhere)
 	FMovementPath MovementPath;
 
@@ -33,26 +29,9 @@ class AGhostAiController : public AAIController
 	UPROPERTY(VisibleAnywhere)
 	FGridLocation CurrentScatterDestination;
 
-protected:
-	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<ULevelLoader> Level;
-
-public:
-	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
-
-	int GetLeaveGhostHousePriority() const;
-
-protected:
-	virtual void OnPossess(APawn* InPawn) override;
-	
-	virtual void Tick(float DeltaTime) override;
-
-	virtual void BeginPlay() override;
-
-private:
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
-	
+
 	UFUNCTION()
 	void HandleDotsConsumedUpdated(int NewDotsConsumed);
 
@@ -78,12 +57,30 @@ private:
 	bool IsStartingPositionInGhostHouse() const;
 
 	bool IsInGhostHouse() const;
-	
+
 	AGhostHouseQueue* GetGhostHouseQueue() const;
+
+protected:
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<ULevelLoader> Level;
+
+	virtual void OnPossess(APawn* InPawn) override;
+
+	virtual void Tick(float DeltaTime) override;
+
+	virtual void BeginPlay() override;
+
+	virtual FGridLocation GetPlayerGridLocation() const;
+
+	virtual FGridLocation GetPlayerGridDirection() const;
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
-	
+
 	virtual FGridLocation GetChaseEndGridPosition_Implementation() const;
+	
+	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+
+	int GetLeaveGhostHousePriority() const;
 };

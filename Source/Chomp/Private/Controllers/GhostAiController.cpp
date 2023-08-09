@@ -4,7 +4,9 @@
 #include "Math/UnrealMathUtility.h"
 #include "AStar/AStar.h"
 #include "ChompGameState.h"
+#include "ChompPlayerController.h"
 #include "LevelGenerator/LevelLoader.h"
+#include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
@@ -112,6 +114,23 @@ void AGhostAiController::BeginPlay()
 	}
 }
 
+FGridLocation AGhostAiController::GetPlayerGridLocation() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
+	checkf(PlayerPawn, TEXT("Player must be alive, otherwise we wouldn't be calling this method"));
+	return PlayerPawn->GetGridLocation();
+}
+
+FGridLocation AGhostAiController::GetPlayerGridDirection() const
+{
+	const auto PlayerController = FSafeGet::PlayerController(this, 0);
+	const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController);
+	check(ChompPlayerController);
+	const auto PlayerGridDirection = ChompPlayerController->GetCurrentMovement();
+	return PlayerGridDirection;
+}
+
 /**
  * Sync the GhostAIController with the playing sub-state of the game.
  */
@@ -134,6 +153,7 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubst
 	}
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -259,11 +279,11 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
 	checkf(PlayerPawn, TEXT("Player is alive"));
-	
+
 	// Compute start position.
 	const auto Pawn = FSafeGet::Pawn<AMovablePawn>(this);
 	const auto StartPosition = Pawn->GetGridLocation();
-	
+
 	// Compute end position.
 	// If it's the same as the current end position, then force the end position to be the player instead.
 	auto EndPosition = GetChaseEndGridPosition();
@@ -289,7 +309,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 	check(NewMovementPath.IsValid());
 	// paths are equal because if you haven't reached 0 yet and you recompute, you will reach the same path
 	check(NewMovementPath != MovementPath);
-	
+
 	return NewMovementPath;
 }
 

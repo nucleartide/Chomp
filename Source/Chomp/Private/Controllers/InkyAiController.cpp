@@ -1,9 +1,7 @@
 #include "InkyAiController.h"
 
 #include "ChompPlayerController.h"
-#include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
-#include "Utils/SafeGet.h"
 
 void AInkyAiController::Initialize(AGhostPawn* BlinkyPawn)
 {
@@ -12,17 +10,12 @@ void AInkyAiController::Initialize(AGhostPawn* BlinkyPawn)
 
 FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 {
-	// Get Blinky's grid position.
+	// Get the grid position under Blinky.
 	const auto BlinkyGridLocation = BlinkyPawnRef->GetGridLocation();
 
-	// Get the player's grid position.
+	// Get the player's info.
 	const auto PlayerGridLocation = GetPlayerGridLocation();
-
-	// Get the player's grid direction.
-	const auto PlayerController = FSafeGet::PlayerController(this, 0);
-	const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController);
-	check(ChompPlayerController);
-	const auto PlayerGridDirection = ChompPlayerController->GetCurrentMovement();
+	const auto PlayerGridDirection = GetPlayerGridDirection();
 
 	// Get the grid position 2 meters ahead (as much as possible) of PlayerGridLocation.
 	auto PlayerGridAheadLocation = PlayerGridLocation;
@@ -34,7 +27,6 @@ FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 				PlayerGridAheadLocation.X + PlayerGridDirection.X,
 				PlayerGridAheadLocation.Y + PlayerGridDirection.Y
 			};
-
 			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->CanAiMoveHere(LocationToTest))
 				PlayerGridAheadLocation = LocationToTest;
 			else
@@ -78,12 +70,4 @@ FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 	// Once you are done decrementing, the resulting grid position is your final result.
 	const auto ResultGridPosition = ULevelLoader::GetInstance(Level)->WorldToGrid(FVector2D(PendingEndWorldPos));
 	return ResultGridPosition;
-}
-
-FGridLocation AInkyAiController::GetPlayerGridLocation() const
-{
-	const auto PlayerController = FSafeGet::PlayerController(this, 0);
-	const auto PlayerPawn = PlayerController->GetPawn<AChompPawn>();
-	checkf(PlayerPawn, TEXT("Player must be alive, otherwise we wouldn't be calling this method"));
-	return PlayerPawn->GetGridLocation();
 }

@@ -13,12 +13,10 @@ class CHOMP_API AInkyAiController : public AGhostAiController
 
 	UPROPERTY(VisibleAnywhere)
 	AGhostPawn* BlinkyPawnRef;
-
+	
+protected:
+	virtual FGridLocation GetChaseEndGridPosition_Implementation() const override;
+	
 public:
 	void Initialize(AGhostPawn* BlinkyPawn);
-
-	virtual FGridLocation GetChaseEndGridPosition_Implementation() const override;
-
-private:
-	FGridLocation GetPlayerGridLocation() const;
 };
