@@ -88,7 +88,8 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 
 	if (NewState != EChompGameStateEnum::Playing)
 	{
-		const auto [OldSubstate, NewSubstate] = CurrentSubstate.StopPlaying();
+		const auto World = FSafeGet::World(this);
+		const auto [OldSubstate, NewSubstate] = CurrentSubstate.StopPlaying(World->GetTimeSeconds());
 		check(OldSubstate != NewSubstate);
 		OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
 	}
