@@ -57,7 +57,7 @@ void AGhostAiController::Tick(float DeltaTime)
 	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// Compute a new movement path if conditions are met.
-	if (const auto PlayingSubstate = GameState->GetPlayingSubstate();
+	if (const auto PlayingSubstate = GameState->GetSubstateEnum();
 		PlayingSubstate == EChompPlayingSubstateEnum::Scatter &&
 		MovementPath.WasCompleted(NewLocation))
 	{
@@ -410,8 +410,11 @@ void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const 
 		MovementPath.GetWorldLocationPath().Num() == 1 && MovementPath.WasCompleted(NewLocation)
 	)
 	{
+		// ReSharper disable once CppDeclaratorNeverUsed
 		const auto DebugA = MovementPath.GetWorldLocationPath().Num();
+		// ReSharper disable once CppDeclaratorNeverUsed
 		const auto DebugB = MovementPath.DidComplete(NewLocation, 1);
+		// ReSharper disable once CppDeclaratorNeverUsed
 		const auto DebugC = MovementPath.WasCompleted(NewLocation);
 		MovementPath = UpdateMovementPathWhenInChase();
 	}
