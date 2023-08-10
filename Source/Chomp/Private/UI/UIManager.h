@@ -48,7 +48,7 @@ private:
 	void HandleDotsCleared();
 
 	UFUNCTION()
-	void HandlePlayerDeath(EChompGameState OldState, EChompGameState NewState);
+	void HandlePlayerDeath(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 
 	UFUNCTION()
 	void HandleRestartGameClicked();

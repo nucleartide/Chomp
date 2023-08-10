@@ -26,6 +26,9 @@ public:
 
 	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
 	TSubclassOf<AStaticMeshActor> PacmanDot;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
+	TSubclassOf<AStaticMeshActor> EnergizerDot;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
 	TSubclassOf<AStaticMeshActor> GateTile;
@@ -63,5 +66,5 @@ private:
 	 * Reset the level's tiles to that of the original level data.
 	 */
 	UFUNCTION(BlueprintCallable)
-	void ResetStateOfEverything(EChompGameState OldState, EChompGameState NewState);
+	void ResetStateOfEverything(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 };

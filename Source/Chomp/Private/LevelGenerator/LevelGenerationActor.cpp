@@ -6,6 +6,7 @@
 #include "Actors/ConsumableDotActor.h"
 #include "AStar/GridLocation.h"
 #include "ChompGameState.h"
+#include "Actors/ConsumableEnergizerActor.h"
 #include "Controllers/ChompPlayerController.h"
 #include "Controllers/GhostAiController.h"
 #include "Kismet/GameplayStatics.h"
@@ -93,29 +94,56 @@ void ALevelGenerationActor::GenerateTiles()
 				// Spawn dot actor.
 				auto BogusSpawn = Level->GridToWorld(FGridLocation{-100, -100});
 				FVector BogusLocation(BogusSpawn.X, BogusSpawn.Y, 0.0f);
+
 				// Spawn in a spot away from the player to avoid spawn failures.
 				FActorSpawnParameters Params;
 				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-				auto Actor = GetWorld()->SpawnActor<AStaticMeshActor>(PacmanDot, BogusLocation, FRotator::ZeroRotator,
-				                                                      Params);
-				check(Actor);
+				auto ConsumableDotActor = GetWorld()->SpawnActor<AConsumableDotActor>(
+					PacmanDot,
+					BogusLocation,
+					FRotator::ZeroRotator,
+					Params
+				);
+				check(ConsumableDotActor);
 
 				// Need this so we can change the dot's location.
-				Actor->SetMobility(EComponentMobility::Movable);
+				ConsumableDotActor->SetMobility(EComponentMobility::Movable);
 
 				// Set the actor location to the actual location.
 				FGridLocation GridPosition{X, Y};
 				auto WorldPosition = Level->GridToWorld(GridPosition);
 				FVector Location(WorldPosition.X, WorldPosition.Y, 0.0f);
-				Actor->SetActorLocation(Location);
-
-				// Finally, attach a handler for when a dot is consumed.
-				auto ConsumableDotActor = Cast<AConsumableDotActor>(Actor);
-				check(ConsumableDotActor);
+				ConsumableDotActor->SetActorLocation(Location);
 
 				// Keep track of the generated dot.
 				Tiles.Add(ConsumableDotActor);
 				NumberOfDotsRemaining++;
+			}
+			else if (Character == 'O')
+			{
+				// Compute spawn position.
+				const auto WorldPosition = [X, Y, Level]()
+				{
+					const FGridLocation GridPosition{X, Y};
+					const auto WorldPosition2D = Level->GridToWorld(GridPosition);
+					return FVector(WorldPosition2D.X, WorldPosition2D.Y, 0.0);
+				}();
+
+				// Compute spawn parameters.
+				FActorSpawnParameters Params;
+				Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+				// Spawn and check.
+				const auto Actor = GetWorld()->SpawnActor<AConsumableEnergizerActor>(
+					EnergizerDot,
+					WorldPosition,
+					FRotator::ZeroRotator,
+					Params
+				);
+				check(Actor);
+
+				// Keep track of the generated actor for later cleanup.
+				Tiles.Add(Actor);
 			}
 			else if (Character == 'x' || Character == 'o' || Character == 'G')
 			{
@@ -131,9 +159,9 @@ void ALevelGenerationActor::GenerateTiles()
 	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetStateOfEverything(const EChompGameState OldState, const EChompGameState NewState)
+void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
 {
-	if (NewState == EChompGameState::Playing)
+	if (NewState == EChompGameStateEnum::Playing)
 	{
 		// First, clean up the map.
 		ClearLeftoverTiles();

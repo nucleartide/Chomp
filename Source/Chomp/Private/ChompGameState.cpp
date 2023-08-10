@@ -1,5 +1,6 @@
 #include "ChompGameState.h"
 
+#include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
 AChompGameState::AChompGameState()
@@ -21,6 +22,12 @@ void AChompGameState::ConsumeDot()
 	UpdateNumberOfDotsConsumed(NumberOfDotsConsumed.GetValue() + 1);
 }
 
+void AChompGameState::ConsumeEnergizerDot()
+{
+	// TODO.
+	DEBUG_LOG(TEXT("Consumed energizer dot."));
+}
+
 void AChompGameState::UpdateScore(const int NewScore)
 {
 	Score = NewScore;
@@ -33,7 +40,7 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 	if (NumberOfDotsRemaining == 0)
 	{
 		OnDotsClearedDelegate.Broadcast();
-		TransitionTo(EChompGameState::GameOverWin);
+		TransitionTo(EChompGameStateEnum::GameOverWin);
 	}
 }
 
@@ -46,16 +53,16 @@ void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsum
 
 void AChompGameState::LoseGame()
 {
-	TransitionTo(EChompGameState::GameOverLose);
+	TransitionTo(EChompGameStateEnum::GameOverLose);
 }
 
 void AChompGameState::StartGame()
 {
-	TransitionTo(EChompGameState::Playing);
+	TransitionTo(EChompGameStateEnum::Playing);
 	GameStartTime = GetWorld()->GetTimeSeconds();
 }
 
-void AChompGameState::TransitionTo(EChompGameState NewState)
+void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 {
 	auto OldState = GameState;
 	check(OldState != NewState);
@@ -63,7 +70,7 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
 	GameState = NewState;
 	OnGameStateChangedDelegate.Broadcast(OldState, NewState);
 
-	if (NewState != EChompGameState::Playing)
+	if (NewState != EChompGameStateEnum::Playing)
 	{
 		auto OldGamePlayingState = LastKnownGamePlayingSubstate;
 		auto NewGamePlayingState = EChompGamePlayingSubstate::None;
@@ -73,7 +80,7 @@ void AChompGameState::TransitionTo(EChompGameState NewState)
 	}
 }
 
-EChompGameState AChompGameState::GetEnum() const
+EChompGameStateEnum AChompGameState::GetEnum() const
 {
 	return GameState;
 }
@@ -121,7 +128,7 @@ void AChompGameState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (GameState == EChompGameState::Playing)
+	if (GameState == EChompGameStateEnum::Playing)
 	{
 		// Compute the last known game playing state.
 		const auto CurrentWave = GetPlayingSubstate();

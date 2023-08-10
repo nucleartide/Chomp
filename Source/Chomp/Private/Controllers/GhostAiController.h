@@ -89,7 +89,7 @@ public:
 	
 	virtual void DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation);
 
-	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+	void HandleGameStateChanged(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 
 	int GetLeaveGhostHousePriority() const;
 };

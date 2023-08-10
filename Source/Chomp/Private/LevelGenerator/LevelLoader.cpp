@@ -63,13 +63,13 @@ void ULevelLoader::LoadLevel()
 			{
 				GhostHouseTiles.insert(FGridLocation{X, Y});
 			}
-			else if (Character == ' ' || Character == 'o') // ' ' = dot, 'o' = no dot
+			else if (Character == ' ' || Character == 'o' || Character == 'O') // ' ' = dot, 'o' = no dot
 			{
 				// No-op.
 			}
 			else
 			{
-				check(false); // Character is not supported in our level format.
+				checkf(false, TEXT("Character is not supported in our level format."));
 			}
 		}
 	}

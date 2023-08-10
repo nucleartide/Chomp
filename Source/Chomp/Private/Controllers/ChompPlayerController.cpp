@@ -44,10 +44,10 @@ void AChompPlayerController::OnMoveVertical(const float Input)
 		TimeThatVerticalAxisWasSet = World->GetRealTimeSeconds();
 }
 
-void AChompPlayerController::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
+void AChompPlayerController::HandleGameRestarted(EChompGameStateEnum OldState, EChompGameStateEnum NewState)
 {
 	check(OldState != NewState);
-	if (NewState == EChompGameState::Playing)
+	if (NewState == EChompGameStateEnum::Playing)
 		ResetMovement();
 }
 
@@ -152,7 +152,7 @@ void AChompPlayerController::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 
 	if (const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-		GameState->GetEnum() != EChompGameState::Playing)
+		GameState->GetEnum() != EChompGameStateEnum::Playing)
 		return;
 
 	const auto MovablePawn = GetPawn<AMovablePawn>();

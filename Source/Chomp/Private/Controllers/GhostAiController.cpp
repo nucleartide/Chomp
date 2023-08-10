@@ -25,7 +25,7 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Early return if not playing.
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-	if (GameState->GetEnum() != EChompGameState::Playing)
+	if (GameState->GetEnum() != EChompGameStateEnum::Playing)
 		return;
 
 	// Early return if in the ghost house.
@@ -174,10 +174,10 @@ void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
 /**
  * When the game starts playing, reset the position of the pawn.
  */
-void AGhostAiController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
+void AGhostAiController::HandleGameStateChanged(EChompGameStateEnum OldState, EChompGameStateEnum NewState)
 {
 	check(OldState != NewState);
-	if (NewState == EChompGameState::Playing)
+	if (NewState == EChompGameStateEnum::Playing)
 	{
 		ResetGhostState();
 	}

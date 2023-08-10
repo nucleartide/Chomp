@@ -7,7 +7,7 @@
 #include "ChompGameState.generated.h"
 
 UENUM(BlueprintType)
-enum class EChompGameState : uint8
+enum class EChompGameStateEnum : uint8
 {
 	None,
 	Playing,
@@ -16,7 +16,7 @@ enum class EChompGameState : uint8
 };
 
 /**
- * When in the EChompGameState::Playing state, these would be the sub-states.
+ * When in the EChompGameStateEnum::Playing state, these would be the sub-states.
  */
 UENUM()
 enum class EChompGamePlayingSubstate : uint8
@@ -49,8 +49,8 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature, int, Score
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdatedSignature, int, NewDotsConsumed);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature,
-                                             EChompGameState, OldState,
-                                             EChompGameState, NewState);
+                                             EChompGameStateEnum, OldState,
+                                             EChompGameStateEnum, NewState);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature,
                                              EChompGamePlayingSubstate, OldSubstate,
@@ -67,23 +67,23 @@ class AChompGameState : public AGameStateBase
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TArray<FWave> Waves;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	int Score = 0;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	int NumberOfDotsRemaining = 0;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(0, nullptr);
 	
-	UPROPERTY(VisibleAnywhere)
-	EChompGameState GameState = EChompGameState::None;
+	UPROPERTY(VisibleInstanceOnly)
+	EChompGameStateEnum GameState = EChompGameStateEnum::None;
 
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleInstanceOnly)
 	EChompGamePlayingSubstate LastKnownGamePlayingSubstate = EChompGamePlayingSubstate::None;
 
-	// The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameState::Playing state.
-	UPROPERTY(VisibleAnywhere)
+	// The time (as reported by UWorld::GetTimeSeconds) when the game entered into an EChompGameStateEnum::Playing state.
+	UPROPERTY(VisibleInstanceOnly)
 	float GameStartTime = 0.0f;
 
 public:
@@ -108,7 +108,9 @@ public:
 
 	void ConsumeDot();
 
-	EChompGameState GetEnum() const;
+	void ConsumeEnergizerDot();
+
+	EChompGameStateEnum GetEnum() const;
 
 	int GetScore() const;
 
@@ -134,5 +136,5 @@ private:
 
 	float GetTimeSinceStart() const;
 
-	void TransitionTo(EChompGameState NewState);
+	void TransitionTo(EChompGameStateEnum NewState);
 };

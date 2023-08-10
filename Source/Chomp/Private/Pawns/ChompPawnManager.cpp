@@ -6,12 +6,12 @@
 void AChompPawnManager::BeginPlay()
 {
 	Super::BeginPlay();
-	HandleGameRestarted(EChompGameState::None, EChompGameState::Playing);
+	HandleGameRestarted(EChompGameStateEnum::None, EChompGameStateEnum::Playing);
 }
 
-void AChompPawnManager::HandleGameRestarted(EChompGameState OldState, EChompGameState NewState)
+void AChompPawnManager::HandleGameRestarted(EChompGameStateEnum OldState, EChompGameStateEnum NewState)
 {
-	if (NewState == EChompGameState::Playing)
+	if (NewState == EChompGameStateEnum::Playing)
 	{
 		auto LevelInstance = ULevelLoader::GetInstance(Level);
 		auto SpawnWorldPosition2D = LevelInstance->GridToWorld(SpawnGridPosition);

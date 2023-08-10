@@ -52,7 +52,7 @@ public:
 	AChompPlayerController();
 
 	// Handle game restarts.
-	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
+	void HandleGameRestarted(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 
 	FGridLocation GetCurrentMovement() const;
 
