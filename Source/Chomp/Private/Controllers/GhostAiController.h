@@ -21,7 +21,7 @@ class AGhostAiController : public AAIController
 	bool DebugAStarMap = false;
 
 	UFUNCTION()
-	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
+	void HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState, EChompPlayingSubstateEnum NewState);
 
 	UFUNCTION()
 	void HandleDotsConsumedUpdated(int NewDotsConsumed);

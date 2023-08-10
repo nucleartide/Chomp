@@ -58,12 +58,12 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Compute a new movement path if conditions are met.
 	if (const auto PlayingSubstate = GameState->GetPlayingSubstate();
-		PlayingSubstate == EChompGamePlayingSubstate::Scatter &&
+		PlayingSubstate == EChompPlayingSubstateEnum::Scatter &&
 		MovementPath.WasCompleted(NewLocation))
 	{
 		MovementPath = UpdateMovementPathWhenInScatter();
 	}
-	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase)
+	else if (PlayingSubstate == EChompPlayingSubstateEnum::Chase)
 	{
 		DecideToUpdateMovementPathInChase(NewLocation);
 	}
@@ -142,16 +142,16 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
  * Sync the GhostAIController with the playing sub-state of the game.
  */
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState,
-                                                          EChompGamePlayingSubstate NewState)
+void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState,
+                                                          EChompPlayingSubstateEnum NewState)
 {
 	check(OldState != NewState);
-	if (NewState == EChompGamePlayingSubstate::Scatter)
+	if (NewState == EChompPlayingSubstateEnum::Scatter)
 	{
 		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInScatter();
 	}
-	else if (NewState == EChompGamePlayingSubstate::Chase)
+	else if (NewState == EChompPlayingSubstateEnum::Chase)
 	{
 		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInChase();

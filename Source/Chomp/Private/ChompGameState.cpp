@@ -1,5 +1,6 @@
 #include "ChompGameState.h"
 
+#include "GameState/Wave.h"
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
@@ -24,8 +25,13 @@ void AChompGameState::ConsumeDot()
 
 void AChompGameState::ConsumeEnergizerDot()
 {
-	// TODO.
 	DEBUG_LOG(TEXT("Consumed energizer dot."));
+	UpdateScore(Score + ScoreMultiplier * 10);
+
+#if false
+	UPROPERTY(VisibleInstanceOnly)
+	EChompPlayingSubstateEnum LastKnownGamePlayingSubstate = EChompPlayingSubstateEnum::None;
+#endif
 }
 
 void AChompGameState::UpdateScore(const int NewScore)
@@ -73,7 +79,7 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 	if (NewState != EChompGameStateEnum::Playing)
 	{
 		auto OldGamePlayingState = LastKnownGamePlayingSubstate;
-		auto NewGamePlayingState = EChompGamePlayingSubstate::None;
+		auto NewGamePlayingState = EChompPlayingSubstateEnum::None;
 		check(OldGamePlayingState != NewGamePlayingState);
 		LastKnownGamePlayingSubstate = NewGamePlayingState;
 		OnGamePlayingStateChangedDelegate.Broadcast(OldGamePlayingState, NewGamePlayingState);
@@ -90,7 +96,7 @@ int AChompGameState::GetScore() const
 	return Score;
 }
 
-EChompGamePlayingSubstate AChompGameState::GetPlayingSubstate() const
+EChompPlayingSubstateEnum AChompGameState::GetPlayingSubstate() const
 {
 	auto TimeSinceStart = GetTimeSinceStart();
 	auto DurationCounter = 0.0;
@@ -100,7 +106,7 @@ EChompGamePlayingSubstate AChompGameState::GetPlayingSubstate() const
 		if (Duration < 0.0f)
 		{
 			auto DurationStart = DurationCounter;
-			return TimeSinceStart >= DurationStart ? PlayingState : EChompGamePlayingSubstate::None;
+			return TimeSinceStart >= DurationStart ? PlayingState : EChompPlayingSubstateEnum::None;
 		}
 
 		auto DurationStart = DurationCounter;
@@ -113,9 +119,8 @@ EChompGamePlayingSubstate AChompGameState::GetPlayingSubstate() const
 		DurationCounter += Duration;
 	}
 
-	// The "Waves" configuration is malformed if we reach this point. Fix the config!
-	check(false);
-	return EChompGamePlayingSubstate::None;
+	checkf(false, TEXT("The 'Waves' configuration is malformed if we reach this point. Fix the config!"));
+	return EChompPlayingSubstateEnum::None;
 }
 
 void AChompGameState::BeginPlay()
