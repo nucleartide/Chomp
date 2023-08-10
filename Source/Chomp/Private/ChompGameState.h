@@ -49,29 +49,102 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	double TimeSpentInFrightenedSubstate = 0.0;
 
+	// Reference to the configured Waves of ghost behavior.
+	TArray<FWave> Waves;
+
+	// Reference to frightened substate duration.
+	double FrightenedSubstateDuration;
+
 public:
 	[[nodiscard]] FCurrentSubstate(
 		const EChompPlayingSubstateEnum LastPlayingSubstate,
 		const double PlayingStartTime,
 		const double FrightenedStartTime,
-		const double TimeSpentInFrightenedSubstate
+		const double TimeSpentInFrightenedSubstate,
+		const TArray<FWave>& Waves,
+		const double FrightenedSubstateDuration
 	):
 		LastPlayingSubstate(LastPlayingSubstate),
 		PlayingStartTime(PlayingStartTime),
 		FrightenedStartTime(FrightenedStartTime),
-		TimeSpentInFrightenedSubstate(TimeSpentInFrightenedSubstate)
+		TimeSpentInFrightenedSubstate(TimeSpentInFrightenedSubstate),
+		Waves(Waves),
+		FrightenedSubstateDuration(FrightenedSubstateDuration)
 	{
 	}
 
-	FCurrentSubstate& operator=(const FCurrentSubstate& Other)
+	double GetPlayingStartTime() const
 	{
-		if (this == &Other)
-			return *this;
-		LastPlayingSubstate = Other.LastPlayingSubstate;
-		PlayingStartTime = Other.PlayingStartTime;
-		FrightenedStartTime = Other.FrightenedStartTime;
-		TimeSpentInFrightenedSubstate = Other.TimeSpentInFrightenedSubstate;
-		return *this;
+		return PlayingStartTime;
+	}
+
+	EChompPlayingSubstateEnum GetLastPlayingSubstate() const
+	{
+		return LastPlayingSubstate;
+	}
+
+	// TODO: Get the existing game features working first.
+	void StartGame(double PlayingStartTime)
+	{
+		// Set playing start time.
+		// ...
+	}
+
+	// TODO: Get the existing game features working first.
+	void Tick(double WorldTimeInSeconds)
+	{
+		// Compute the current substate.
+		// ...
+
+		// Grab a reference to LastPlayingSubstate. We're about to overwrite it.
+		// ...
+
+		// Assign LastPlayingSubstate to the current substate.
+		// ...
+
+		// Return the current substate and reference to old substate to the caller.
+		// ...
+	}
+
+	// TODO(2): Do this after the existing game features have been refactored to use this struct.
+	// TODO: You will need to update the behavior of Tick() to take into account this Frightened interruption.
+	void Frighten(double CurrentWorldTimeInSeconds)
+	{
+		// Enter the Frightened substate.
+		// ...
+	}
+
+private:
+	EChompPlayingSubstateEnum GetCurrentPlayingSubstate() const
+	{
+		auto TimeSinceStart = GetTimeSinceStart();
+		/*
+    	const auto World = GetWorld();
+    	check(World);
+    	return World->GetTimeSeconds() - CurrentSubstate.GetPlayingStartTime();
+    	*/
+		auto DurationCounter = 0.0;
+
+		for (const auto& [PlayingState, Duration] : Waves)
+		{
+			if (Duration < 0.0f)
+			{
+				auto DurationStart = DurationCounter;
+				return TimeSinceStart >= DurationStart ? PlayingState : EChompPlayingSubstateEnum::None;
+			}
+
+			auto DurationStart = DurationCounter;
+			if (auto DurationEnd = DurationCounter + Duration; DurationStart <= TimeSinceStart && TimeSinceStart <
+				DurationEnd)
+			{
+				return PlayingState;
+			}
+
+			DurationCounter += Duration;
+		}
+
+		checkf(false, TEXT("The 'Waves' configuration is malformed if we reach this point. Fix the config!"));
+		return EChompPlayingSubstateEnum::None;
 	}
 };
 
@@ -144,8 +217,6 @@ public:
 	EChompGameStateEnum GetEnum() const;
 
 	int GetScore() const;
-
-	EChompPlayingSubstateEnum GetPlayingSubstate() const;
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;
 
