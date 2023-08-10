@@ -192,4 +192,6 @@ public:
 			: false
 		);
 	}
+
+	// TODO: When energizer dot is consumed, call Frighten in the gamestate.
 };
