@@ -193,8 +193,9 @@ public:
 		);
 
 		// TODO: for ghost frightened behavior
-		// [ ] visual change
-		// [ ] create notion of intersection nodes (encoded on map)
+		// [x] visual change
+		// [x] create notion of intersection nodes (encoded on map)
+		//     an intersection node is a node that has at least one horizontally adjacent node, and one vertically adjacent node
 		// [ ] compute movement path: random next intersection
 		//     get current grid location
 		//     if current grid location is not an intersection
