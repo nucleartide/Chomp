@@ -202,7 +202,8 @@ public:
 		//         choose a random axis-aligned direction
 		//         find the intersection in that random direction
 		//         compute movement path to that direction
-		// [ ] debug the above
+		// [x] debug the above
+		// [x] get ghosts moving
 		// [ ] once intersection is reached, compute random next axis-aligned intersection, but omit the prev direction.
 		//     algorithm is the same
 		// [ ] once frightened behavior is implemented, halve the speed via configuration

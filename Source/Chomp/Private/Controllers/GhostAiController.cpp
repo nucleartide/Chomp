@@ -12,6 +12,7 @@
 #include "Utils/SafeGet.h"
 #include "Pawns/MovablePawn.h"
 #include "Pawns/Movement/MovementResult.h"
+#include "Utils/ArrayHelpers.h"
 
 void AGhostAiController::OnPossess(APawn* InPawn)
 {
@@ -40,15 +41,11 @@ void AGhostAiController::Tick(float DeltaTime)
 	if (!IsPlayerAlive())
 		return;
 
-	// For now, early return when in Frightened state.
-	if (GameState->GetSubstateEnum() == EChompPlayingSubstateEnum::Frightened)
-		return;
-
 	// Preconditions.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
 	{
 		const auto ActorLocation = MovablePawn->GetActorLocation();
-		checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
+	checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
 	}
 
 	// Compute new location and rotation.
@@ -70,6 +67,12 @@ void AGhostAiController::Tick(float DeltaTime)
 	else if (PlayingSubstate == EChompPlayingSubstateEnum::Chase)
 	{
 		DecideToUpdateMovementPathInChase(NewLocation);
+	}
+	else if (
+		PlayingSubstate == EChompPlayingSubstateEnum::Frightened &&
+		MovementPath.WasCompleted(NewLocation))
+	{
+		MovementPath = UpdateMovementPathWhenInFrightened();
 	}
 
 #if WITH_EDITOR
@@ -311,21 +314,10 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 {
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
-	
-	// If the ghost's current tile is within the ghost-house or gate tile, do nothing.
-	if (ULevelLoader::GetInstance(Level)->IsGhostHouse(GridLocation) ||
-		ULevelLoader::GetInstance(Level)->IsGateTile(GridLocation))
-	{
-		return MovementPath;
-	}
 
-	FGridLocation Dir;
-	{
-		const auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
-		const auto RandomDirIndex = FMath::RandRange(0, AdjacentTiles.size() - 1);
-		const auto AdjacentTile = AdjacentTiles[RandomDirIndex];
-		Dir = AdjacentTile - GridLocation;
-	}
+	// Jumble adjacent tiles.
+	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
+	FArrayHelpers::Randomize(AdjacentTiles);
 
 	// Find the intersection tile in our selected direction.
 	const auto MaxDimension = FMath::Max(
@@ -333,29 +325,40 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 		ULevelLoader::GetInstance(Level)->GetLevelWidth()
 	);
 
-	// Iterate at most MaxDimension times. If we haven't found an intersection node by then, then throw an exception.
-	for (auto i = 1; i <= MaxDimension; i++)
+	// Iterate over tile choices.
+	for (const auto& Tile : AdjacentTiles)
 	{
-		if (const auto PossibleIntersectionTile = GridLocation + FGridLocation{Dir.X * i, Dir.Y * i};
-			ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
+		// Compute direction of adjacent tile.
+		const auto [DirX, DirY] = Tile - GridLocation;
+
+		// Iterate at most MaxDimension times in Dir.
+		for (auto i = 1; i <= MaxDimension; i++)
 		{
-			const auto Path = ComputePath(
-				ULevelLoader::GetInstance(Level),
-				FVector2D(GhostPawn->GetActorLocation()),
-				GridLocation,
-				PossibleIntersectionTile,
-				DebugAStarMap
-			);
+			const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
 
-			const auto NewMovementPath = FMovementPath(
-				GhostPawn->GetActorLocation(),
-				Path,
-				ULevelLoader::GetInstance(Level)
-			);
+			if (ULevelLoader::GetInstance(Level)->IsWall(PossibleIntersectionTile))
+				break;
+			
+			if (ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
+			{
+				const auto Path = ComputePath(
+					ULevelLoader::GetInstance(Level),
+					FVector2D(GhostPawn->GetActorLocation()),
+					GridLocation,
+					PossibleIntersectionTile,
+					DebugAStarMap
+				);
 
-			NewMovementPath.DebugLog(TEXT("Frightened"));
+				const auto NewMovementPath = FMovementPath(
+					GhostPawn->GetActorLocation(),
+					Path,
+					ULevelLoader::GetInstance(Level)
+				);
 
-			return NewMovementPath;
+				NewMovementPath.DebugLog(TEXT("Frightened"));
+
+				return NewMovementPath;
+			}
 		}
 	}
 
