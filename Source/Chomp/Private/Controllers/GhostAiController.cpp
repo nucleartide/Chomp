@@ -40,6 +40,10 @@ void AGhostAiController::Tick(float DeltaTime)
 	if (!IsPlayerAlive())
 		return;
 
+	// For now, early return when in Frightened state.
+	if (GameState->GetSubstateEnum() == EChompPlayingSubstateEnum::Frightened)
+		return;
+
 	// Preconditions.
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
 	{

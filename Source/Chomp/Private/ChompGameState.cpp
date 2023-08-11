@@ -23,14 +23,9 @@ void AChompGameState::ConsumeDot()
 
 void AChompGameState::ConsumeEnergizerDot()
 {
-	DEBUG_LOG(TEXT("Consumed energizer dot."));
 	UpdateScore(Score + ScoreMultiplier * 10);
-
-	// TODO.
-#if false
-	UPROPERTY(VisibleInstanceOnly)
-	EChompPlayingSubstateEnum LastKnownGamePlayingSubstate = EChompPlayingSubstateEnum::None;
-#endif
+	const auto World = FSafeGet::World(this);
+	CurrentSubstate.Frighten(World->GetTimeSeconds());
 }
 
 void AChompGameState::UpdateScore(const int NewScore)

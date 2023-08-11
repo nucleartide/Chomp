@@ -189,9 +189,7 @@ public:
 		check(
 			IsCurrentlyFrightened
 			? TimeSpentInFrightenedSubstate >= CurrentWorldTimeSeconds - OldFrightenedStartTime
-			: false
+			: true
 		);
 	}
-
-	// TODO: When energizer dot is consumed, call Frighten in the gamestate.
 };
