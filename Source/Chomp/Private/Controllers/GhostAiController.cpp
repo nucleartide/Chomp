@@ -149,17 +149,16 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
 void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState,
                                                           EChompPlayingSubstateEnum NewState)
 {
+	// Pre-conditions.
 	check(OldState != NewState);
+	DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
+
 	if (NewState == EChompPlayingSubstateEnum::Scatter)
-	{
-		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInScatter();
-	}
 	else if (NewState == EChompPlayingSubstateEnum::Chase)
-	{
-		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 		MovementPath = UpdateMovementPathWhenInChase();
-	}
+	else if (NewState == EChompPlayingSubstateEnum::Frightened)
+		MovementPath = UpdateMovementPathWhenInFrightened();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -268,7 +267,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 	// If we are on the CurrentScatterDestination, swap so we don't compute a 1-node path.
 	if (GridLocation == CurrentScatterDestination)
 		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
-	
+
 	// If we are computing the same path, then return early to avoid the post-condition check.
 	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
 		GridLocationPath.Num() > 0)
@@ -299,6 +298,49 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 	std::swap(CurrentScatterOrigin, CurrentScatterDestination);
 
 	return NewMovementPath;
+}
+
+FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
+{
+	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto GridLocation = GhostPawn->GetGridLocation();
+	const auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
+	const auto RandomDirIndex = FMath::RandRange(0, AdjacentTiles.size() - 1);
+	const auto [DirX, DirY] = AdjacentTiles[RandomDirIndex];
+
+	// Find the intersection tile in our selected direction.
+	const auto MaxDimension = FMath::Max(ULevelLoader::GetInstance(Level)->GetLevelHeight(),
+	                                     ULevelLoader::GetInstance(Level)->GetLevelWidth());
+
+	// Iterate at most MaxDimension times. If we haven't found an intersection node by then, then throw an exception.
+	for (auto i = 1; i <= MaxDimension; i++)
+	{
+		if (const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
+			ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
+		{
+			const auto Path = ComputePath(
+				ULevelLoader::GetInstance(Level),
+				FVector2D(GhostPawn->GetActorLocation()),
+				GridLocation,
+				PossibleIntersectionTile,
+				DebugAStarMap
+			);
+
+			const auto NewMovementPath = FMovementPath(
+				GhostPawn->GetActorLocation(),
+				Path,
+				ULevelLoader::GetInstance(Level)
+			);
+			
+			NewMovementPath.DebugLog(TEXT("Frightened"));
+
+			return NewMovementPath;
+		}
+	}
+
+	const auto DebugDirX = DirX;
+	const auto DebugDirY = DirY;
+	checkf(false, TEXT("Could not find an intersection node."));
 }
 
 FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const

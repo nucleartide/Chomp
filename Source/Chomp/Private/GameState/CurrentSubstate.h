@@ -196,12 +196,13 @@ public:
 		// [x] visual change
 		// [x] create notion of intersection nodes (encoded on map)
 		//     an intersection node is a node that has at least one horizontally adjacent node, and one vertically adjacent node
-		// [ ] compute movement path: random next intersection
+		// [x] compute movement path: random next intersection
 		//     get current grid location
 		//     if current grid location is not an intersection
 		//         choose a random axis-aligned direction
 		//         find the intersection in that random direction
 		//         compute movement path to that direction
+		// [ ] debug the above
 		// [ ] once intersection is reached, compute random next axis-aligned intersection, but omit the prev direction.
 		//     algorithm is the same
 		// [ ] once frightened behavior is implemented, halve the speed via configuration

@@ -78,6 +78,8 @@ protected:
 	
 	FMovementPath UpdateMovementPathWhenInScatter();
 
+	FMovementPath UpdateMovementPathWhenInFrightened() const;
+
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
