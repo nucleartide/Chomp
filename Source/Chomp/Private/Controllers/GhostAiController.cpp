@@ -311,6 +311,13 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 {
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
+	
+	// If the ghost's current tile is within the ghost-house or gate tile, do nothing.
+	if (ULevelLoader::GetInstance(Level)->IsGhostHouse(GridLocation) ||
+		ULevelLoader::GetInstance(Level)->IsGateTile(GridLocation))
+	{
+		return MovementPath;
+	}
 
 	FGridLocation Dir;
 	{

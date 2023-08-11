@@ -162,6 +162,11 @@ bool ULevelLoader::IsGhostHouse(const FGridLocation& Location) const
 	return GhostHouseTiles.find(Location) != GhostHouseTiles.end();
 }
 
+bool ULevelLoader::IsGateTile(const FGridLocation& Location) const
+{
+	return GateTiles.find(Location) != GateTiles.end();
+}
+
 bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 {
 	return 0 <= GridPosition.X

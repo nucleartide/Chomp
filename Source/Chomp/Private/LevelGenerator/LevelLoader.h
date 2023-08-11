@@ -87,6 +87,8 @@ public:
 
 	bool IsGhostHouse(const FGridLocation& Location) const;
 
+	bool IsGateTile(const FGridLocation& Location) const;
+
 	/**
 	 * Check whether a grid position is within the map boundaries.
 	 */
