@@ -7,6 +7,7 @@
 #include "AStar/GridLocation.h"
 #include "GhostPawn.generated.h"
 
+enum class EChompPlayingSubstateEnum : uint8;
 class AGhostHouseQueue;
 
 UCLASS()
@@ -14,37 +15,62 @@ class AGhostPawn : public AMovablePawn
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	// Material that is displayed when ghost is not in a frightened state.
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
+	UMaterialInterface* NotFrightenedMaterial;
+
+	// Material that is displayed when ghost is in a frightened state.
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
+	UMaterialInterface* FrightenedMaterial;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Custom Settings")
+	UStaticMeshComponent* HeadComponentRef;
+	
+	UPROPERTY(VisibleInstanceOnly, Category = "Custom Settings")
+	UStaticMeshComponent* BodyComponentRef;
+
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	FGridLocation StartingPosition;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	int DotsConsumedMovementThreshold = 0;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	FGridLocation ScatterOrigin;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	FGridLocation ScatterDestination;
 
 	// Higher number means higher priority. Similar to z-index in CSS.
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	int LeaveGhostHousePriority = 0;
 
-	UPROPERTY(EditAnywhere, Category = "Custom Settings")
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	AGhostHouseQueue* GhostHouseQueue;
 
 	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	FLinearColor DebugColor = FLinearColor::Red;
 
-public:
-	FGridLocation GetStartingPosition() const;
-	int GetDotsConsumedMovementThreshold() const;
-	FGridLocation GetScatterOrigin() const;
-	FGridLocation GetScatterDestination() const;
-	int GetLeaveGhostHousePriority() const;
-	AGhostHouseQueue* GetGhostHouseQueue() const;
-	FLinearColor GetDebugColor() const;
-
+	UFUNCTION()
+	void HandlePlayingSubstateChanged(EChompPlayingSubstateEnum OldSubstate, EChompPlayingSubstateEnum NewSubstate);
+	
 protected:
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+
+public:
+	FGridLocation GetStartingPosition() const;
+	
+	int GetDotsConsumedMovementThreshold() const;
+	
+	FGridLocation GetScatterOrigin() const;
+	
+	FGridLocation GetScatterDestination() const;
+	
+	int GetLeaveGhostHousePriority() const;
+	
+	AGhostHouseQueue* GetGhostHouseQueue() const;
+	
+	FLinearColor GetDebugColor() const;
 };

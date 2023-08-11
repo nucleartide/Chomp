@@ -1,20 +1,62 @@
 #include "Pawns/GhostPawn.h"
-#include "Utils/Debug.h"
+#include "ChompGameState.h"
+#include "Utils/SafeGet.h"
 
 void AGhostPawn::BeginPlay()
 {
 	Super::BeginPlay();
 
-	auto HeadComponents = GetComponentsByTag(UStaticMeshComponent::StaticClass(), FName("Head"));
-	check(HeadComponents.Num() == 1);
+	{
+		const auto HeadComponents = GetComponentsByTag(UStaticMeshComponent::StaticClass(), FName("Head"));
+		check(HeadComponents.Num() == 1);
+		HeadComponentRef = Cast<UStaticMeshComponent>(HeadComponents[0]);
+		check(HeadComponentRef);
+	}
 
-	auto BodyComponents = GetComponentsByTag(UStaticMeshComponent::StaticClass(), FName("Body"));
-	check(BodyComponents.Num() == 1);
-
-	DEBUG_LOG(TEXT("Head component name: %s"), *HeadComponents[0]->GetReadableName());
-	DEBUG_LOG(TEXT("Body component name: %s"), *BodyComponents[0]->GetReadableName());
+	{
+		auto BodyComponents = GetComponentsByTag(UStaticMeshComponent::StaticClass(), FName("Body"));
+		check(BodyComponents.Num() == 1);
+		BodyComponentRef = Cast<UStaticMeshComponent>(BodyComponents[0]);
+		check(BodyComponentRef);
+	}
 
 	check(GhostHouseQueue);
+	check(NotFrightenedMaterial);
+	check(FrightenedMaterial);
+
+	{
+		const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+		ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostPawn::HandlePlayingSubstateChanged);
+	}
+}
+
+void AGhostPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+	
+	{
+		const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+		ChompGameState->OnGamePlayingStateChangedDelegate.RemoveDynamic(this, &AGhostPawn::HandlePlayingSubstateChanged);
+	}
+}
+
+void AGhostPawn::HandlePlayingSubstateChanged(
+	EChompPlayingSubstateEnum OldSubstate,
+	EChompPlayingSubstateEnum NewSubstate)
+{
+	// Pre-conditions.
+	check(OldSubstate != NewSubstate);
+
+	if (NewSubstate == EChompPlayingSubstateEnum::Frightened)
+	{
+		HeadComponentRef->SetMaterial(0, FrightenedMaterial);
+		BodyComponentRef->SetMaterial(0, FrightenedMaterial);
+	}
+	else
+	{
+		HeadComponentRef->SetMaterial(0, NotFrightenedMaterial);
+		BodyComponentRef->SetMaterial(0, NotFrightenedMaterial);
+	}
 }
 
 FGridLocation AGhostPawn::GetStartingPosition() const
