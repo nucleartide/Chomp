@@ -191,5 +191,19 @@ public:
 			? TimeSpentInFrightenedSubstate >= CurrentWorldTimeSeconds - OldFrightenedStartTime
 			: true
 		);
+
+		// TODO: for ghost frightened behavior
+		// [ ] visual change
+		// [ ] create notion of intersection nodes (encoded on map)
+		// [ ] compute movement path: random next intersection
+		//     get current grid location
+		//     if current grid location is not an intersection
+		//         choose a random axis-aligned direction
+		//         find the intersection in that random direction
+		//         compute movement path to that direction
+		// [ ] once intersection is reached, compute random next axis-aligned intersection, but omit the prev direction.
+		//     algorithm is the same
+		// [ ] once frightened behavior is implemented, halve the speed via configuration
+		// [ ] then make a plan for remaining todos in notion
 	}
 };
