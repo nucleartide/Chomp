@@ -25,6 +25,8 @@ struct FGridLocation
 	bool IsZero() const;
 
 	FGridLocation operator+(const FGridLocation& IntendedDir) const;
+	
+	FGridLocation operator-(const FGridLocation& IntendedDir) const;
 
 	static std::optional<double> IsInBetween(const FVector& Location, const FVector& WorldA, const FVector& WorldB);
 
@@ -79,6 +81,7 @@ struct std::hash<FGridLocation>
 	}
 };
 
+// TODO: You can refactor this to use std::optional.
 USTRUCT(BlueprintType)
 struct FMaybeGridLocation
 {

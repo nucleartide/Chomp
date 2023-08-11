@@ -153,6 +153,13 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateE
 	check(OldState != NewState);
 	DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
 
+	// Early returns.
+	if (FSafeGet::GameState<AChompGameState>(this)->GetEnum() != EChompGameStateEnum::Playing)
+		return;
+	if (!IsPlayerAlive())
+		return;
+
+	// TODO: Update movement path computation so that moving within the ghosthouse is allowed.
 	if (NewState == EChompPlayingSubstateEnum::Scatter)
 		MovementPath = UpdateMovementPathWhenInScatter();
 	else if (NewState == EChompPlayingSubstateEnum::Chase)
@@ -304,18 +311,25 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 {
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
-	const auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
-	const auto RandomDirIndex = FMath::RandRange(0, AdjacentTiles.size() - 1);
-	const auto [DirX, DirY] = AdjacentTiles[RandomDirIndex];
+
+	FGridLocation Dir;
+	{
+		const auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
+		const auto RandomDirIndex = FMath::RandRange(0, AdjacentTiles.size() - 1);
+		const auto AdjacentTile = AdjacentTiles[RandomDirIndex];
+		Dir = AdjacentTile - GridLocation;
+	}
 
 	// Find the intersection tile in our selected direction.
-	const auto MaxDimension = FMath::Max(ULevelLoader::GetInstance(Level)->GetLevelHeight(),
-	                                     ULevelLoader::GetInstance(Level)->GetLevelWidth());
+	const auto MaxDimension = FMath::Max(
+		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
+		ULevelLoader::GetInstance(Level)->GetLevelWidth()
+	);
 
 	// Iterate at most MaxDimension times. If we haven't found an intersection node by then, then throw an exception.
 	for (auto i = 1; i <= MaxDimension; i++)
 	{
-		if (const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
+		if (const auto PossibleIntersectionTile = GridLocation + FGridLocation{Dir.X * i, Dir.Y * i};
 			ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
 		{
 			const auto Path = ComputePath(
@@ -331,16 +345,15 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 				Path,
 				ULevelLoader::GetInstance(Level)
 			);
-			
+
 			NewMovementPath.DebugLog(TEXT("Frightened"));
 
 			return NewMovementPath;
 		}
 	}
 
-	const auto DebugDirX = DirX;
-	const auto DebugDirY = DirY;
 	checkf(false, TEXT("Could not find an intersection node."));
+	return MovementPath;
 }
 
 FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const

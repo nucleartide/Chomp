@@ -227,9 +227,9 @@ bool ULevelLoader::IsIntersectionTile(const FGridLocation& TileToTest) const
 	int VerticallyAdjacentTiles = 0;
 	int HorizontallyAdjacentTiles = 0;
 
-	for (const auto& [X, Y] : AdjacentTiles)
+	for (const auto& AdjacentTile : AdjacentTiles)
 	{
-		if (FMath::Abs(X) == 1)
+		if (const auto [X, Y] = AdjacentTile - TileToTest; FMath::Abs(X) == 1)
 			VerticallyAdjacentTiles++;
 		else if (FMath::Abs(Y) == 1)
 			HorizontallyAdjacentTiles++;

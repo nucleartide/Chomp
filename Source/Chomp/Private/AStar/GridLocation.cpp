@@ -36,6 +36,11 @@ FGridLocation FGridLocation::operator+(const FGridLocation& IntendedDir) const
 	return FGridLocation{X + IntendedDir.X, Y + IntendedDir.Y};
 }
 
+FGridLocation FGridLocation::operator-(const FGridLocation& IntendedDir) const
+{
+	return FGridLocation{X - IntendedDir.X, Y - IntendedDir.Y};
+}
+
 // Return whether a Location is in the range [WorldA, WorldB), and by how much.
 std::optional<double> FGridLocation::IsInBetween(
 	const FVector& Location,
