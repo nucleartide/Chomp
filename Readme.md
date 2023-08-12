@@ -1,8 +1,6 @@
 # Chomp
 
-boop
-
-A cat-and-mouse game made in Unreal Engine 5.2 about chomping on foods and avoiding ghosts. Loosely inspired by Pacman.
+An action maze chase video game about eating dots and avoiding ghosts. Made in Unreal Engine 5.2; loosely inspired by Pacman.
 
 ## 🎮 Play the game
 
