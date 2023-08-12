@@ -1,17 +1,18 @@
 #include "Controllers/GhostAiController.h"
 
-#include "GhostHouseQueue.h"
-#include "Math/UnrealMathUtility.h"
-#include "AStar/AStar.h"
 #include "ChompGameState.h"
 #include "ChompPlayerController.h"
+#include "GhostHouseQueue.h"
+#include "AStar/AStar.h"
 #include "LevelGenerator/LevelLoader.h"
+#include "Math/UnrealMathUtility.h"
 #include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
-#include "Utils/Debug.h"
-#include "Utils/SafeGet.h"
 #include "Pawns/MovablePawn.h"
 #include "Pawns/Movement/MovementResult.h"
+#include "Utils/ArrayHelpers.h"
+#include "Utils/Debug.h"
+#include "Utils/SafeGet.h"
 
 void AGhostAiController::OnPossess(APawn* InPawn)
 {
@@ -25,7 +26,7 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Early return if not playing.
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-	if (GameState->GetEnum() != EChompGameState::Playing)
+	if (GameState->GetEnum() != EChompGameStateEnum::Playing)
 		return;
 
 	// Early return if in the ghost house.
@@ -41,31 +42,41 @@ void AGhostAiController::Tick(float DeltaTime)
 		return;
 
 	// Preconditions.
-	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
+	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	{
-		const auto ActorLocation = MovablePawn->GetActorLocation();
+		const auto ActorLocation = GhostPawn->GetActorLocation();
 		checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
 	}
 
 	// Compute new location and rotation.
-	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
+	const auto GameSubstate = GameState->GetSubstateEnum();
+	const auto [NewLocation, NewRotation] = GhostPawn->MoveAlongPath(
 		MovementPath,
-		DeltaTime
+		DeltaTime,
+		GameSubstate == EChompPlayingSubstateEnum::Frightened
+			? GhostPawn->GetFrightenedMovementSpeed()
+			: GhostPawn->GetMovementSpeed()
 	);
 
 	// Apply new location.
-	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
+	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// Compute a new movement path if conditions are met.
-	if (const auto PlayingSubstate = GameState->GetPlayingSubstate();
-		PlayingSubstate == EChompGamePlayingSubstate::Scatter &&
+	if (const auto PlayingSubstate = GameState->GetSubstateEnum();
+		PlayingSubstate == EChompPlayingSubstateEnum::Scatter &&
 		MovementPath.WasCompleted(NewLocation))
 	{
 		MovementPath = UpdateMovementPathWhenInScatter();
 	}
-	else if (PlayingSubstate == EChompGamePlayingSubstate::Chase)
+	else if (PlayingSubstate == EChompPlayingSubstateEnum::Chase)
 	{
 		DecideToUpdateMovementPathInChase(NewLocation);
+	}
+	else if (
+		PlayingSubstate == EChompPlayingSubstateEnum::Frightened &&
+		MovementPath.WasCompleted(NewLocation))
+	{
+		MovementPath = UpdateMovementPathWhenInFrightened();
 	}
 
 #if WITH_EDITOR
@@ -74,7 +85,6 @@ void AGhostAiController::Tick(float DeltaTime)
 		for (const auto SphereCenter : WorldLocationPath)
 		{
 			constexpr float SphereRadius = 25.0f; // Radius of the sphere
-			const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 			const auto SphereColor = GhostPawn->GetDebugColor().ToFColor(false);
 
 			// Draw the debug sphere
@@ -142,20 +152,25 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
  * Sync the GhostAIController with the playing sub-state of the game.
  */
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void AGhostAiController::HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState,
-                                                          EChompGamePlayingSubstate NewState)
+void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState,
+                                                          EChompPlayingSubstateEnum NewState)
 {
+	// Pre-conditions.
 	check(OldState != NewState);
-	if (NewState == EChompGamePlayingSubstate::Scatter)
-	{
-		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
+	DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
+
+	// Early returns.
+	if (FSafeGet::GameState<AChompGameState>(this)->GetEnum() != EChompGameStateEnum::Playing)
+		return;
+	if (!IsPlayerAlive())
+		return;
+
+	if (NewState == EChompPlayingSubstateEnum::Scatter)
 		MovementPath = UpdateMovementPathWhenInScatter();
-	}
-	else if (NewState == EChompGamePlayingSubstate::Chase)
-	{
-		DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
+	else if (NewState == EChompPlayingSubstateEnum::Chase)
 		MovementPath = UpdateMovementPathWhenInChase();
-	}
+	else if (NewState == EChompPlayingSubstateEnum::Frightened)
+		MovementPath = UpdateMovementPathWhenInFrightened();
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -174,10 +189,10 @@ void AGhostAiController::HandleDotsConsumedUpdated(const int NewDotsConsumed)
 /**
  * When the game starts playing, reset the position of the pawn.
  */
-void AGhostAiController::HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState)
+void AGhostAiController::HandleGameStateChanged(EChompGameStateEnum OldState, EChompGameStateEnum NewState)
 {
 	check(OldState != NewState);
-	if (NewState == EChompGameState::Playing)
+	if (NewState == EChompGameStateEnum::Playing)
 	{
 		ResetGhostState();
 	}
@@ -264,7 +279,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 	// If we are on the CurrentScatterDestination, swap so we don't compute a 1-node path.
 	if (GridLocation == CurrentScatterDestination)
 		std::swap(CurrentScatterOrigin, CurrentScatterDestination);
-	
+
 	// If we are computing the same path, then return early to avoid the post-condition check.
 	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
 		GridLocationPath.Num() > 0)
@@ -295,6 +310,84 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 	std::swap(CurrentScatterOrigin, CurrentScatterDestination);
 
 	return NewMovementPath;
+}
+
+FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
+{
+	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto GridLocation = GhostPawn->GetGridLocation();
+
+	// Jumble adjacent tiles.
+	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
+	FArrayHelpers::Randomize(AdjacentTiles);
+
+	{
+		const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		for (auto i = 0; i < GridLocationPath.Num(); i++)
+		{
+			if (GridLocationPath[i] == GridLocation && i >= 1)
+			{
+				// Then get the previous node.
+				const auto PrevNode = GridLocationPath[i - 1];
+
+				// Remove it from AdjacentTiles.
+				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
+					It != AdjacentTiles.end())
+					AdjacentTiles.erase(It);
+
+				// Then break early.
+				break;
+			}
+		}
+	}
+
+	check(AdjacentTiles.size() > 0);
+
+	// Find the intersection tile in our selected direction.
+	const auto MaxDimension = FMath::Max(
+		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
+		ULevelLoader::GetInstance(Level)->GetLevelWidth()
+	);
+
+	// Iterate over tile choices.
+	for (const auto& Tile : AdjacentTiles)
+	{
+		// Compute direction of adjacent tile.
+		const auto [DirX, DirY] = Tile - GridLocation;
+
+		// Iterate at most MaxDimension times in Dir.
+		for (auto i = 1; i <= MaxDimension; i++)
+		{
+			const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
+
+			if (ULevelLoader::GetInstance(Level)->IsWall(PossibleIntersectionTile))
+				break;
+
+			if (ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
+			{
+				const auto Path = ComputePath(
+					ULevelLoader::GetInstance(Level),
+					FVector2D(GhostPawn->GetActorLocation()),
+					GridLocation,
+					PossibleIntersectionTile,
+					DebugAStarMap
+				);
+
+				const auto NewMovementPath = FMovementPath(
+					GhostPawn->GetActorLocation(),
+					Path,
+					ULevelLoader::GetInstance(Level)
+				);
+
+				NewMovementPath.DebugLog(TEXT("Frightened"));
+
+				return NewMovementPath;
+			}
+		}
+	}
+
+	checkf(false, TEXT("Could not find an intersection node."));
+	return MovementPath;
 }
 
 FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
@@ -410,8 +503,11 @@ void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const 
 		MovementPath.GetWorldLocationPath().Num() == 1 && MovementPath.WasCompleted(NewLocation)
 	)
 	{
+		// ReSharper disable once CppDeclaratorNeverUsed
 		const auto DebugA = MovementPath.GetWorldLocationPath().Num();
+		// ReSharper disable once CppDeclaratorNeverUsed
 		const auto DebugB = MovementPath.DidComplete(NewLocation, 1);
+		// ReSharper disable once CppDeclaratorNeverUsed
 		const auto DebugC = MovementPath.WasCompleted(NewLocation);
 		MovementPath = UpdateMovementPathWhenInChase();
 	}

@@ -63,13 +63,13 @@ void ULevelLoader::LoadLevel()
 			{
 				GhostHouseTiles.insert(FGridLocation{X, Y});
 			}
-			else if (Character == ' ' || Character == 'o') // ' ' = dot, 'o' = no dot
+			else if (Character == ' ' || Character == 'o' || Character == 'O') // ' ' = dot, 'o' = no dot
 			{
 				// No-op.
 			}
 			else
 			{
-				check(false); // Character is not supported in our level format.
+				checkf(false, TEXT("Character is not supported in our level format."));
 			}
 		}
 	}
@@ -162,6 +162,11 @@ bool ULevelLoader::IsGhostHouse(const FGridLocation& Location) const
 	return GhostHouseTiles.find(Location) != GhostHouseTiles.end();
 }
 
+bool ULevelLoader::IsGateTile(const FGridLocation& Location) const
+{
+	return GateTiles.find(Location) != GateTiles.end();
+}
+
 bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 {
 	return 0 <= GridPosition.X
@@ -170,7 +175,7 @@ bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 		&& GridPosition.Y < GetLevelWidth();
 }
 
-bool ULevelLoader::CanAiMoveHere(const FGridLocation& GridLocation) const
+bool ULevelLoader::CanAiMoveHereWhenNotFrightened(const FGridLocation& GridLocation) const
 {
 	return InBounds(GridLocation) &&
 		Walls.find(GridLocation) == Walls.end() &&
@@ -178,11 +183,11 @@ bool ULevelLoader::CanAiMoveHere(const FGridLocation& GridLocation) const
 		GhostHouseTiles.find(GridLocation) == GhostHouseTiles.end();
 }
 
-bool ULevelLoader::CanAiMoveHere(const FVector& WorldLocation) const
+bool ULevelLoader::CanAiMoveHereWhenNotFrightened(const FVector& WorldLocation) const
 {
 	const FVector2D WorldLocation2D{WorldLocation.X, WorldLocation.Y};
 	const auto GridLocation = WorldToGrid(WorldLocation2D);
-	return CanAiMoveHere(GridLocation);
+	return CanAiMoveHereWhenNotFrightened(GridLocation);
 }
 
 std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
@@ -219,4 +224,21 @@ double ULevelLoader::Cost(FGridLocation FromNode, FGridLocation ToNode) const
 {
 	check(FMath::Abs(FromNode.X - ToNode.X) + FMath::Abs(FromNode.Y - ToNode.Y) == 1);
 	return 1.0; // Arbitrary non-zero constant.
+}
+
+bool ULevelLoader::IsIntersectionTile(const FGridLocation& TileToTest) const
+{
+	const auto AdjacentTiles = Neighbors(TileToTest);
+	int VerticallyAdjacentTiles = 0;
+	int HorizontallyAdjacentTiles = 0;
+
+	for (const auto& AdjacentTile : AdjacentTiles)
+	{
+		if (const auto [X, Y] = AdjacentTile - TileToTest; FMath::Abs(X) == 1)
+			VerticallyAdjacentTiles++;
+		else if (FMath::Abs(Y) == 1)
+			HorizontallyAdjacentTiles++;
+	}
+
+	return VerticallyAdjacentTiles >= 1 && HorizontallyAdjacentTiles >= 1;
 }

@@ -131,7 +131,8 @@ FGridLocation AMovablePawn::GetGridLocation() const
 
 FMovementResult AMovablePawn::MoveAlongPath(
 	const FMovementPath& MovementPath,
-	const float DeltaTime) const
+	const float DeltaTime,
+	const double DesiredMovementSpeed) const
 {
 	// If we're already at the end, return a no-movement result. Note that no rotation takes place.
 	const auto Location = GetActorLocation();
@@ -140,7 +141,7 @@ FMovementResult AMovablePawn::MoveAlongPath(
 		return FMovementResult{Location, Rotation};
 
 	// Else, compute the DeltaDistance.
-	const auto DeltaDistance = MovementSpeed * DeltaTime;
+	const auto DeltaDistance = DesiredMovementSpeed * DeltaTime;
 
 	// Call out to MovementPath->MoveAlongPath(ActorLocation, DeltaDistance), which will return an FVector.
 	const auto NewLocation = MovementPath.MoveAlongPath(Location, DeltaDistance);
@@ -188,6 +189,11 @@ bool AMovablePawn::CanTravelInDirection(FVector Location, FGridLocation Directio
 
 	// Otherwise, we *can* travel in Direction's way. Return true.
 	return true;
+}
+
+double AMovablePawn::GetMovementSpeed() const
+{
+	return MovementSpeed;
 }
 
 FVector AMovablePawn::WrapAroundWorld(FVector Location, const ULevelLoader* LevelInstance)

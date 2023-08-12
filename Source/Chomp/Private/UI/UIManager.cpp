@@ -36,9 +36,9 @@ void AUIManager::HandleDotsCleared()
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
-void AUIManager::HandlePlayerDeath(const EChompGameState OldState, const EChompGameState NewState)
+void AUIManager::HandlePlayerDeath(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
 {
-	const auto DidLose = OldState != NewState && NewState == EChompGameState::GameOverLose;
+	const auto DidLose = OldState != NewState && NewState == EChompGameStateEnum::GameOverLose;
 	if (!DidLose)
 		return;
 

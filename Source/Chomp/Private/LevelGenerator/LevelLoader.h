@@ -87,14 +87,16 @@ public:
 
 	bool IsGhostHouse(const FGridLocation& Location) const;
 
+	bool IsGateTile(const FGridLocation& Location) const;
+
 	/**
 	 * Check whether a grid position is within the map boundaries.
 	 */
 	bool InBounds(const FGridLocation& GridPosition) const;
 
-	bool CanAiMoveHere(const FGridLocation& GridLocation) const;
+	bool CanAiMoveHereWhenNotFrightened(const FGridLocation& GridLocation) const;
 	
-	bool CanAiMoveHere(const FVector& WorldLocation) const;
+	bool CanAiMoveHereWhenNotFrightened(const FVector& WorldLocation) const;
 
 	/**
 	 * Get the passable neighbor nodes of a node.
@@ -115,6 +117,8 @@ public:
 	 */
 	TArray<FString> StringList;
 
+	bool IsIntersectionTile(const FGridLocation& TileToTest) const;
+
 private:
 	/**
 	 * The number of rows in the level.
@@ -129,21 +133,21 @@ private:
 	/**
 	 * A set of FGridLocations that describe all the wall tiles in the level.
 	 * 
-	 * Note: if you're updating this you should also update the CanAiMoveHere() condition.
+	 * Note: if you're updating this you should also update the CanAiMoveHereWhenNotFrightened() condition.
 	 */
 	std::unordered_set<FGridLocation> Walls;
 
 	/**
 	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
 	 * 
-	 * Note: if you're updating this you should also update the CanAiMoveHere() condition.
+	 * Note: if you're updating this you should also update the CanAiMoveHereWhenNotFrightened() condition.
 	 */
 	std::unordered_set<FGridLocation> GateTiles;
 
 	/**
 	 * A set of FGridLocations that describe all the tiles within the ghost house in the level.
 	 *
-	 * Note: if you're updating this you should also update the CanAiMoveHere() condition.
+	 * Note: if you're updating this you should also update the CanAiMoveHereWhenNotFrightened() condition.
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
 

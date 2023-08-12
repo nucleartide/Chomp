@@ -1,7 +1,7 @@
 WWWWWWWWWWWWWW WWWWWWWWWWWWWWW
 W        WxxxW WxxxW    WW   W
 W WWW WW WxxxW WxxxW WW WW W W
-W WWW WW WxxxW WxxxW WW    W W
+WOWWW WW WxxxW WxxxW WW    WOW
 W WWW WW WxxxW WxxxW WW WW W W
 W WWW WW WWWWW WWWWW WW WW W W
 W                          W W
@@ -16,7 +16,7 @@ WWWWW WWWWW WW WW WWWWW WWWW W
       WWWWW WW WW WW    WW    
 W WWW WW    WW WW WW WW WW W W
 W WWW WW WW WW WW WW WW WW W W
-W WWW    WW          WW    W W
+WOWWW    WW          WW    WOW
 W WWW WWWWWWWW WWWWW WWWWWWW W
 W WWW WWWWWWWW WWWWW WWWWWWW W
 W                          W W

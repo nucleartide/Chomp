@@ -1,5 +1,4 @@
 #include "ChompGameState.h"
-
 #include "Utils/SafeGet.h"
 
 AChompGameState::AChompGameState()
@@ -21,6 +20,13 @@ void AChompGameState::ConsumeDot()
 	UpdateNumberOfDotsConsumed(NumberOfDotsConsumed.GetValue() + 1);
 }
 
+void AChompGameState::ConsumeEnergizerDot()
+{
+	UpdateScore(Score + ScoreMultiplier * 10);
+	const auto World = FSafeGet::World(this);
+	CurrentSubstate.Frighten(World->GetTimeSeconds());
+}
+
 void AChompGameState::UpdateScore(const int NewScore)
 {
 	Score = NewScore;
@@ -33,7 +39,7 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 	if (NumberOfDotsRemaining == 0)
 	{
 		OnDotsClearedDelegate.Broadcast();
-		TransitionTo(EChompGameState::GameOverWin);
+		TransitionTo(EChompGameStateEnum::GameOverWin);
 	}
 }
 
@@ -44,36 +50,47 @@ void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsum
 	OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
+EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum() const
+{
+	const auto World = FSafeGet::World(this);
+	return CurrentSubstate.GetEnum(World->GetTimeSeconds());
+}
+
 void AChompGameState::LoseGame()
 {
-	TransitionTo(EChompGameState::GameOverLose);
+	TransitionTo(EChompGameStateEnum::GameOverLose);
 }
 
 void AChompGameState::StartGame()
 {
-	TransitionTo(EChompGameState::Playing);
-	GameStartTime = GetWorld()->GetTimeSeconds();
+	// Pre-conditions.
+	check(Waves.Num() > 0);
+	
+	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
+	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
+	
+	TransitionTo(EChompGameStateEnum::Playing);
 }
 
-void AChompGameState::TransitionTo(EChompGameState NewState)
+void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 {
-	auto OldState = GameState;
+	// Pre-conditions.
+	const auto OldState = GameState;
 	check(OldState != NewState);
 
 	GameState = NewState;
 	OnGameStateChangedDelegate.Broadcast(OldState, NewState);
 
-	if (NewState != EChompGameState::Playing)
+	if (NewState != EChompGameStateEnum::Playing)
 	{
-		auto OldGamePlayingState = LastKnownGamePlayingSubstate;
-		auto NewGamePlayingState = EChompGamePlayingSubstate::None;
-		check(OldGamePlayingState != NewGamePlayingState);
-		LastKnownGamePlayingSubstate = NewGamePlayingState;
-		OnGamePlayingStateChangedDelegate.Broadcast(OldGamePlayingState, NewGamePlayingState);
+		const auto World = FSafeGet::World(this);
+		const auto [OldSubstate, NewSubstate] = CurrentSubstate.StopPlaying(World->GetTimeSeconds());
+		check(OldSubstate != NewSubstate);
+		OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
 	}
 }
 
-EChompGameState AChompGameState::GetEnum() const
+EChompGameStateEnum AChompGameState::GetEnum() const
 {
 	return GameState;
 }
@@ -81,34 +98,6 @@ EChompGameState AChompGameState::GetEnum() const
 int AChompGameState::GetScore() const
 {
 	return Score;
-}
-
-EChompGamePlayingSubstate AChompGameState::GetPlayingSubstate() const
-{
-	auto TimeSinceStart = GetTimeSinceStart();
-	auto DurationCounter = 0.0;
-
-	for (const auto& [PlayingState, Duration] : Waves)
-	{
-		if (Duration < 0.0f)
-		{
-			auto DurationStart = DurationCounter;
-			return TimeSinceStart >= DurationStart ? PlayingState : EChompGamePlayingSubstate::None;
-		}
-
-		auto DurationStart = DurationCounter;
-		if (auto DurationEnd = DurationCounter + Duration; DurationStart <= TimeSinceStart && TimeSinceStart <
-			DurationEnd)
-		{
-			return PlayingState;
-		}
-
-		DurationCounter += Duration;
-	}
-
-	// The "Waves" configuration is malformed if we reach this point. Fix the config!
-	check(false);
-	return EChompGamePlayingSubstate::None;
 }
 
 void AChompGameState::BeginPlay()
@@ -120,26 +109,13 @@ void AChompGameState::BeginPlay()
 void AChompGameState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
-	if (GameState == EChompGameState::Playing)
+	if (GameState == EChompGameStateEnum::Playing)
 	{
-		// Compute the last known game playing state.
-		const auto CurrentWave = GetPlayingSubstate();
-
-		// If there was a change in the last known game playing state, broadcast the event.
-		if (LastKnownGamePlayingSubstate != CurrentWave)
-			OnGamePlayingStateChangedDelegate.Broadcast(LastKnownGamePlayingSubstate, CurrentWave);
-
-		// Afterward, save the new game playing state.
-		LastKnownGamePlayingSubstate = CurrentWave;
+		const auto World = FSafeGet::World(this);
+		const auto [OldSubstate, NewSubstate] = CurrentSubstate.Tick(World->GetTimeSeconds());
+		if (OldSubstate != NewSubstate)
+			OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
 	}
-}
-
-float AChompGameState::GetTimeSinceStart() const
-{
-	const auto World = GetWorld();
-	check(World);
-	return World->GetTimeSeconds() - GameStartTime;
 }
 
 FIntFieldWithLastUpdatedTime AChompGameState::GetNumberOfDotsConsumed() const

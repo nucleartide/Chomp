@@ -32,7 +32,7 @@ class AChompPawnManager : public AActor
 	
 public:
 	UFUNCTION()
-	void HandleGameRestarted(EChompGameState OldState, EChompGameState NewState);
+	void HandleGameRestarted(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 
 protected:
 	virtual void BeginPlay() override;

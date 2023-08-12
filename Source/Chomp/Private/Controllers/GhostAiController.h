@@ -21,7 +21,7 @@ class AGhostAiController : public AAIController
 	bool DebugAStarMap = false;
 
 	UFUNCTION()
-	void HandleGamePlayingSubstateChanged(EChompGamePlayingSubstate OldState, EChompGamePlayingSubstate NewState);
+	void HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState, EChompPlayingSubstateEnum NewState);
 
 	UFUNCTION()
 	void HandleDotsConsumedUpdated(int NewDotsConsumed);
@@ -78,6 +78,8 @@ protected:
 	
 	FMovementPath UpdateMovementPathWhenInScatter();
 
+	FMovementPath UpdateMovementPathWhenInFrightened() const;
+
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
@@ -89,7 +91,7 @@ public:
 	
 	virtual void DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation);
 
-	void HandleGameStateChanged(EChompGameState OldState, EChompGameState NewState);
+	void HandleGameStateChanged(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 
 	int GetLeaveGhostHousePriority() const;
 };
