@@ -12,6 +12,7 @@
 * [ ] **Playtest**. Playtest through game to ensure everything works.
 * [ ] **Merge and release**. Merge into `master`, cut a new build in Unreal, and upload a GitHub release.
 * [ ] Do a CAR/STAR write-up describing your challenge, action, and result. This is important! No one cares about the game, the interesting part is in how you built it.
+* [ ] Document your code and any neat little utilities that you created
 
 ## After a break
 
