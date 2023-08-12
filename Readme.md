@@ -1,6 +1,6 @@
 # Chomp
 
-A cat-and-mouse game about chomping on foods and avoiding ghosts, that is loosely inspired by Pacman. Made in Unreal Engine 5.2.
+A cat-and-mouse game made in Unreal Engine 5.2 about chomping on foods and avoiding ghosts. Loosely inspired by Pacman.
 
 ## 🎮 Play the game
 
