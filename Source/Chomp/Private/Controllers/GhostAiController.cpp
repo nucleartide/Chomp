@@ -1,18 +1,18 @@
 #include "Controllers/GhostAiController.h"
 
-#include "GhostHouseQueue.h"
-#include "Math/UnrealMathUtility.h"
-#include "AStar/AStar.h"
 #include "ChompGameState.h"
 #include "ChompPlayerController.h"
+#include "GhostHouseQueue.h"
+#include "AStar/AStar.h"
 #include "LevelGenerator/LevelLoader.h"
+#include "Math/UnrealMathUtility.h"
 #include "Pawns/ChompPawn.h"
 #include "Pawns/GhostPawn.h"
-#include "Utils/Debug.h"
-#include "Utils/SafeGet.h"
 #include "Pawns/MovablePawn.h"
 #include "Pawns/Movement/MovementResult.h"
 #include "Utils/ArrayHelpers.h"
+#include "Utils/Debug.h"
+#include "Utils/SafeGet.h"
 
 void AGhostAiController::OnPossess(APawn* InPawn)
 {
