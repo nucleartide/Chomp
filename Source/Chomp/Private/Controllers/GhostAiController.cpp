@@ -45,7 +45,7 @@ void AGhostAiController::Tick(float DeltaTime)
 	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
 	{
 		const auto ActorLocation = MovablePawn->GetActorLocation();
-	checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
+		checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
 	}
 
 	// Compute new location and rotation.
@@ -319,6 +319,28 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
 	FArrayHelpers::Randomize(AdjacentTiles);
 
+	{
+		const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		for (auto i = 0; i < GridLocationPath.Num(); i++)
+		{
+			if (GridLocationPath[i] == GridLocation && i >= 1)
+			{
+				// Then get the previous node.
+				const auto PrevNode = GridLocationPath[i - 1];
+
+				// Remove it from AdjacentTiles.
+				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
+					It != AdjacentTiles.end())
+					AdjacentTiles.erase(It);
+
+				// Then break early.
+				break;
+			}
+		}
+	}
+
+	check(AdjacentTiles.size() > 0);
+
 	// Find the intersection tile in our selected direction.
 	const auto MaxDimension = FMath::Max(
 		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
@@ -338,7 +360,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 
 			if (ULevelLoader::GetInstance(Level)->IsWall(PossibleIntersectionTile))
 				break;
-			
+
 			if (ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
 			{
 				const auto Path = ComputePath(
