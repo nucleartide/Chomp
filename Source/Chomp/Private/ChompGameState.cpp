@@ -1,5 +1,4 @@
 #include "ChompGameState.h"
-#include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
 AChompGameState::AChompGameState()
@@ -64,18 +63,19 @@ void AChompGameState::LoseGame()
 
 void AChompGameState::StartGame()
 {
-	// Initialize CurrentSubstate.
+	// Pre-conditions.
 	check(Waves.Num() > 0);
+	
 	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
 	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
-
-	// Transition to Playing substate.
+	
 	TransitionTo(EChompGameStateEnum::Playing);
 }
 
 void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 {
-	auto OldState = GameState;
+	// Pre-conditions.
+	const auto OldState = GameState;
 	check(OldState != NewState);
 
 	GameState = NewState;
@@ -109,7 +109,6 @@ void AChompGameState::BeginPlay()
 void AChompGameState::Tick(const float DeltaTime)
 {
 	Super::Tick(DeltaTime);
-
 	if (GameState == EChompGameStateEnum::Playing)
 	{
 		const auto World = FSafeGet::World(this);
