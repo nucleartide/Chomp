@@ -42,20 +42,24 @@ void AGhostAiController::Tick(float DeltaTime)
 		return;
 
 	// Preconditions.
-	const auto MovablePawn = FSafeGet::Pawn<AMovablePawn>(this);
+	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	{
-		const auto ActorLocation = MovablePawn->GetActorLocation();
+		const auto ActorLocation = GhostPawn->GetActorLocation();
 		checkf(!MovementPath.WasCompleted(ActorLocation), TEXT("Movement path mustn't be complete."));
 	}
 
 	// Compute new location and rotation.
-	const auto [NewLocation, NewRotation] = MovablePawn->MoveAlongPath(
+	const auto GameSubstate = GameState->GetSubstateEnum();
+	const auto [NewLocation, NewRotation] = GhostPawn->MoveAlongPath(
 		MovementPath,
-		DeltaTime
+		DeltaTime,
+		GameSubstate == EChompPlayingSubstateEnum::Frightened
+			? GhostPawn->GetFrightenedMovementSpeed()
+			: GhostPawn->GetMovementSpeed()
 	);
 
 	// Apply new location.
-	MovablePawn->SetActorLocationAndRotation(NewLocation, NewRotation);
+	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// Compute a new movement path if conditions are met.
 	if (const auto PlayingSubstate = GameState->GetSubstateEnum();
@@ -81,7 +85,6 @@ void AGhostAiController::Tick(float DeltaTime)
 		for (const auto SphereCenter : WorldLocationPath)
 		{
 			constexpr float SphereRadius = 25.0f; // Radius of the sphere
-			const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 			const auto SphereColor = GhostPawn->GetDebugColor().ToFColor(false);
 
 			// Draw the debug sphere
@@ -162,7 +165,6 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateE
 	if (!IsPlayerAlive())
 		return;
 
-	// TODO: Update movement path computation so that moving within the ghosthouse is allowed.
 	if (NewState == EChompPlayingSubstateEnum::Scatter)
 		MovementPath = UpdateMovementPathWhenInScatter();
 	else if (NewState == EChompPlayingSubstateEnum::Chase)

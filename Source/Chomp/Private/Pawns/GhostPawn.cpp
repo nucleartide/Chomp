@@ -93,3 +93,8 @@ FLinearColor AGhostPawn::GetDebugColor() const
 {
 	return DebugColor;
 }
+
+double AGhostPawn::GetFrightenedMovementSpeed() const
+{
+	return FrightenedMovementSpeed;
+}

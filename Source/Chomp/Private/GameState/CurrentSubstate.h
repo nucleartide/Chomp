@@ -204,7 +204,7 @@ public:
 		//         compute movement path to that direction
 		// [x] debug the above
 		// [x] get ghosts moving
-		// [ ] once intersection is reached, compute random next axis-aligned intersection, but omit the prev direction.
+		// [x] once intersection is reached, compute random next axis-aligned intersection, but omit the prev direction.
 		//     algorithm is the same
 		// [ ] once frightened behavior is implemented, halve the speed via configuration
 		// [ ] then make a plan for remaining todos in notion

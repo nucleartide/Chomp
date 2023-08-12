@@ -50,10 +50,13 @@ class AGhostPawn : public AMovablePawn
 
 	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
 	FLinearColor DebugColor = FLinearColor::Red;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	double FrightenedMovementSpeed = 2.5;
 
 	UFUNCTION()
 	void HandlePlayingSubstateChanged(EChompPlayingSubstateEnum OldSubstate, EChompPlayingSubstateEnum NewSubstate);
-	
+
 protected:
 	virtual void BeginPlay() override;
 
@@ -73,4 +76,6 @@ public:
 	AGhostHouseQueue* GetGhostHouseQueue() const;
 	
 	FLinearColor GetDebugColor() const;
+
+	double GetFrightenedMovementSpeed() const;
 };

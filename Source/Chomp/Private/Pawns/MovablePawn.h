@@ -34,7 +34,7 @@ class AMovablePawn : public APawn
 
 	// Movement speed scaling factor.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	float MovementSpeed = 5.0f;
+	double MovementSpeed = 5.0;
 
 public:
 	// Move in a certain direction. Used by the player controller.
@@ -50,11 +50,14 @@ public:
 	// Move along a path. Used by the AI controller.
 	FMovementResult MoveAlongPath(
 		const FMovementPath& MovementPath,
-		const float DeltaTime
+		const float DeltaTime,
+		const double DesiredMovementSpeed
 	) const;
 
 	// Check whether a Pawn at Location can travel 1 unit in Direction.
 	bool CanTravelInDirection(FVector Location, FGridLocation Direction) const;
+	
+	double GetMovementSpeed() const;
 
 private:
 	// Wrap a Location around the ULevelLoader bounds.
