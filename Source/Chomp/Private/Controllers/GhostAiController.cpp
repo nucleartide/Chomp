@@ -63,6 +63,19 @@ void AGhostAiController::Tick(float DeltaTime)
 	// Apply new location.
 	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
+	// Make body re-appear if conditions are met.
+	if (HasBeenEaten && MovementPath.WasCompleted(NewLocation))
+	{
+		SetHasBeenEaten(false);
+	}
+
+	// [ ] TODO: model Frightened state on a per-ghost level, not a global level
+	// [ ] TODO: edge case when in scatter mode
+	// [ ] TODO: edge case when in chase mode
+	// [ ] TODO: allow movement within ghost house
+	// [ ] TODO: check IsGhostHouse function, does that get messed up
+	// [ ] TODO: when in frightened state and you've reached the ghost house again, should return to scatter/chase
+
 	// Compute a new movement path if conditions are met.
 	if (!HasBeenEaten)
 	{
