@@ -58,6 +58,11 @@ class AGhostAiController : public AAIController
 	// A setter that will also notify observers of the changed internal state.
 	void SetHasBeenEaten(bool WasJustEaten);
 
+	UFUNCTION()
+	void HandleHasBeenEatenChanged(const bool WasJustEaten);
+
+	FMovementPath ReturnToGhostHouse() const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
@@ -76,6 +81,8 @@ protected:
 	virtual void Tick(float DeltaTime) override;
 
 	virtual void BeginPlay() override;
+
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	virtual FGridLocation GetPlayerGridLocation() const;
 

@@ -93,7 +93,7 @@ void AGhostPawn::HandlePlayingSubstateChanged(
 	}
 }
 
-void AGhostPawn::HandleHasBeenEatenChanged(bool HasBeenEaten)
+void AGhostPawn::HandleHasBeenEatenChanged(const bool HasBeenEaten)
 {
 	HeadComponentRef->SetVisibility(!HasBeenEaten);
 	BodyComponentRef->SetVisibility(!HasBeenEaten);
@@ -137,4 +137,9 @@ FLinearColor AGhostPawn::GetDebugColor() const
 double AGhostPawn::GetFrightenedMovementSpeed() const
 {
 	return FrightenedMovementSpeed;
+}
+
+double AGhostPawn::GetReturnToGhostHouseMovementSpeed() const
+{
+	return ReturnToGhostHouseMovementSpeed;
 }

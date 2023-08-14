@@ -54,6 +54,9 @@ class AGhostPawn : public AMovablePawn
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	double FrightenedMovementSpeed = 2.5;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	double ReturnToGhostHouseMovementSpeed = 0.0;
+
 	UFUNCTION()
 	void HandlePlayingSubstateChanged(EChompPlayingSubstateEnum OldSubstate, EChompPlayingSubstateEnum NewSubstate);
 
@@ -83,4 +86,6 @@ public:
 	FLinearColor GetDebugColor() const;
 
 	double GetFrightenedMovementSpeed() const;
+
+	double GetReturnToGhostHouseMovementSpeed() const;
 };
