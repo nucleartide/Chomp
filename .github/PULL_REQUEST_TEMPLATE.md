@@ -11,7 +11,8 @@
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
 * [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
 * [ ] **Fill out the changelog**. Self-explanatory.
-* [ ] **Merge and release**. Merge into `master`, cut a new build in Unreal, and upload a GitHub release.
+* [ ] **So what**. Describe the challenge, action, tradeoffs, and result. This is important! Why should a game studio manager care about your work? Update your readme with this documented pull request.
+* [ ] **Merge and release**. Merge into `master`, cut a new build in Unreal, and upload a release to Google Drive.
 
 ## After a break
 
