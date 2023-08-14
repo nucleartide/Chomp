@@ -69,6 +69,7 @@ void AGhostAiController::Tick(float DeltaTime)
 		SetHasBeenEaten(false);
 	}
 
+	// [ ] TODO: playtest to see what's going on
 	// [ ] TODO: model Frightened state on a per-ghost level, not a global level
 	// [ ] TODO: edge case when in scatter mode
 	// [ ] TODO: edge case when in chase mode
