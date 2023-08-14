@@ -12,6 +12,7 @@
 * [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
 * [ ] **Fill out the changelog**. Self-explanatory.
 * [ ] **So what**. Describe the challenge, action, tradeoffs, and result. This is important! Why should a game studio manager care about your work? Update your readme with this documented pull request.
+* [ ] **Remember the GIFs**. Your "so what" doesn't need to be all text. Include the visuals!
 * [ ] **Merge and release**. Merge into `master`, cut a new build in Unreal, and upload a release to Google Drive.
 
 ## After a break
