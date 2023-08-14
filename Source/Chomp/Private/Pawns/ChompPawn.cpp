@@ -9,6 +9,8 @@
 
 void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 {
+	Super::NotifyActorBeginOverlap(Other);
+	
 	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
 	if (ChompGameState->GetEnum() != EChompGameStateEnum::Playing)
 		return;
@@ -17,7 +19,7 @@ void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 	{
 		ConsumableDot->Consume();
 	}
-	else if (Cast<AGhostPawn>(Other))
+	else if (Cast<AGhostPawn>(Other) && ChompGameState->GetSubstateEnum() != EChompPlayingSubstateEnum::Frightened)
 	{
 		DEBUG_LOG(TEXT("Overlapped with ghost pawn. Pawn name: %s"), *Other->GetHumanReadableName());
 		ChompGameState->LoseGame();

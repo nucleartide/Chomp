@@ -1,5 +1,4 @@
 #include "Controllers/GhostAiController.h"
-
 #include "ChompGameState.h"
 #include "ChompPlayerController.h"
 #include "GhostHouseQueue.h"
@@ -483,6 +482,16 @@ int AGhostAiController::GetLeaveGhostHousePriority() const
 	return Pawn->GetLeaveGhostHousePriority();
 }
 
+bool AGhostAiController::GetHasBeenEaten() const
+{
+	return HasBeenEaten;
+}
+
+void AGhostAiController::Consume()
+{
+	SetHasBeenEaten(true);
+}
+
 AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -494,6 +503,12 @@ bool AGhostAiController::IsPlayerAlive() const
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
 	return PlayerPawn != nullptr;
+}
+
+void AGhostAiController::SetHasBeenEaten(bool WasJustEaten)
+{
+	HasBeenEaten = WasJustEaten;
+	OnHasBeenEatenChanged.Broadcast(HasBeenEaten);
 }
 
 void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const FVector NewLocation)

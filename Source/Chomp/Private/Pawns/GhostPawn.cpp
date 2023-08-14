@@ -1,5 +1,7 @@
 #include "Pawns/GhostPawn.h"
 #include "ChompGameState.h"
+#include "ChompPawn.h"
+#include "Controllers/GhostAiController.h"
 #include "Utils/SafeGet.h"
 
 void AGhostPawn::BeginPlay()
@@ -26,17 +28,49 @@ void AGhostPawn::BeginPlay()
 
 	{
 		const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-		ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(this, &AGhostPawn::HandlePlayingSubstateChanged);
+		ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+			this, &AGhostPawn::HandlePlayingSubstateChanged);
+	}
+
+	{
+		const auto GhostController = GetController<AGhostAiController>();
+		check(GhostController);
+		GhostController->OnHasBeenEatenChanged.AddUniqueDynamic(this, &AGhostPawn::HandleHasBeenEatenChanged);
 	}
 }
 
 void AGhostPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
-	
+
 	{
 		const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-		ChompGameState->OnGamePlayingStateChangedDelegate.RemoveDynamic(this, &AGhostPawn::HandlePlayingSubstateChanged);
+		ChompGameState->OnGamePlayingStateChangedDelegate.
+		                RemoveDynamic(this, &AGhostPawn::HandlePlayingSubstateChanged);
+	}
+
+	if (const auto GhostController = GetController<AGhostAiController>())
+		GhostController->OnHasBeenEatenChanged.RemoveDynamic(this, &AGhostPawn::HandleHasBeenEatenChanged);
+}
+
+void AGhostPawn::NotifyActorBeginOverlap(AActor* Other)
+{
+	Super::NotifyActorBeginOverlap(Other);
+
+	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+	if (ChompGameState->GetEnum() != EChompGameStateEnum::Playing)
+	{
+		return;
+	}
+
+	const auto GhostController = GetController<AGhostAiController>();
+	check(GhostController);
+	
+	if (ChompGameState->GetSubstateEnum() == EChompPlayingSubstateEnum::Frightened &&
+		!GhostController->GetHasBeenEaten() &&
+		Cast<AChompPawn>(Other))
+	{
+		GhostController->Consume();
 	}
 }
 
@@ -57,6 +91,12 @@ void AGhostPawn::HandlePlayingSubstateChanged(
 		HeadComponentRef->SetMaterial(0, NotFrightenedMaterial);
 		BodyComponentRef->SetMaterial(0, NotFrightenedMaterial);
 	}
+}
+
+void AGhostPawn::HandleHasBeenEatenChanged(bool HasBeenEaten)
+{
+	HeadComponentRef->SetVisibility(!HasBeenEaten);
+	BodyComponentRef->SetVisibility(!HasBeenEaten);
 }
 
 FGridLocation AGhostPawn::GetStartingPosition() const

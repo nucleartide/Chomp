@@ -11,6 +11,9 @@
 
 class AGhostHouseQueue;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHasBeenEatenChanged,
+                                            bool, HasBeenEaten);
+
 UCLASS()
 class AGhostAiController : public AAIController
 {
@@ -19,6 +22,9 @@ class AGhostAiController : public AAIController
 	// Whether to print out A* map info in the logs.
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
+
+	UPROPERTY(VisibleInstanceOnly, Category = "Debug View")
+	bool HasBeenEaten = false;
 
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState, EChompPlayingSubstateEnum NewState);
@@ -48,6 +54,9 @@ class AGhostAiController : public AAIController
 	AGhostHouseQueue* GetGhostHouseQueue() const;
 
 	bool IsPlayerAlive() const;
+
+	// A setter that will also notify observers of the changed internal state.
+	void SetHasBeenEaten(bool WasJustEaten);
 
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
@@ -81,6 +90,9 @@ protected:
 	FMovementPath UpdateMovementPathWhenInFrightened() const;
 
 public:
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnHasBeenEatenChanged OnHasBeenEatenChanged;
+	
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
 	
@@ -94,4 +106,8 @@ public:
 	void HandleGameStateChanged(EChompGameStateEnum OldState, EChompGameStateEnum NewState);
 
 	int GetLeaveGhostHousePriority() const;
+
+	bool GetHasBeenEaten() const;
+
+	void Consume();
 };

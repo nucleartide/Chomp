@@ -57,10 +57,15 @@ class AGhostPawn : public AMovablePawn
 	UFUNCTION()
 	void HandlePlayingSubstateChanged(EChompPlayingSubstateEnum OldSubstate, EChompPlayingSubstateEnum NewSubstate);
 
+	UFUNCTION()
+	void HandleHasBeenEatenChanged(bool HasBeenEaten);
+
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
+	virtual void NotifyActorBeginOverlap(AActor* Other) override;
 
 public:
 	FGridLocation GetStartingPosition() const;
