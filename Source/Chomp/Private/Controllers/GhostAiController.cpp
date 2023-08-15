@@ -210,19 +210,15 @@ void AGhostAiController::UpdateWhenSubstateChanges(EChompPlayingSubstateEnum Old
 	if (!IsPlayerAlive())
 		return;
 
-	// Update internal ghost state, because whether a ghost appears frightened is independent
-	// of the GameState's playing substate.
-	//
-	// For example, a ghost can revert to its normal non-frightened look/behavior once it returns to the ghost house,
-	// even though the GameState's playing substate remains "Frightened".
-	if (NewState == EChompPlayingSubstateEnum::Frightened)
-		SetGhostState(EGhostState::Frightened);
-	else if (NewState != EChompPlayingSubstateEnum::Frightened && GhostState != EGhostState::Eaten)
-		SetGhostState(EGhostState::Normal);
-
-	// Update movement path.
 	if (GhostState != EGhostState::Eaten)
 	{
+		// Update ghost state.
+		if (NewState == EChompPlayingSubstateEnum::Frightened)
+			SetGhostState(EGhostState::Frightened);
+		else if (NewState != EChompPlayingSubstateEnum::Frightened)
+			SetGhostState(EGhostState::Normal);
+
+		// Update movement path.
 		if (NewState == EChompPlayingSubstateEnum::Scatter)
 			MovementPath = UpdateMovementPathWhenInScatter();
 		else if (NewState == EChompPlayingSubstateEnum::Chase)
@@ -373,6 +369,9 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 
 FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 {
+	// Pre-conditions.
+	checkf(GhostState != EGhostState::Eaten, TEXT("Ghosts in the eaten state should use a ReturnToGhostHouse movement path."));
+	
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
 
@@ -382,7 +381,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 
 	// Omit the direction that we came from.
 	// ReSharper disable once CppTooWideScope
-	bool DidRemove = false;
+	bool DebugDidRemoveCameFrom = false;
 	{
 		const auto GridLocationPath = MovementPath.GetGridLocationPath();
 		for (auto i = 1; i < GridLocationPath.Num(); i++)
@@ -396,10 +395,30 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
 					It != AdjacentTiles.end())
 				{
-					DidRemove = true;
+					DebugDidRemoveCameFrom = true;
 					AdjacentTiles.erase(It);
 					break;
 				}
+			}
+		}
+	}
+
+	// Also omit the gate tile, since we do not want frightened ghosts to navigate into the ghost house.
+	// Only eaten ghosts can navigate into the ghost house.
+	// ReSharper disable once CppTooWideScope
+	bool DebugDidRemoveGateTile = false;
+	if (!IsInGhostHouse())
+	{
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto GateTiles = ULevelLoader::GetInstance(Level)->GetGateTiles();
+		for (const auto& Tile : GateTiles)
+		{
+			if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), Tile);
+				It != AdjacentTiles.end())
+			{
+				DebugDidRemoveGateTile = true;
+				AdjacentTiles.erase(It);
+				break;
 			}
 		}
 	}

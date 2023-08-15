@@ -142,14 +142,41 @@ bool ULevelLoader::Passable(const FGridLocation& FromLocation, const FGridLocati
 		return false;
 	}
 
-	// If ToLocation is a Wall,
-	if (Walls.find(ToLocation) != Walls.end())
+#if false
+	// Don't include this, then ghosts can't return to ghost house.
+	// If ToLocation is an OnlyGoUpTile,
+	if (GateTiles.find(ToLocation) != GateTiles.end())
 	{
-		// Then ToLocation is not passable.
+		// Then ToLocation is only passable if FromLocation is directly below.
+		return ToLocation.Y == FromLocation.Y && ToLocation.X == FromLocation.X + 1;
+	}
+#endif
+
+	return Passable(ToLocation);
+}
+
+bool ULevelLoader::Passable(const FGridLocation& TestLocation) const
+{
+	// First thing to check.
+	if (!InBounds(TestLocation))
+	{
+		return false;
+	}
+
+	// If TestLocation is a Wall,
+	if (Walls.find(TestLocation) != Walls.end())
+	{
+		// Then TestLocation is not passable.
 		return false;
 	}
 
 	return true;
+}
+
+bool ULevelLoader::Passable(const FVector& WorldTestLocation) const
+{
+	const auto GridLocation = WorldToGrid(FVector2D(WorldTestLocation));
+	return Passable(GridLocation);
 }
 
 bool ULevelLoader::IsWall(const FGridLocation& Location) const
@@ -175,21 +202,6 @@ bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 		&& GridPosition.Y < GetLevelWidth();
 }
 
-bool ULevelLoader::CanAiMoveHereWhenNotFrightened(const FGridLocation& GridLocation) const
-{
-	return InBounds(GridLocation) &&
-		Walls.find(GridLocation) == Walls.end() &&
-		GateTiles.find(GridLocation) == GateTiles.end() &&
-		GhostHouseTiles.find(GridLocation) == GhostHouseTiles.end();
-}
-
-bool ULevelLoader::CanAiMoveHereWhenNotFrightened(const FVector& WorldLocation) const
-{
-	const FVector2D WorldLocation2D{WorldLocation.X, WorldLocation.Y};
-	const auto GridLocation = WorldToGrid(WorldLocation2D);
-	return CanAiMoveHereWhenNotFrightened(GridLocation);
-}
-
 std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
 	FGridLocation{1, 0}, // North
 	FGridLocation{-1, 0}, // South
@@ -207,7 +219,7 @@ std::vector<FGridLocation> ULevelLoader::Neighbors(const FGridLocation GridPosit
 	for (const auto [X, Y] : CardinalDirections)
 	{
 		FGridLocation Current{GridPosition.X, GridPosition.Y};
-		if (FGridLocation Next{GridPosition.X + X, GridPosition.Y + Y}; InBounds(Next) && Passable(Current, Next))
+		if (FGridLocation Next{GridPosition.X + X, GridPosition.Y + Y}; Passable(Current, Next))
 			Results.push_back(Next);
 	}
 
@@ -241,4 +253,9 @@ bool ULevelLoader::IsIntersectionTile(const FGridLocation& TileToTest) const
 	}
 
 	return VerticallyAdjacentTiles >= 1 && HorizontallyAdjacentTiles >= 1;
+}
+
+std::unordered_set<FGridLocation> ULevelLoader::GetGateTiles() const
+{
+	return GateTiles;
 }
