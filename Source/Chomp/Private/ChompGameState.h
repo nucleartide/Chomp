@@ -92,6 +92,8 @@ public:
 
 	EChompGameStateEnum GetEnum() const;
 
+	bool IsPlaying() const;
+
 	int GetScore() const;
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;

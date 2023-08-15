@@ -95,6 +95,11 @@ EChompGameStateEnum AChompGameState::GetEnum() const
 	return GameState;
 }
 
+bool AChompGameState::IsPlaying() const
+{
+	return GameState == EChompGameStateEnum::Playing;
+}
+
 int AChompGameState::GetScore() const
 {
 	return Score;

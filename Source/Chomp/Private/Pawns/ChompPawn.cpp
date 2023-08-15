@@ -3,6 +3,7 @@
 #include "Actors/ConsumableDotActor.h"
 #include "Actors/ConsumableEnergizerActor.h"
 #include "ChompGameState.h"
+#include "Controllers/GhostAiController.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
@@ -10,23 +11,22 @@
 void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 {
 	Super::NotifyActorBeginOverlap(Other);
-	
+
 	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-	if (ChompGameState->GetEnum() != EChompGameStateEnum::Playing)
+	if (!ChompGameState->IsPlaying())
 		return;
 
 	if (const auto ConsumableDot = Cast<AConsumableDotActor>(Other))
-	{
 		ConsumableDot->Consume();
-	}
-	else if (Cast<AGhostPawn>(Other) && ChompGameState->GetSubstateEnum() != EChompPlayingSubstateEnum::Frightened)
+	else if (const auto GhostPawn = Cast<AGhostPawn>(Other))
 	{
-		DEBUG_LOG(TEXT("Overlapped with ghost pawn. Pawn name: %s"), *Other->GetHumanReadableName());
-		ChompGameState->LoseGame();
-		Destroy();
+		const auto GhostController = GhostPawn->GetController<AGhostAiController>();
+		if (const auto HasBeenEaten = GhostController->GetHasBeenEaten(); !HasBeenEaten)
+		{
+			ChompGameState->LoseGame();
+			Destroy();
+		}
 	}
 	else if (const auto EnergizerDot = Cast<AConsumableEnergizerActor>(Other))
-	{
 		EnergizerDot->Consume();
-	}
 }
