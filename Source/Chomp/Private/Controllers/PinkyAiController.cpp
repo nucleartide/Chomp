@@ -15,13 +15,14 @@ FGridLocation APinkyAiController::GetChaseEndGridPosition_Implementation() const
 				PlayerGridAheadLocation.X + PlayerGridDirection.X,
 				PlayerGridAheadLocation.Y + PlayerGridDirection.Y
 			};
-			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->CanAiMoveHereWhenNotFrightened(LocationToTest))
+			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->Passable(PlayerGridAheadLocation, LocationToTest))
 				PlayerGridAheadLocation = LocationToTest;
 			else
 				break;
 		}
 	}
 
-	checkf(ULevelLoader::GetInstance(Level)->CanAiMoveHereWhenNotFrightened(PlayerGridAheadLocation), TEXT("Post condition"));
+	checkf(ULevelLoader::GetInstance(Level)->Passable(PlayerGridAheadLocation),
+	       TEXT("Post condition"));
 	return PlayerGridAheadLocation;
 }

@@ -1,5 +1,4 @@
 #include "Controllers/GhostAiController.h"
-
 #include "ChompGameState.h"
 #include "ChompPlayerController.h"
 #include "GhostHouseQueue.h"
@@ -50,33 +49,59 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Compute new location and rotation.
 	const auto GameSubstate = GameState->GetSubstateEnum();
+	const auto MovementSpeed = GhostState == EGhostState::Eaten
+		                           ? GhostPawn->GetReturnToGhostHouseMovementSpeed()
+		                           : GhostState == EGhostState::Frightened
+		                           ? GhostPawn->GetFrightenedMovementSpeed()
+		                           : GhostState == EGhostState::Normal
+		                           ? GhostPawn->GetMovementSpeed()
+		                           : -1.0;
+	checkf(MovementSpeed > 0, TEXT("GhostState must be handled by the ternary expression above: %d"), GhostState);
 	const auto [NewLocation, NewRotation] = GhostPawn->MoveAlongPath(
 		MovementPath,
 		DeltaTime,
-		GameSubstate == EChompPlayingSubstateEnum::Frightened
-			? GhostPawn->GetFrightenedMovementSpeed()
-			: GhostPawn->GetMovementSpeed()
+		MovementSpeed
 	);
 
 	// Apply new location.
 	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// Compute a new movement path if conditions are met.
-	if (const auto PlayingSubstate = GameState->GetSubstateEnum();
-		PlayingSubstate == EChompPlayingSubstateEnum::Scatter &&
-		MovementPath.WasCompleted(NewLocation))
+	if (GhostState != EGhostState::Eaten)
 	{
-		MovementPath = UpdateMovementPathWhenInScatter();
+		if (const auto PlayingSubstate = GameState->GetSubstateEnum();
+			PlayingSubstate == EChompPlayingSubstateEnum::Scatter &&
+			MovementPath.WasCompleted(NewLocation))
+		{
+			MovementPath = UpdateMovementPathWhenInScatter();
+		}
+		else if (PlayingSubstate == EChompPlayingSubstateEnum::Chase)
+		{
+			DecideToUpdateMovementPathInChase(NewLocation);
+		}
+		else if (
+			PlayingSubstate == EChompPlayingSubstateEnum::Frightened &&
+			MovementPath.WasCompleted(NewLocation))
+		{
+			MovementPath = UpdateMovementPathWhenInFrightened();
+		}
 	}
-	else if (PlayingSubstate == EChompPlayingSubstateEnum::Chase)
+	else if (GhostState == EGhostState::Eaten && MovementPath.WasCompleted(NewLocation))
 	{
-		DecideToUpdateMovementPathInChase(NewLocation);
-	}
-	else if (
-		PlayingSubstate == EChompPlayingSubstateEnum::Frightened &&
-		MovementPath.WasCompleted(NewLocation))
-	{
-		MovementPath = UpdateMovementPathWhenInFrightened();
+		// Find the underlying substate.
+		const auto NonFrightenedSubstate = GameState->GetSubstateEnum(true);
+		check(NonFrightenedSubstate != EChompPlayingSubstateEnum::Frightened);
+
+		// Compute new movement path depending on underlying substate.
+		if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Scatter)
+			MovementPath = UpdateMovementPathWhenInScatter();
+		else if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Chase)
+			DecideToUpdateMovementPathInChase(NewLocation);
+		else
+			checkf(false, TEXT("Movement path is %d"), NonFrightenedSubstate);
+
+		// Uncheck internal state for tracking whether ghost has been eaten.
+		SetGhostState(EGhostState::Normal);
 	}
 
 #if WITH_EDITOR
@@ -107,18 +132,38 @@ void AGhostAiController::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// Attach some handlers for when game state changes.
 	{
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
-			&AGhostAiController::HandleGamePlayingSubstateChanged
+			&AGhostAiController::UpdateWhenSubstateChanges
 		);
 		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
 			this,
 			&AGhostAiController::HandleDotsConsumedUpdated
 		);
 	}
+
+	OnGhostStateChanged.AddUniqueDynamic(this, &AGhostAiController::HandleGhostStateChanged);
+}
+
+void AGhostAiController::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	{
+		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
+		GameState->OnGamePlayingStateChangedDelegate.RemoveDynamic(
+			this,
+			&AGhostAiController::UpdateWhenSubstateChanges
+		);
+		GameState->OnDotsConsumedUpdatedDelegate.RemoveDynamic(
+			this,
+			&AGhostAiController::HandleDotsConsumedUpdated
+		);
+	}
+
+	OnGhostStateChanged.RemoveDynamic(this, &AGhostAiController::HandleGhostStateChanged);
 }
 
 FGridLocation AGhostAiController::GetPlayerGridLocation() const
@@ -152,12 +197,12 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
  * Sync the GhostAIController with the playing sub-state of the game.
  */
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState,
-                                                          EChompPlayingSubstateEnum NewState)
+void AGhostAiController::UpdateWhenSubstateChanges(EChompPlayingSubstateEnum OldState,
+                                                   EChompPlayingSubstateEnum NewState)
 {
 	// Pre-conditions.
 	check(OldState != NewState);
-	DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
+	DEBUG_LOG(TEXT("UpdateWhenSubstateChanges: %d to %d"), OldState, NewState);
 
 	// Early returns.
 	if (FSafeGet::GameState<AChompGameState>(this)->GetEnum() != EChompGameStateEnum::Playing)
@@ -165,12 +210,22 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateE
 	if (!IsPlayerAlive())
 		return;
 
-	if (NewState == EChompPlayingSubstateEnum::Scatter)
-		MovementPath = UpdateMovementPathWhenInScatter();
-	else if (NewState == EChompPlayingSubstateEnum::Chase)
-		MovementPath = UpdateMovementPathWhenInChase();
-	else if (NewState == EChompPlayingSubstateEnum::Frightened)
-		MovementPath = UpdateMovementPathWhenInFrightened();
+	if (GhostState != EGhostState::Eaten)
+	{
+		// Update ghost state.
+		if (NewState == EChompPlayingSubstateEnum::Frightened)
+			SetGhostState(EGhostState::Frightened);
+		else if (NewState != EChompPlayingSubstateEnum::Frightened)
+			SetGhostState(EGhostState::Normal);
+
+		// Update movement path.
+		if (NewState == EChompPlayingSubstateEnum::Scatter)
+			MovementPath = UpdateMovementPathWhenInScatter();
+		else if (NewState == EChompPlayingSubstateEnum::Chase)
+			MovementPath = UpdateMovementPathWhenInChase();
+		else if (NewState == EChompPlayingSubstateEnum::Frightened)
+			MovementPath = UpdateMovementPathWhenInFrightened();
+	}
 }
 
 // ReSharper disable once CppMemberFunctionMayBeConst
@@ -314,18 +369,24 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 
 FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 {
+	// Pre-conditions.
+	checkf(GhostState != EGhostState::Eaten, TEXT("Ghosts in the eaten state should use a ReturnToGhostHouse movement path."));
+	
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
 
-	// Jumble adjacent tiles.
+	// Find adjacent tiles, and jumble them.
 	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
 	FArrayHelpers::Randomize(AdjacentTiles);
 
+	// Omit the direction that we came from.
+	// ReSharper disable once CppTooWideScope
+	bool DebugDidRemoveCameFrom = false;
 	{
 		const auto GridLocationPath = MovementPath.GetGridLocationPath();
-		for (auto i = 0; i < GridLocationPath.Num(); i++)
+		for (auto i = 1; i < GridLocationPath.Num(); i++)
 		{
-			if (GridLocationPath[i] == GridLocation && i >= 1)
+			if (GridLocation == GridLocationPath[i])
 			{
 				// Then get the previous node.
 				const auto PrevNode = GridLocationPath[i - 1];
@@ -333,17 +394,37 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 				// Remove it from AdjacentTiles.
 				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
 					It != AdjacentTiles.end())
+				{
+					DebugDidRemoveCameFrom = true;
 					AdjacentTiles.erase(It);
+					break;
+				}
+			}
+		}
+	}
 
-				// Then break early.
+	// Also omit the gate tile, since we do not want frightened ghosts to navigate into the ghost house.
+	// Only eaten ghosts can navigate into the ghost house.
+	// ReSharper disable once CppTooWideScope
+	bool DebugDidRemoveGateTile = false;
+	if (!IsInGhostHouse())
+	{
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto GateTiles = ULevelLoader::GetInstance(Level)->GetGateTiles();
+		for (const auto& Tile : GateTiles)
+		{
+			if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), Tile);
+				It != AdjacentTiles.end())
+			{
+				DebugDidRemoveGateTile = true;
+				AdjacentTiles.erase(It);
 				break;
 			}
 		}
 	}
 
-	check(AdjacentTiles.size() > 0);
+	checkf(AdjacentTiles.size() > 0, TEXT("Must have at least 1 adjacent tile."));
 
-	// Find the intersection tile in our selected direction.
 	const auto MaxDimension = FMath::Max(
 		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
 		ULevelLoader::GetInstance(Level)->GetLevelWidth()
@@ -483,6 +564,21 @@ int AGhostAiController::GetLeaveGhostHousePriority() const
 	return Pawn->GetLeaveGhostHousePriority();
 }
 
+bool AGhostAiController::IsEaten() const
+{
+	return GhostState == EGhostState::Eaten;
+}
+
+bool AGhostAiController::IsNormal() const
+{
+	return GhostState == EGhostState::Normal;
+}
+
+void AGhostAiController::Consume()
+{
+	SetGhostState(EGhostState::Eaten);
+}
+
 AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
@@ -494,6 +590,48 @@ bool AGhostAiController::IsPlayerAlive() const
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
 	return PlayerPawn != nullptr;
+}
+
+void AGhostAiController::SetGhostState(const EGhostState NewGhostState)
+{
+	GhostState = NewGhostState;
+	OnGhostStateChanged.Broadcast(NewGhostState);
+}
+
+void AGhostAiController::HandleGhostStateChanged(const EGhostState NewGhostState)
+{
+	if (NewGhostState == EGhostState::Eaten)
+		MovementPath = ReturnToGhostHouse();
+}
+
+FMovementPath AGhostAiController::ReturnToGhostHouse() const
+{
+	// Compute start position.
+	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
+	const auto StartPosition = Pawn->GetGridLocation();
+
+	// Compute end position.
+	const auto EndPosition = Pawn->GetGhostHouseReturnLocation();
+
+	// Compute path.
+	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());
+	const auto Path = ComputePath(
+		ULevelLoader::GetInstance(Level),
+		WorldLocation,
+		StartPosition,
+		EndPosition,
+		DebugAStarMap
+	);
+
+	// Construct FMovementPath.
+	const auto NewMovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
+	NewMovementPath.DebugLog(TEXT("Chase"));
+
+	// Post-conditions.
+	check(NewMovementPath.IsValid());
+	check(NewMovementPath != MovementPath);
+
+	return NewMovementPath;
 }
 
 void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const FVector NewLocation)

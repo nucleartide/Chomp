@@ -27,10 +27,15 @@ FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 				PlayerGridAheadLocation.X + PlayerGridDirection.X,
 				PlayerGridAheadLocation.Y + PlayerGridDirection.Y
 			};
-			if (const auto IsValidLocation = ULevelLoader::GetInstance(Level)->CanAiMoveHereWhenNotFrightened(LocationToTest))
+			if (const auto IsValidLocation =
+				ULevelLoader::GetInstance(Level)->Passable(PlayerGridAheadLocation, LocationToTest))
+			{
 				PlayerGridAheadLocation = LocationToTest;
+			}
 			else
+			{
 				break;
+			}
 		}
 	}
 
@@ -49,7 +54,10 @@ FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 	// Inch backward until we have a valid grid position.
 	// If we can't find *any* valid grid position, then default to the PlayerGridAheadLocation.
 	auto PendingEndWorldPos = BlinkyPawnRef->GetActorLocation() + D;
-	while (DMagnitude > CMagnitude && !ULevelLoader::GetInstance(Level)->CanAiMoveHereWhenNotFrightened(PendingEndWorldPos))
+	while (
+		DMagnitude > CMagnitude &&
+		!ULevelLoader::GetInstance(Level)->Passable(PendingEndWorldPos)
+	)
 	{
 		// Decrement the magnitude of vector D by 100 cm.
 		DMagnitude -= 100.0;
@@ -63,7 +71,7 @@ FGridLocation AInkyAiController::GetChaseEndGridPosition_Implementation() const
 
 	// This should always be true.
 	checkf(
-		ULevelLoader::GetInstance(Level)->CanAiMoveHereWhenNotFrightened(PendingEndWorldPos),
+		ULevelLoader::GetInstance(Level)->Passable(PendingEndWorldPos),
 		TEXT("PendingEndWorldPos can always fall back to the player's direct position.")
 	);
 

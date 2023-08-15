@@ -10,19 +10,19 @@
 
 struct FWave;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsClearedSignature);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsCleared);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdatedSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated,
                                             int, Score);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdatedSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdated,
                                             int, NewDotsConsumed);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChangedSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChanged,
                                              EChompGameStateEnum, OldState,
                                              EChompGameStateEnum, NewState);
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChangedSignature,
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGamePlayingStateChanged,
                                              EChompPlayingSubstateEnum, OldSubstate,
                                              EChompPlayingSubstateEnum, NewSubstate);
 
@@ -68,19 +68,19 @@ protected:
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsClearedSignature OnDotsClearedDelegate;
+	FOnDotsCleared OnDotsClearedDelegate;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsConsumedUpdatedSignature OnDotsConsumedUpdatedDelegate;
+	FOnDotsConsumedUpdated OnDotsConsumedUpdatedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGameStateChangedSignature OnGameStateChangedDelegate;
+	FOnGameStateChanged OnGameStateChangedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnScoreUpdatedSignature OnScoreUpdatedDelegate;
+	FOnScoreUpdated OnScoreUpdatedDelegate;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGamePlayingStateChangedSignature OnGamePlayingStateChangedDelegate;
+	FOnGamePlayingStateChanged OnGamePlayingStateChangedDelegate;
 
 	AChompGameState();
 
@@ -92,6 +92,10 @@ public:
 
 	EChompGameStateEnum GetEnum() const;
 
+	bool IsPlaying() const;
+
+	bool IsFrightened() const;
+
 	int GetScore() const;
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;
@@ -102,5 +106,5 @@ public:
 
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
-	EChompPlayingSubstateEnum GetSubstateEnum() const;
+	EChompPlayingSubstateEnum GetSubstateEnum(const bool ExcludeFrightened = false) const;
 };

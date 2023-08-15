@@ -57,10 +57,10 @@ public:
 	{
 	}
 
-	EChompPlayingSubstateEnum GetEnum(const double CurrentWorldTimeSeconds) const
+	EChompPlayingSubstateEnum GetEnum(const double CurrentWorldTimeSeconds, const bool ExcludeFrightened = false) const
 	{
 		// Early return if we are in a frightened substate.
-		if (CurrentWorldTimeSeconds < FrightenedStartTime + FrightenedDurationRef)
+		if (!ExcludeFrightened && CurrentWorldTimeSeconds < FrightenedStartTime + FrightenedDurationRef)
 			return EChompPlayingSubstateEnum::Frightened;
 
 		const auto TimeSinceStart = CurrentWorldTimeSeconds - PlayingStartTime - TimeSpentInFrightenedSubstate;

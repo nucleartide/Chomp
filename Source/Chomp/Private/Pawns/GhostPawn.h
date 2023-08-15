@@ -7,6 +7,7 @@
 #include "AStar/GridLocation.h"
 #include "GhostPawn.generated.h"
 
+enum class EGhostState : uint8;
 enum class EChompPlayingSubstateEnum : uint8;
 class AGhostHouseQueue;
 
@@ -54,16 +55,29 @@ class AGhostPawn : public AMovablePawn
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	double FrightenedMovementSpeed = 2.5;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	double ReturnToGhostHouseMovementSpeed = 0.0;
+
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
+	FGridLocation GhostHouseReturnLocation;
+
 	UFUNCTION()
-	void HandlePlayingSubstateChanged(EChompPlayingSubstateEnum OldSubstate, EChompPlayingSubstateEnum NewSubstate);
+	void UpdateVisibility(const EGhostState NewGhostState);
+
+	UFUNCTION()
+	void UpdateMaterial(const EGhostState NewGhostState);
 
 protected:
 	virtual void BeginPlay() override;
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+	
+	virtual void NotifyActorBeginOverlap(AActor* Other) override;
 
 public:
 	FGridLocation GetStartingPosition() const;
+	
+	FGridLocation GetGhostHouseReturnLocation() const;
 	
 	int GetDotsConsumedMovementThreshold() const;
 	
@@ -78,4 +92,6 @@ public:
 	FLinearColor GetDebugColor() const;
 
 	double GetFrightenedMovementSpeed() const;
+
+	double GetReturnToGhostHouseMovementSpeed() const;
 };

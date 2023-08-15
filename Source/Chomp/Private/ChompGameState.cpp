@@ -50,10 +50,10 @@ void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsum
 	OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
-EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum() const
+EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFrightened) const
 {
 	const auto World = FSafeGet::World(this);
-	return CurrentSubstate.GetEnum(World->GetTimeSeconds());
+	return CurrentSubstate.GetEnum(World->GetTimeSeconds(), ExcludeFrightened);
 }
 
 void AChompGameState::LoseGame()
@@ -93,6 +93,16 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 EChompGameStateEnum AChompGameState::GetEnum() const
 {
 	return GameState;
+}
+
+bool AChompGameState::IsPlaying() const
+{
+	return GameState == EChompGameStateEnum::Playing;
+}
+
+bool AChompGameState::IsFrightened() const
+{
+	return IsPlaying() && GetSubstateEnum() == EChompPlayingSubstateEnum::Frightened;
 }
 
 int AChompGameState::GetScore() const
