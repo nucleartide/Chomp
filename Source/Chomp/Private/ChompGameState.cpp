@@ -50,10 +50,10 @@ void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsum
 	OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
 }
 
-EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum() const
+EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFrightened) const
 {
 	const auto World = FSafeGet::World(this);
-	return CurrentSubstate.GetEnum(World->GetTimeSeconds());
+	return CurrentSubstate.GetEnum(World->GetTimeSeconds(), ExcludeFrightened);
 }
 
 void AChompGameState::LoseGame()

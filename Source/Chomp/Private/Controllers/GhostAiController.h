@@ -11,8 +11,16 @@
 
 class AGhostHouseQueue;
 
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnHasBeenEatenChanged,
-                                            bool, HasBeenEaten);
+UENUM()
+enum class EGhostState : uint8
+{
+	Normal,
+	Frightened,
+	Eaten,
+};
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGhostStateChanged,
+                                            EGhostState, HasBeenEaten);
 
 UCLASS()
 class AGhostAiController : public AAIController
@@ -23,8 +31,9 @@ class AGhostAiController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
+
 	UPROPERTY(VisibleInstanceOnly, Category = "Debug View")
-	bool HasBeenEaten = false;
+	EGhostState GhostState = EGhostState::Normal;
 
 	UFUNCTION()
 	void HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState, EChompPlayingSubstateEnum NewState);
@@ -56,10 +65,10 @@ class AGhostAiController : public AAIController
 	bool IsPlayerAlive() const;
 
 	// A setter that will also notify observers of the changed internal state.
-	void SetHasBeenEaten(bool WasJustEaten);
+	void SetGhostState(const EGhostState NewGhostState);
 
 	UFUNCTION()
-	void HandleHasBeenEatenChanged(const bool WasJustEaten);
+	void HandleGhostStateChanged(const EGhostState NewGhostState);
 
 	FMovementPath ReturnToGhostHouse() const;
 
@@ -69,7 +78,7 @@ protected:
 
 	UPROPERTY(VisibleInstanceOnly)
 	FMovementPath MovementPath;
-	
+
 	UPROPERTY(VisibleInstanceOnly)
 	FGridLocation CurrentScatterOrigin;
 
@@ -91,23 +100,23 @@ protected:
 	virtual FVector GetPlayerWorldLocation() const;
 
 	FMovementPath UpdateMovementPathWhenInChase() const;
-	
+
 	FMovementPath UpdateMovementPathWhenInScatter();
 
 	FMovementPath UpdateMovementPathWhenInFrightened() const;
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnHasBeenEatenChanged OnHasBeenEatenChanged;
-	
+	FOnGhostStateChanged OnGhostStateChanged;
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	FGridLocation GetChaseEndGridPosition() const;
-	
+
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "Customizable AI Behavior")
 	void DecideToUpdateMovementPathInChase(FVector NewLocation);
 
 	virtual FGridLocation GetChaseEndGridPosition_Implementation() const;
-	
+
 	virtual void DecideToUpdateMovementPathInChase_Implementation(FVector NewLocation);
 
 	void HandleGameStateChanged(EChompGameStateEnum OldState, EChompGameStateEnum NewState);

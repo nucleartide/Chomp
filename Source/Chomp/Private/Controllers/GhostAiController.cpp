@@ -49,11 +49,14 @@ void AGhostAiController::Tick(float DeltaTime)
 
 	// Compute new location and rotation.
 	const auto GameSubstate = GameState->GetSubstateEnum();
-	const auto MovementSpeed = HasBeenEaten
+	const auto MovementSpeed = GhostState == EGhostState::Eaten
 		                           ? GhostPawn->GetReturnToGhostHouseMovementSpeed()
-		                           : GameSubstate == EChompPlayingSubstateEnum::Frightened
+		                           : GhostState == EGhostState::Frightened
 		                           ? GhostPawn->GetFrightenedMovementSpeed()
-		                           : GhostPawn->GetMovementSpeed();
+		                           : GhostState == EGhostState::Normal
+		                           ? GhostPawn->GetMovementSpeed()
+		                           : -1.0;
+	checkf(MovementSpeed > 0, TEXT("GhostState must be handled by the ternary expression above: %d"), GhostState);
 	const auto [NewLocation, NewRotation] = GhostPawn->MoveAlongPath(
 		MovementPath,
 		DeltaTime,
@@ -64,21 +67,25 @@ void AGhostAiController::Tick(float DeltaTime)
 	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
 	// Make body re-appear if conditions are met.
-	if (HasBeenEaten && MovementPath.WasCompleted(NewLocation))
+	if (GhostState == EGhostState::Eaten && MovementPath.WasCompleted(NewLocation))
 	{
-		SetHasBeenEaten(false);
+		SetGhostState(EGhostState::Normal);
 	}
 
-	// [ ] TODO: playtest to see what's going on
-	// [ ] TODO: model Frightened state on a per-ghost level, not a global level
-	// [ ] TODO: edge case when in scatter mode
-	// [ ] TODO: edge case when in chase mode
-	// [ ] TODO: allow movement within ghost house
-	// [ ] TODO: check IsGhostHouse function, does that get messed up
-	// [ ] TODO: when in frightened state and you've reached the ghost house again, should return to scatter/chase
-
+	// [x] TODO: playtest to see what's going on
+	// [x] TODO: model Frightened state on a per-ghost level, not a global level
+	// [x] TODO: update how Frightened state is computed - it should remain the same
+	// [x] TODO: edge case when in scatter mode
+	// [x] TODO: edge case when in chase mode
+	// [x] TODO: allow movement within ghost house
+	// [x] TODO: check IsGhostHouse function, does that get messed up
+	// [x] TODO: when in frightened state and you've reached the ghost house again, should return to scatter/chase
+	// [x] TODO: HasBeenEaten should be a ghost state instead
+	// [x] TODO: movement speed condition is not purely dependent on global state
+	// [x] TODO: consider all state transitions and how that affects ghost state
+	
 	// Compute a new movement path if conditions are met.
-	if (!HasBeenEaten)
+	if (GhostState != EGhostState::Eaten)
 	{
 		if (const auto PlayingSubstate = GameState->GetSubstateEnum();
 			PlayingSubstate == EChompPlayingSubstateEnum::Scatter &&
@@ -96,6 +103,23 @@ void AGhostAiController::Tick(float DeltaTime)
 		{
 			MovementPath = UpdateMovementPathWhenInFrightened();
 		}
+	}
+	else if (GhostState == EGhostState::Eaten && MovementPath.WasCompleted(NewLocation))
+	{
+		// Find the underlying substate.
+		const auto NonFrightenedSubstate = GameState->GetSubstateEnum(true);
+		check(NonFrightenedSubstate != EChompPlayingSubstateEnum::Frightened);
+
+		// Compute new movement path depending on underlying substate.
+		if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Scatter)
+			MovementPath = UpdateMovementPathWhenInScatter();
+		else if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Chase)
+			DecideToUpdateMovementPathInChase(NewLocation);
+		else
+			checkf(false, TEXT("Movement path is %d"), NonFrightenedSubstate);
+
+		// Uncheck internal state for tracking whether ghost has been eaten.
+		SetGhostState(EGhostState::Normal);
 	}
 
 #if WITH_EDITOR
@@ -138,7 +162,7 @@ void AGhostAiController::BeginPlay()
 		);
 	}
 
-	OnHasBeenEatenChanged.AddUniqueDynamic(this, &AGhostAiController::HandleHasBeenEatenChanged);
+	OnGhostStateChanged.AddUniqueDynamic(this, &AGhostAiController::HandleGhostStateChanged);
 }
 
 void AGhostAiController::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -157,7 +181,7 @@ void AGhostAiController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		);
 	}
 
-	OnHasBeenEatenChanged.RemoveDynamic(this, &AGhostAiController::HandleHasBeenEatenChanged);
+	OnGhostStateChanged.RemoveDynamic(this, &AGhostAiController::HandleGhostStateChanged);
 }
 
 FGridLocation AGhostAiController::GetPlayerGridLocation() const
@@ -204,7 +228,18 @@ void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateE
 	if (!IsPlayerAlive())
 		return;
 
-	if (!HasBeenEaten)
+	// Update internal ghost state, because whether a ghost appears frightened is independent
+	// of the GameState's playing substate.
+	//
+	// For example, a ghost can revert to its normal non-frightened look/behavior once it returns to the ghost house,
+	// even though the GameState's playing substate remains "Frightened".
+	if (NewState == EChompPlayingSubstateEnum::Frightened)
+		SetGhostState(EGhostState::Frightened);
+	else if (NewState != EChompPlayingSubstateEnum::Frightened && GhostState != EGhostState::Eaten)
+		SetGhostState(EGhostState::Normal);
+
+	// Update movement path.
+	if (GhostState != EGhostState::Eaten)
 	{
 		if (NewState == EChompPlayingSubstateEnum::Scatter)
 			MovementPath = UpdateMovementPathWhenInScatter();
@@ -527,12 +562,12 @@ int AGhostAiController::GetLeaveGhostHousePriority() const
 
 bool AGhostAiController::GetHasBeenEaten() const
 {
-	return HasBeenEaten;
+	return GhostState == EGhostState::Eaten;
 }
 
 void AGhostAiController::Consume()
 {
-	SetHasBeenEaten(true);
+	SetGhostState(EGhostState::Eaten);
 }
 
 AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
@@ -548,15 +583,15 @@ bool AGhostAiController::IsPlayerAlive() const
 	return PlayerPawn != nullptr;
 }
 
-void AGhostAiController::SetHasBeenEaten(bool WasJustEaten)
+void AGhostAiController::SetGhostState(const EGhostState NewGhostState)
 {
-	HasBeenEaten = WasJustEaten;
-	OnHasBeenEatenChanged.Broadcast(HasBeenEaten);
+	GhostState = NewGhostState;
+	OnGhostStateChanged.Broadcast(NewGhostState);
 }
 
-void AGhostAiController::HandleHasBeenEatenChanged(const bool WasJustEaten)
+void AGhostAiController::HandleGhostStateChanged(const EGhostState NewGhostState)
 {
-	if (WasJustEaten)
+	if (NewGhostState == EGhostState::Eaten)
 		MovementPath = ReturnToGhostHouse();
 }
 
@@ -567,7 +602,7 @@ FMovementPath AGhostAiController::ReturnToGhostHouse() const
 	const auto StartPosition = Pawn->GetGridLocation();
 
 	// Compute end position.
-	const auto EndPosition = Pawn->GetStartingPosition();
+	const auto EndPosition = Pawn->GetGhostHouseReturnLocation();
 
 	// Compute path.
 	const auto WorldLocation = FVector2D(Pawn->GetActorLocation());

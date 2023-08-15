@@ -27,15 +27,9 @@ void AGhostPawn::BeginPlay()
 	check(FrightenedMaterial);
 
 	{
-		const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-		ChompGameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
-			this, &AGhostPawn::HandlePlayingSubstateChanged);
-	}
-
-	{
 		const auto GhostController = GetController<AGhostAiController>();
 		check(GhostController);
-		GhostController->OnHasBeenEatenChanged.AddUniqueDynamic(this, &AGhostPawn::HandleHasBeenEatenChanged);
+		GhostController->OnGhostStateChanged.AddUniqueDynamic(this, &AGhostPawn::HandleGhostStateChanged);
 	}
 }
 
@@ -43,14 +37,8 @@ void AGhostPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
 	Super::EndPlay(EndPlayReason);
 
-	{
-		const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-		ChompGameState->OnGamePlayingStateChangedDelegate.
-		                RemoveDynamic(this, &AGhostPawn::HandlePlayingSubstateChanged);
-	}
-
 	if (const auto GhostController = GetController<AGhostAiController>())
-		GhostController->OnHasBeenEatenChanged.RemoveDynamic(this, &AGhostPawn::HandleHasBeenEatenChanged);
+		GhostController->OnGhostStateChanged.RemoveDynamic(this, &AGhostPawn::HandleGhostStateChanged);
 }
 
 void AGhostPawn::NotifyActorBeginOverlap(AActor* Other)
@@ -74,34 +62,40 @@ void AGhostPawn::NotifyActorBeginOverlap(AActor* Other)
 	}
 }
 
-void AGhostPawn::HandlePlayingSubstateChanged(
-	EChompPlayingSubstateEnum OldSubstate,
-	EChompPlayingSubstateEnum NewSubstate)
+void AGhostPawn::HandleGhostStateChanged(const EGhostState NewGhostState)
 {
-	// Pre-conditions.
-	check(OldSubstate != NewSubstate);
-
-	if (NewSubstate == EChompPlayingSubstateEnum::Frightened)
+	const auto IsVisible = NewGhostState != EGhostState::Eaten;
+	HeadComponentRef->SetVisibility(IsVisible);
+	BodyComponentRef->SetVisibility(IsVisible);
+	
+	if (NewGhostState == EGhostState::Frightened)
 	{
 		HeadComponentRef->SetMaterial(0, FrightenedMaterial);
 		BodyComponentRef->SetMaterial(0, FrightenedMaterial);
 	}
-	else
+	else if (NewGhostState == EGhostState::Normal)
 	{
 		HeadComponentRef->SetMaterial(0, NotFrightenedMaterial);
 		BodyComponentRef->SetMaterial(0, NotFrightenedMaterial);
 	}
-}
-
-void AGhostPawn::HandleHasBeenEatenChanged(const bool HasBeenEaten)
-{
-	HeadComponentRef->SetVisibility(!HasBeenEaten);
-	BodyComponentRef->SetVisibility(!HasBeenEaten);
+	else if (NewGhostState == EGhostState::Eaten)
+	{
+		// No-op. Can't see anything anyway.
+	}
+	else
+	{
+		checkf(false, TEXT("GhostState is not handled: %d"), NewGhostState)
+	}
 }
 
 FGridLocation AGhostPawn::GetStartingPosition() const
 {
 	return StartingPosition;
+}
+
+FGridLocation AGhostPawn::GetGhostHouseReturnLocation() const
+{
+	return GhostHouseReturnLocation;
 }
 
 int AGhostPawn::GetDotsConsumedMovementThreshold() const

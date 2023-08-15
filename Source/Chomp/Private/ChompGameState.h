@@ -102,5 +102,5 @@ public:
 
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
-	EChompPlayingSubstateEnum GetSubstateEnum() const;
+	EChompPlayingSubstateEnum GetSubstateEnum(const bool ExcludeFrightened = false) const;
 };

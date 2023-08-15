@@ -7,6 +7,7 @@
 #include "AStar/GridLocation.h"
 #include "GhostPawn.generated.h"
 
+enum class EGhostState : uint8;
 enum class EChompPlayingSubstateEnum : uint8;
 class AGhostHouseQueue;
 
@@ -57,11 +58,11 @@ class AGhostPawn : public AMovablePawn
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	double ReturnToGhostHouseMovementSpeed = 0.0;
 
-	UFUNCTION()
-	void HandlePlayingSubstateChanged(EChompPlayingSubstateEnum OldSubstate, EChompPlayingSubstateEnum NewSubstate);
+	UPROPERTY(EditInstanceOnly, Category = "Custom Settings")
+	FGridLocation GhostHouseReturnLocation;
 
 	UFUNCTION()
-	void HandleHasBeenEatenChanged(bool HasBeenEaten);
+	void HandleGhostStateChanged(const EGhostState NewGhostState);
 
 protected:
 	virtual void BeginPlay() override;
@@ -72,6 +73,8 @@ protected:
 
 public:
 	FGridLocation GetStartingPosition() const;
+	
+	FGridLocation GetGhostHouseReturnLocation() const;
 	
 	int GetDotsConsumedMovementThreshold() const;
 	
