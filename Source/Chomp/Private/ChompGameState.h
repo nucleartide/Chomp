@@ -94,6 +94,8 @@ public:
 
 	bool IsPlaying() const;
 
+	bool IsFrightened() const;
+
 	int GetScore() const;
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;

@@ -100,6 +100,11 @@ bool AChompGameState::IsPlaying() const
 	return GameState == EChompGameStateEnum::Playing;
 }
 
+bool AChompGameState::IsFrightened() const
+{
+	return IsPlaying() && GetSubstateEnum() == EChompPlayingSubstateEnum::Frightened;
+}
+
 int AChompGameState::GetScore() const
 {
 	return Score;

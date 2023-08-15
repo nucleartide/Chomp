@@ -62,7 +62,10 @@ class AGhostPawn : public AMovablePawn
 	FGridLocation GhostHouseReturnLocation;
 
 	UFUNCTION()
-	void HandleGhostStateChanged(const EGhostState NewGhostState);
+	void UpdateVisibility(const EGhostState NewGhostState);
+
+	UFUNCTION()
+	void UpdateMaterial(const EGhostState NewGhostState);
 
 protected:
 	virtual void BeginPlay() override;

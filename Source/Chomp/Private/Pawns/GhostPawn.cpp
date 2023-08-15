@@ -29,7 +29,8 @@ void AGhostPawn::BeginPlay()
 	{
 		const auto GhostController = GetController<AGhostAiController>();
 		check(GhostController);
-		GhostController->OnGhostStateChanged.AddUniqueDynamic(this, &AGhostPawn::HandleGhostStateChanged);
+		GhostController->OnGhostStateChanged.AddUniqueDynamic(this, &AGhostPawn::UpdateVisibility);
+		GhostController->OnGhostStateChanged.AddUniqueDynamic(this, &AGhostPawn::UpdateMaterial);
 	}
 }
 
@@ -38,7 +39,10 @@ void AGhostPawn::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 
 	if (const auto GhostController = GetController<AGhostAiController>())
-		GhostController->OnGhostStateChanged.RemoveDynamic(this, &AGhostPawn::HandleGhostStateChanged);
+	{
+		GhostController->OnGhostStateChanged.RemoveDynamic(this, &AGhostPawn::UpdateVisibility);
+		GhostController->OnGhostStateChanged.RemoveDynamic(this, &AGhostPawn::UpdateMaterial);
+	}
 }
 
 void AGhostPawn::NotifyActorBeginOverlap(AActor* Other)
@@ -46,28 +50,32 @@ void AGhostPawn::NotifyActorBeginOverlap(AActor* Other)
 	Super::NotifyActorBeginOverlap(Other);
 
 	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-	if (ChompGameState->GetEnum() != EChompGameStateEnum::Playing)
-	{
+	if (!ChompGameState->IsPlaying())
 		return;
-	}
 
 	const auto GhostController = GetController<AGhostAiController>();
 	check(GhostController);
-	
-	if (ChompGameState->GetSubstateEnum() == EChompPlayingSubstateEnum::Frightened &&
-		!GhostController->GetHasBeenEaten() &&
-		Cast<AChompPawn>(Other))
+
+	if (const auto IsPlayer = Cast<AChompPawn>(Other);
+		IsPlayer &&
+		ChompGameState->IsFrightened() &&
+		!GhostController->GetHasBeenEaten())
 	{
 		GhostController->Consume();
 	}
 }
 
-void AGhostPawn::HandleGhostStateChanged(const EGhostState NewGhostState)
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AGhostPawn::UpdateVisibility(const EGhostState NewGhostState)
 {
 	const auto IsVisible = NewGhostState != EGhostState::Eaten;
 	HeadComponentRef->SetVisibility(IsVisible);
 	BodyComponentRef->SetVisibility(IsVisible);
-	
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void AGhostPawn::UpdateMaterial(const EGhostState NewGhostState)
+{
 	if (NewGhostState == EGhostState::Frightened)
 	{
 		HeadComponentRef->SetMaterial(0, FrightenedMaterial);
@@ -80,7 +88,7 @@ void AGhostPawn::HandleGhostStateChanged(const EGhostState NewGhostState)
 	}
 	else if (NewGhostState == EGhostState::Eaten)
 	{
-		// No-op. Can't see anything anyway.
+		// No-op. Shouldn't be able to see anything.
 	}
 	else
 	{
