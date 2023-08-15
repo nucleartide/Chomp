@@ -123,7 +123,9 @@ public:
 
 	int GetLeaveGhostHousePriority() const;
 
-	bool GetHasBeenEaten() const;
+	bool IsEaten() const;
+
+	bool IsNormal() const;
 
 	void Consume();
 };
@@ -140,7 +142,7 @@ public:
 	* Tick()
 	* OnGhostStateChanged
 	* HandleGameStateChanged
-	* GetHasBeenEaten
+	* IsEaten
 	* Consume
 * Member of ghosthousequeue (component)
 	* HandleDotsConsumedUpdated

@@ -382,15 +382,20 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
 
-	// Jumble adjacent tiles.
+	// Find adjacent tiles, and jumble them.
 	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
 	FArrayHelpers::Randomize(AdjacentTiles);
 
+	// Omit the direction that we came from.
+	// ReSharper disable once CppTooWideScope
+	// TODO: once returned to ghost house you should not be updating movement path in frightened, you should be
+	// updating in the underlying scatter or chase state
+	bool DidRemove = false;
 	{
 		const auto GridLocationPath = MovementPath.GetGridLocationPath();
-		for (auto i = 0; i < GridLocationPath.Num(); i++)
+		for (auto i = 1; i < GridLocationPath.Num(); i++)
 		{
-			if (GridLocationPath[i] == GridLocation && i >= 1)
+			if (GridLocation == GridLocationPath[i])
 			{
 				// Then get the previous node.
 				const auto PrevNode = GridLocationPath[i - 1];
@@ -398,17 +403,17 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 				// Remove it from AdjacentTiles.
 				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
 					It != AdjacentTiles.end())
+				{
+					 DidRemove = true;
 					AdjacentTiles.erase(It);
-
-				// Then break early.
 				break;
+				}
 			}
 		}
 	}
 
-	check(AdjacentTiles.size() > 0);
+	checkf(AdjacentTiles.size() > 0, TEXT("Must have at least 1 adjacent tile."));
 
-	// Find the intersection tile in our selected direction.
 	const auto MaxDimension = FMath::Max(
 		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
 		ULevelLoader::GetInstance(Level)->GetLevelWidth()
@@ -548,9 +553,14 @@ int AGhostAiController::GetLeaveGhostHousePriority() const
 	return Pawn->GetLeaveGhostHousePriority();
 }
 
-bool AGhostAiController::GetHasBeenEaten() const
+bool AGhostAiController::IsEaten() const
 {
 	return GhostState == EGhostState::Eaten;
+}
+
+bool AGhostAiController::IsNormal() const
+{
+	return GhostState == EGhostState::Normal;
 }
 
 void AGhostAiController::Consume()

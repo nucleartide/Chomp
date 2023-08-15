@@ -59,7 +59,7 @@ void AGhostPawn::NotifyActorBeginOverlap(AActor* Other)
 	if (const auto IsPlayer = Cast<AChompPawn>(Other);
 		IsPlayer &&
 		ChompGameState->IsFrightened() &&
-		!GhostController->GetHasBeenEaten())
+		!GhostController->IsEaten())
 	{
 		GhostController->Consume();
 	}
