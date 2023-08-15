@@ -63,8 +63,12 @@ void AGhostAiController::Tick(float DeltaTime)
 		MovementSpeed
 	);
 
-	// Apply new location.
+	// Apply new location. Player might be dead after this, so return early.
 	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
+	if (!IsPlayerAlive())
+	{
+		return;
+	}
 
 	// Compute a new movement path if conditions are met.
 	if (GhostState != EGhostState::Eaten)
@@ -589,7 +593,7 @@ bool AGhostAiController::IsPlayerAlive() const
 {
 	const auto PlayerController = FSafeGet::PlayerController(this, 0);
 	const auto PlayerPawn = PlayerController->GetPawn<AMovablePawn>();
-	return PlayerPawn != nullptr;
+	return IsValid(PlayerPawn);
 }
 
 void AGhostAiController::SetGhostState(const EGhostState NewGhostState)
