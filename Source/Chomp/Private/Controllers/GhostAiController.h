@@ -31,7 +31,6 @@ class AGhostAiController : public AAIController
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	bool DebugAStarMap = false;
 
-
 	UPROPERTY(VisibleInstanceOnly, Category = "Debug View")
 	EGhostState GhostState = EGhostState::Normal;
 

@@ -72,18 +72,6 @@ void AGhostAiController::Tick(float DeltaTime)
 		SetGhostState(EGhostState::Normal);
 	}
 
-	// [x] TODO: playtest to see what's going on
-	// [x] TODO: model Frightened state on a per-ghost level, not a global level
-	// [x] TODO: update how Frightened state is computed - it should remain the same
-	// [x] TODO: edge case when in scatter mode
-	// [x] TODO: edge case when in chase mode
-	// [x] TODO: allow movement within ghost house
-	// [x] TODO: check IsGhostHouse function, does that get messed up
-	// [x] TODO: when in frightened state and you've reached the ghost house again, should return to scatter/chase
-	// [x] TODO: HasBeenEaten should be a ghost state instead
-	// [x] TODO: movement speed condition is not purely dependent on global state
-	// [x] TODO: consider all state transitions and how that affects ghost state
-	
 	// Compute a new movement path if conditions are met.
 	if (GhostState != EGhostState::Eaten)
 	{
