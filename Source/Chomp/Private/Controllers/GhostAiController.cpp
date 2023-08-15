@@ -29,7 +29,7 @@ void AGhostAiController::Tick(float DeltaTime)
 		return;
 
 	// Early return if in the ghost house.
-	if (IsInGhostHouse())
+	if (IsInGhostHouseQueue())
 		return;
 
 	// Early return if movement path hasn't been initialized yet.
@@ -411,7 +411,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 	// Only eaten ghosts can navigate into the ghost house.
 	// ReSharper disable once CppTooWideScope
 	bool DebugDidRemoveGateTile = false;
-	if (!IsInGhostHouse())
+	if (!ULevelLoader::GetInstance(Level)->IsGhostHouse(GridLocation))
 	{
 		// ReSharper disable once CppTooWideScopeInitStatement
 		const auto GateTiles = ULevelLoader::GetInstance(Level)->GetGateTiles();
@@ -555,7 +555,7 @@ bool AGhostAiController::IsStartingPositionInGhostHouse() const
 	return ULevelLoader::GetInstance(Level)->IsGhostHouse(StartingPosition);
 }
 
-bool AGhostAiController::IsInGhostHouse() const
+bool AGhostAiController::IsInGhostHouseQueue() const
 {
 	const auto Pawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto Queue = Pawn->GetGhostHouseQueue();

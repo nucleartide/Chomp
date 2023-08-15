@@ -58,7 +58,7 @@ class AGhostAiController : public AAIController
 
 	bool IsStartingPositionInGhostHouse() const;
 
-	bool IsInGhostHouse() const;
+	bool IsInGhostHouseQueue() const;
 
 	AGhostHouseQueue* GetGhostHouseQueue() const;
 
@@ -147,7 +147,7 @@ public:
 * Member of ghosthousequeue (component)
 	* HandleDotsConsumedUpdated
 	* ResetGhostState
-	* IsInGhostHouse
+	* IsInGhostHouseQueue
 	* GetGhostHouseQueue
 	* IsStartingPositionInGhostHouse (helper)
 	* GetLeaveGhostHousePriority
