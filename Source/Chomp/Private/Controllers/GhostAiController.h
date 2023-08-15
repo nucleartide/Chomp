@@ -22,6 +22,7 @@ enum class EGhostState : uint8
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnGhostStateChanged,
                                             EGhostState, HasBeenEaten);
 
+// TODO: This class has many responsibilities, see the bottom of this file for potential refactorings when it's expedient.
 UCLASS()
 class AGhostAiController : public AAIController
 {
@@ -35,7 +36,7 @@ class AGhostAiController : public AAIController
 	EGhostState GhostState = EGhostState::Normal;
 
 	UFUNCTION()
-	void HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState, EChompPlayingSubstateEnum NewState);
+	void UpdateWhenSubstateChanges(EChompPlayingSubstateEnum OldState, EChompPlayingSubstateEnum NewState);
 
 	UFUNCTION()
 	void HandleDotsConsumedUpdated(int NewDotsConsumed);
@@ -126,3 +127,50 @@ public:
 
 	void Consume();
 };
+
+#if false
+
+* GhostAiController (the brain of the Ghost pawn)
+	* GhostState (field)
+	* UpdateWhenSubstateChanged
+	* ResetGhostState (emit an event)
+	* SetGhostState
+	* HandleGhostStateChanged
+	* OnPossess
+	* Tick()
+	* OnGhostStateChanged
+	* HandleGameStateChanged
+	* GetHasBeenEaten
+	* Consume
+* Member of ghosthousequeue (component)
+	* HandleDotsConsumedUpdated
+	* ResetGhostState
+	* IsInGhostHouse
+	* GetGhostHouseQueue
+	* IsStartingPositionInGhostHouse (helper)
+	* GetLeaveGhostHousePriority
+* A* maze navigator component
+	* ComputePath
+	* DebugAStarMap (config), whether to print out map
+	* DebugAStar
+	* ReturnToGhostHouse
+	* MovementPath (field)
+	* CurrentScatterOrigin
+	* CurrentScatterDestination
+	* Tick()
+	* Possibly use state pattern:
+		* UpdateMovementPathWhenInChase
+		* UpdateMovementPathWhenInScatter
+		* UpdateMovementPathWhenInFrightened
+		* GetChaseEndGridPosition
+		* DecideToUpdateMovementPathInChase
+		* GetChaseEndGridPosition_Implementation
+		* DecideToUpdateMovementPathInChase_Implementation
+* Util (FSafeGet)
+	* IsPlayerAlive
+* ChompPlayerController
+	* GetPlayerGridLocation (static)
+	* GetPlayerGridDirection (static)
+	* GetPlayerWorldLocation (static)
+
+#endif

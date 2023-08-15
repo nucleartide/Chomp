@@ -142,7 +142,7 @@ void AGhostAiController::BeginPlay()
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
 			this,
-			&AGhostAiController::HandleGamePlayingSubstateChanged
+			&AGhostAiController::UpdateWhenSubstateChanges
 		);
 		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
 			this,
@@ -161,7 +161,7 @@ void AGhostAiController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 		GameState->OnGamePlayingStateChangedDelegate.RemoveDynamic(
 			this,
-			&AGhostAiController::HandleGamePlayingSubstateChanged
+			&AGhostAiController::UpdateWhenSubstateChanges
 		);
 		GameState->OnDotsConsumedUpdatedDelegate.RemoveDynamic(
 			this,
@@ -203,12 +203,12 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
  * Sync the GhostAIController with the playing sub-state of the game.
  */
 // ReSharper disable once CppMemberFunctionMayBeStatic
-void AGhostAiController::HandleGamePlayingSubstateChanged(EChompPlayingSubstateEnum OldState,
+void AGhostAiController::UpdateWhenSubstateChanges(EChompPlayingSubstateEnum OldState,
                                                           EChompPlayingSubstateEnum NewState)
 {
 	// Pre-conditions.
 	check(OldState != NewState);
-	DEBUG_LOG(TEXT("HandleGamePlayingSubstateChanged: %d to %d"), OldState, NewState);
+	DEBUG_LOG(TEXT("UpdateWhenSubstateChanges: %d to %d"), OldState, NewState);
 
 	// Early returns.
 	if (FSafeGet::GameState<AChompGameState>(this)->GetEnum() != EChompGameStateEnum::Playing)
