@@ -66,12 +66,6 @@ void AGhostAiController::Tick(float DeltaTime)
 	// Apply new location.
 	GhostPawn->SetActorLocationAndRotation(NewLocation, NewRotation);
 
-	// Make body re-appear if conditions are met.
-	if (GhostState == EGhostState::Eaten && MovementPath.WasCompleted(NewLocation))
-	{
-		SetGhostState(EGhostState::Normal);
-	}
-
 	// Compute a new movement path if conditions are met.
 	if (GhostState != EGhostState::Eaten)
 	{
@@ -204,7 +198,7 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
  */
 // ReSharper disable once CppMemberFunctionMayBeStatic
 void AGhostAiController::UpdateWhenSubstateChanges(EChompPlayingSubstateEnum OldState,
-                                                          EChompPlayingSubstateEnum NewState)
+                                                   EChompPlayingSubstateEnum NewState)
 {
 	// Pre-conditions.
 	check(OldState != NewState);
@@ -388,8 +382,6 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 
 	// Omit the direction that we came from.
 	// ReSharper disable once CppTooWideScope
-	// TODO: once returned to ghost house you should not be updating movement path in frightened, you should be
-	// updating in the underlying scatter or chase state
 	bool DidRemove = false;
 	{
 		const auto GridLocationPath = MovementPath.GetGridLocationPath();
@@ -404,9 +396,9 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
 					It != AdjacentTiles.end())
 				{
-					 DidRemove = true;
+					DidRemove = true;
 					AdjacentTiles.erase(It);
-				break;
+					break;
 				}
 			}
 		}
