@@ -7,7 +7,7 @@
 ## Dev checklist
 
 * [ ] **First draft**. Implement a working first pass at the feature.
-* [ ] **Scientific debugging**. Work is not complete until you've performed thorough playtesting, following the [scientific method](https://cseweb.ucsd.edu/classes/wi10/cse15L/c/method.php) to tease out any bugs or edge cases.
+* [ ] **Scientific debugging**. Work is not complete until you've performed thorough QA of behavior, following the [scientific method](https://cseweb.ucsd.edu/classes/wi10/cse15L/c/method.php) to resolve any bugs or edge cases.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
 * [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
 * [ ] **Fill out the changelog**. Self-explanatory.
