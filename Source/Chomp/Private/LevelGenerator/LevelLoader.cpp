@@ -60,7 +60,7 @@ void ULevelLoader::LoadLevel()
 				checkf(!GateTile.has_value(), TEXT("GateTile is being set multiple times. You have too many '-' chars in your level file!"));
 				GateTile = FGridLocation{X, Y};
 			}
-			else if (Character == 'G' || Character == 'g') // 'G' = inside ghost house
+			else if (Character == 'G') // 'G' = inside ghost house
 			{
 				GhostHouseTiles.insert(FGridLocation{X, Y});
 			}
