@@ -31,6 +31,8 @@ class AChompGameState : public AGameStateBase
 {
 	GENERATED_BODY()
 
+	// Amount to multiply the score by.
+	// Example: consuming a dot is 1 point multiplied by ScoreMultiplier, giving 10 points as a result.
 	UPROPERTY(EditDefaultsOnly)
 	int ScoreMultiplier = 10;
 
@@ -89,6 +91,8 @@ public:
 	void ConsumeDot();
 
 	void ConsumeEnergizerDot();
+
+	void ConsumeGhost();
 
 	EChompGameStateEnum GetEnum() const;
 

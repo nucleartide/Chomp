@@ -32,6 +32,11 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	double TimeSpentInFrightenedSubstate = 0.0;
 
+	// The number of ghosts consumed within the current frightened substate.
+	//
+	// Will reset upon transitioning out of the frightened substate.
+	int NumGhostsConsumed = 0;
+
 	// Reference to the configured WavesRef of ghost behavior.
 	//
 	// Note: this value should be injected by constructor, and should not be mutated once set.
@@ -51,7 +56,7 @@ public:
 		const TArray<FWave>& WavesRef,
 		const double FrightenedDurationRef
 	):
-		FrightenedStartTime(-FrightenedDurationRef),
+		FrightenedStartTime(-FrightenedDurationRef), // Needed to not violate a pre-condition.
 		WavesRef(WavesRef),
 		FrightenedDurationRef(FrightenedDurationRef)
 	{
@@ -101,9 +106,11 @@ public:
 		PlayingStartTime = CurrentWorldTimeSeconds;
 		FrightenedStartTime = -FrightenedDurationRef;
 		TimeSpentInFrightenedSubstate = 0.0;
+		NumGhostsConsumed = 0;
 
 		// Post-conditions.
 		check(GetEnum(CurrentWorldTimeSeconds) != EChompPlayingSubstateEnum::Frightened);
+		check(NumGhostsConsumed == 0);
 	}
 
 	// Note: we keep a reference to the LastPlayingSubstate so that we can call a delegate when the substate changes.
@@ -120,6 +127,7 @@ public:
 			CurrentSubstate != EChompPlayingSubstateEnum::Frightened)
 		{
 			TimeSpentInFrightenedSubstate += FrightenedDurationRef;
+			NumGhostsConsumed = 0;
 		}
 
 		// Assign LastPlayingSubstate to the current substate.
@@ -130,6 +138,12 @@ public:
 			OldLastPlayingSubstate == EChompPlayingSubstateEnum::Frightened
 			&& CurrentSubstate != EChompPlayingSubstateEnum::Frightened
 			? TimeSpentInFrightenedSubstate >= FrightenedDurationRef
+			: true
+		);
+		check(
+			OldLastPlayingSubstate == EChompPlayingSubstateEnum::Frightened
+			&& CurrentSubstate != EChompPlayingSubstateEnum::Frightened
+			? NumGhostsConsumed == 0
 			: true
 		);
 
@@ -149,6 +163,7 @@ public:
 		if (OldLastPlayingSubstate == EChompPlayingSubstateEnum::Frightened)
 		{
 			TimeSpentInFrightenedSubstate += CurrentWorldTimeSeconds - FrightenedStartTime;
+			NumGhostsConsumed = 0;
 		}
 
 		// Assign LastPlayingSubstate to the current substate.
@@ -162,6 +177,11 @@ public:
 		check(
 			OldLastPlayingSubstate == EChompPlayingSubstateEnum::Frightened
 			? TimeSpentInFrightenedSubstate >= CurrentWorldTimeSeconds - FrightenedStartTime
+			: true
+		);
+		check(
+			OldLastPlayingSubstate == EChompPlayingSubstateEnum::Frightened
+			? NumGhostsConsumed == 0
 			: true
 		);
 
@@ -189,5 +209,23 @@ public:
 			? TimeSpentInFrightenedSubstate >= CurrentWorldTimeSeconds - OldFrightenedStartTime
 			: true
 		);
+	}
+
+	void IncrementNumGhostsConsumed()
+	{
+		NumGhostsConsumed++;
+	}
+
+	// Get the number of ghosts consumed within the current "frightened" substate duration.
+	int GetNumGhostsConsumed(double CurrentWorldTimeSeconds) const
+	{
+		// Pre-conditions.
+		check(
+			GetEnum(CurrentWorldTimeSeconds) != EChompPlayingSubstateEnum::Frightened
+			? NumGhostsConsumed == 0
+			: NumGhostsConsumed >= 0
+		);
+
+		return NumGhostsConsumed;
 	}
 };

@@ -374,105 +374,31 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 {
 	// Pre-conditions.
-	checkf(GhostState != EGhostState::Eaten, TEXT("Ghosts in the eaten state should use a ReturnToGhostHouse movement path."));
-	
+	checkf(GhostState != EGhostState::Eaten,
+	       TEXT("Ghosts in the eaten state should use a ReturnToGhostHouse movement path."));
+
+	// Grab some references.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto GridLocation = GhostPawn->GetGridLocation();
+	const auto DestinationNode = ComputeDestinationNodeInFrightened(GridLocation);
 
-	// Find adjacent tiles, and jumble them.
-	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
-	FArrayHelpers::Randomize(AdjacentTiles);
-
-	// Omit the direction that we came from.
-	// ReSharper disable once CppTooWideScope
-	bool DebugDidRemoveCameFrom = false;
-	{
-		const auto GridLocationPath = MovementPath.GetGridLocationPath();
-		for (auto i = 1; i < GridLocationPath.Num(); i++)
-		{
-			if (GridLocation == GridLocationPath[i])
-			{
-				// Then get the previous node.
-				const auto PrevNode = GridLocationPath[i - 1];
-
-				// Remove it from AdjacentTiles.
-				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
-					It != AdjacentTiles.end())
-				{
-					DebugDidRemoveCameFrom = true;
-					AdjacentTiles.erase(It);
-					break;
-				}
-			}
-		}
-	}
-
-	// Also omit the gate tile, since we do not want frightened ghosts to navigate into the ghost house.
-	// Only eaten ghosts can navigate into the ghost house.
-	// ReSharper disable once CppTooWideScope
-	bool DebugDidRemoveGateTile = false;
-	if (!ULevelLoader::GetInstance(Level)->IsGhostHouse(GridLocation))
-	{
-		// ReSharper disable once CppTooWideScopeInitStatement
-		const auto GateTiles = ULevelLoader::GetInstance(Level)->GetGateTiles();
-		for (const auto& Tile : GateTiles)
-		{
-			if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), Tile);
-				It != AdjacentTiles.end())
-			{
-				DebugDidRemoveGateTile = true;
-				AdjacentTiles.erase(It);
-				break;
-			}
-		}
-	}
-
-	checkf(AdjacentTiles.size() > 0, TEXT("Must have at least 1 adjacent tile."));
-
-	const auto MaxDimension = FMath::Max(
-		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
-		ULevelLoader::GetInstance(Level)->GetLevelWidth()
+	const auto Path = ComputePath(
+		ULevelLoader::GetInstance(Level),
+		FVector2D(GhostPawn->GetActorLocation()),
+		GridLocation,
+		DestinationNode,
+		DebugAStarMap
 	);
 
-	// Iterate over tile choices.
-	for (const auto& Tile : AdjacentTiles)
-	{
-		// Compute direction of adjacent tile.
-		const auto [DirX, DirY] = Tile - GridLocation;
+	const auto NewMovementPath = FMovementPath(
+		GhostPawn->GetActorLocation(),
+		Path,
+		ULevelLoader::GetInstance(Level)
+	);
 
-		// Iterate at most MaxDimension times in Dir.
-		for (auto i = 1; i <= MaxDimension; i++)
-		{
-			const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
+	NewMovementPath.DebugLog(TEXT("Frightened"));
 
-			if (ULevelLoader::GetInstance(Level)->IsWall(PossibleIntersectionTile))
-				break;
-
-			if (ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
-			{
-				const auto Path = ComputePath(
-					ULevelLoader::GetInstance(Level),
-					FVector2D(GhostPawn->GetActorLocation()),
-					GridLocation,
-					PossibleIntersectionTile,
-					DebugAStarMap
-				);
-
-				const auto NewMovementPath = FMovementPath(
-					GhostPawn->GetActorLocation(),
-					Path,
-					ULevelLoader::GetInstance(Level)
-				);
-
-				NewMovementPath.DebugLog(TEXT("Frightened"));
-
-				return NewMovementPath;
-			}
-		}
-	}
-
-	checkf(false, TEXT("Could not find an intersection node."));
-	return MovementPath;
+	return NewMovementPath;
 }
 
 FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
@@ -546,6 +472,9 @@ void AGhostAiController::ResetGhostState()
 		CurrentScatterOrigin = Pawn->GetScatterOrigin();
 		CurrentScatterDestination = Pawn->GetScatterDestination();
 	}
+
+	// Reset the movement path too.
+	MovementPath.Reset();
 }
 
 bool AGhostAiController::IsStartingPositionInGhostHouse() const
@@ -581,6 +510,8 @@ bool AGhostAiController::IsNormal() const
 void AGhostAiController::Consume()
 {
 	SetGhostState(EGhostState::Eaten);
+	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+	ChompGameState->ConsumeGhost();
 }
 
 AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
@@ -636,6 +567,95 @@ FMovementPath AGhostAiController::ReturnToGhostHouse() const
 	check(NewMovementPath != MovementPath);
 
 	return NewMovementPath;
+}
+
+FGridLocation
+AGhostAiController::ComputeDestinationNodeInFrightened(const FGridLocation& GridLocation) const
+{
+	const auto LevelInstance = ULevelLoader::GetInstance(Level);
+	if (const auto IsGhostHouseTile =
+		LevelInstance->IsGhostHouse(GridLocation) ||
+		LevelInstance->IsGateTile(GridLocation))
+	{
+		// If we're in the ghost house, then return the point right outside of the ghost house.
+		const auto Tile = LevelInstance->GetRightOutsideGhostHouseTile();
+		return Tile;
+	}
+
+	// Save this for later.
+	const auto MaxDimension = FMath::Max(
+		ULevelLoader::GetInstance(Level)->GetLevelHeight(),
+		ULevelLoader::GetInstance(Level)->GetLevelWidth()
+	);
+
+	// Find adjacent tiles, and jumble them.
+	auto AdjacentTiles = ULevelLoader::GetInstance(Level)->Neighbors(GridLocation);
+	FArrayHelpers::Randomize(AdjacentTiles);
+
+	// Omit the direction that we came from.
+	// ReSharper disable once CppTooWideScope
+	bool DebugDidRemoveCameFrom = false;
+	{
+		const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		for (auto i = 1; i < GridLocationPath.Num(); i++)
+		{
+			if (GridLocation == GridLocationPath[i])
+			{
+				// Then get the previous node.
+				const auto PrevNode = GridLocationPath[i - 1];
+
+				// Remove it from AdjacentTiles.
+				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
+					It != AdjacentTiles.end())
+				{
+					DebugDidRemoveCameFrom = true;
+					AdjacentTiles.erase(It);
+					break;
+				}
+			}
+		}
+	}
+
+	// Also omit the gate tile, since we do not want frightened ghosts to navigate into the ghost house.
+	// Only eaten ghosts can navigate into the ghost house.
+	// ReSharper disable once CppTooWideScope
+	bool DebugDidRemoveGateTile = false;
+	{
+		// Disabling lint rule because it's a C++20 feature, which doesn't work in Unreal 5.2.
+		// ReSharper disable once CppTooWideScopeInitStatement
+		const auto GateTile = ULevelLoader::GetInstance(Level)->GetGateTile();
+		if (const auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), GateTile);
+			It != AdjacentTiles.end())
+		{
+			DebugDidRemoveGateTile = true;
+			AdjacentTiles.erase(It);
+		}
+	}
+
+	// Sanity check.
+	checkf(AdjacentTiles.size() > 0, TEXT("Must have at least 1 adjacent tile."));
+
+	// Iterate over tile choices.
+	for (const auto& Tile : AdjacentTiles)
+	{
+		// Compute direction of adjacent tile.
+		const auto [DirX, DirY] = Tile - GridLocation;
+
+		// Iterate at most MaxDimension times in Dir.
+		for (auto i = 1; i <= MaxDimension; i++)
+		{
+			const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
+
+			if (ULevelLoader::GetInstance(Level)->IsWall(PossibleIntersectionTile))
+				break;
+
+			if (ULevelLoader::GetInstance(Level)->IsIntersectionTile(PossibleIntersectionTile))
+				return PossibleIntersectionTile;
+		}
+	}
+
+	checkf(false, TEXT("Did not find an intersection tile. Returning dummy value that will likely fail at runtime."))
+	return FGridLocation{-1000, -1000};
 }
 
 void AGhostAiController::DecideToUpdateMovementPathInChase_Implementation(const FVector NewLocation)

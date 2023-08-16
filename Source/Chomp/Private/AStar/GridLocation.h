@@ -13,10 +13,10 @@ struct FGridLocation
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, SimpleDisplay, meta = (Input))
-	int X;
+	int X = 0;
 
 	UPROPERTY(EditAnywhere, SimpleDisplay, meta = (Input))
-	int Y;
+	int Y = 0;
 
 	FString ToString() const;
 

@@ -109,6 +109,12 @@ public:
 		for (auto Location : NewLocationPath)
 			check(!LevelInstance->IsWall(Location));
 	}
+	
+	void Reset()
+	{
+		GridLocationPath.Empty();
+		WorldLocationPath.Empty();
+	}
 
 	bool WasCompleted(const FVector& ActorLocation) const
 	{

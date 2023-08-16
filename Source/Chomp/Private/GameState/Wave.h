@@ -13,8 +13,8 @@ struct FWave
 	GENERATED_BODY()
 
 	UPROPERTY(EditDefaultsOnly)
-	EChompPlayingSubstateEnum PlayingState;
+	EChompPlayingSubstateEnum PlayingState = EChompPlayingSubstateEnum::None;
 
 	UPROPERTY(EditDefaultsOnly)
-	double Duration;
+	double Duration = 0.0;
 };

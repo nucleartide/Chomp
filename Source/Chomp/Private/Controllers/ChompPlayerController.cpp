@@ -96,7 +96,6 @@ FMovement AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTar
 		IntendedMovement.GetDirection().IsOppositeDirection(CurrentMovement.GetDirection()) &&
 		Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement.GetDirection()))
 	{
-		DEBUG_LOG(TEXT("Doing a 180"));
 		return NewMovement(Pawn, IntendedMovement.GetDirection(), ULevelLoader::GetInstance(Level));
 	}
 
@@ -108,7 +107,6 @@ FMovement AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTar
 			IntendedMovement.GetDirection() != CurrentMovement.GetDirection() &&
 			Pawn->CanTravelInDirection(Pawn->GetActorLocation(), IntendedMovement.GetDirection()))
 		{
-			DEBUG_LOG(TEXT("Switching to intended movement direction"));
 			CheckThatPawnIsRightOnGrid(Pawn);
 			return NewMovement(Pawn, IntendedMovement.GetDirection(), ULevelLoader::GetInstance(Level));
 		}
@@ -116,18 +114,15 @@ FMovement AChompPlayerController::UpdateCurrentMovement(const bool InvalidateTar
 		// Case where we can continue moving in current direction.
 		if (Pawn->CanTravelInDirection(Pawn->GetActorLocation(), CurrentMovement.GetDirection()))
 		{
-			DEBUG_LOG(TEXT("Continuing to move in current direction with new target tile"));
 			return NewMovement(Pawn, CurrentMovement.GetDirection(), ULevelLoader::GetInstance(Level));
 		}
 
 		// Case where we can't move anywhere.
-		DEBUG_LOG(TEXT("Can't move anywhere"));
 		CheckThatPawnIsRightOnGrid(Pawn);
 		return FMovement(CurrentMovement.GetDirection(), FMaybeGridLocation{false, FGridLocation{0, 0}});
 	}
 
 	// Default, return the current movement.
-	DEBUG_LOG(TEXT("Player: Continuing to move in current direction with old target tile"));
 	return CurrentMovement;
 }
 

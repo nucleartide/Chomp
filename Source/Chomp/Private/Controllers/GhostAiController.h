@@ -72,6 +72,8 @@ class AGhostAiController : public AAIController
 
 	FMovementPath ReturnToGhostHouse() const;
 
+	FGridLocation ComputeDestinationNodeInFrightened(const FGridLocation& GridLocation) const;
+
 protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<ULevelLoader> Level;
