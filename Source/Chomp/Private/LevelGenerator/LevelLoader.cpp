@@ -17,6 +17,11 @@ ULevelLoader* ULevelLoader::GetInstance(const TSubclassOf<ULevelLoader>& Bluepri
 
 void ULevelLoader::LoadLevel()
 {
+	if (IsLoaded)
+		return;
+	else
+		IsLoaded = true;
+	
 	// Load file into variable.
 	TArray<uint8> FileData;
 	FString FilePath = FPaths::ProjectContentDir() + LevelFilename; // Example: "Levels/level2.txt"

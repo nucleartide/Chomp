@@ -152,4 +152,6 @@ private:
 	 * The cardinal directions.
 	 */
 	static std::array<FGridLocation, 4> CardinalDirections;
+
+	bool IsLoaded = false;
 };
