@@ -119,7 +119,9 @@ public:
 
 	bool IsIntersectionTile(const FGridLocation& TileToTest) const;
 
-	std::unordered_set<FGridLocation> GetGateTiles() const;
+	FGridLocation GetGateTile() const;
+
+	FGridLocation GetRightOutsideGhostHouseTile() const;
 
 private:
 	/**
@@ -137,15 +139,14 @@ private:
 	 */
 	std::unordered_set<FGridLocation> Walls;
 
-	/**
-	 * A set of FGridLocations that describe all the "OnlyGoUp" tiles in the level.
-	 */
-	std::unordered_set<FGridLocation> GateTiles;
+	std::optional<FGridLocation> GateTile;
 
 	/**
 	 * A set of FGridLocations that describe all the tiles within the ghost house in the level.
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
+	
+	std::optional<FGridLocation> RightOutsideGhostHouseTile;
 
 	/**
 	 * The cardinal directions.

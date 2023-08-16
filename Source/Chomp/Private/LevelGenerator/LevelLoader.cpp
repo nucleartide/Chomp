@@ -57,11 +57,17 @@ void ULevelLoader::LoadLevel()
 			}
 			else if (Character == '-')
 			{
-				GateTiles.insert(FGridLocation{X, Y});
+				checkf(!GateTile.has_value(), TEXT("GateTile is being set multiple times. You have too many '-' chars in your level file!"));
+				GateTile = FGridLocation{X, Y};
 			}
-			else if (Character == 'G') // 'G' = inside ghost house
+			else if (Character == 'G' || Character == 'g') // 'G' = inside ghost house
 			{
 				GhostHouseTiles.insert(FGridLocation{X, Y});
+			}
+			else if (Character == 'g') // 'g' = right outside ghost house
+			{
+				checkf(!RightOutsideGhostHouseTile.has_value(), TEXT("RightOutsideGhostHouseTile is being set multiple times. You have too many 'g' chars in your level file!"));
+				RightOutsideGhostHouseTile = FGridLocation{X, Y};
 			}
 			else if (Character == ' ' || Character == 'o' || Character == 'O') // ' ' = dot, 'o' = no dot
 			{
@@ -73,6 +79,9 @@ void ULevelLoader::LoadLevel()
 			}
 		}
 	}
+
+	// Post-conditions.
+	check(RightOutsideGhostHouseTile.has_value());
 }
 
 void ULevelLoader::Clear()
@@ -191,7 +200,8 @@ bool ULevelLoader::IsGhostHouse(const FGridLocation& Location) const
 
 bool ULevelLoader::IsGateTile(const FGridLocation& Location) const
 {
-	return GateTiles.find(Location) != GateTiles.end();
+	check(GateTile.has_value());
+	return GateTile.value() == Location;
 }
 
 bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
@@ -255,7 +265,15 @@ bool ULevelLoader::IsIntersectionTile(const FGridLocation& TileToTest) const
 	return VerticallyAdjacentTiles >= 1 && HorizontallyAdjacentTiles >= 1;
 }
 
-std::unordered_set<FGridLocation> ULevelLoader::GetGateTiles() const
+FGridLocation ULevelLoader::GetGateTile() const
 {
-	return GateTiles;
+	check(GateTile.has_value());
+	return GateTile.value();
+}
+
+FGridLocation ULevelLoader::GetRightOutsideGhostHouseTile() const
+{
+	check(RightOutsideGhostHouseTile.has_value());
+	check(InBounds(RightOutsideGhostHouseTile.value()));
+	return RightOutsideGhostHouseTile.value();
 }
