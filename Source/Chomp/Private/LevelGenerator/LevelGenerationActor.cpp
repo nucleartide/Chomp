@@ -61,7 +61,7 @@ void ALevelGenerationActor::GenerateTiles()
 
 		for (int Y = 0; Y < Level->GetLevelWidth(); Y++)
 		{
-			if (auto Character = Row[Y]; Character == 'W' || Character == '-')
+			if (auto Character = Row[Y]; Character == 'W' || Character == '-' || Character == 'S')
 			{
 				// Compute selected tile.
 				TSubclassOf<AStaticMeshActor> SelectedTile;
@@ -69,6 +69,8 @@ void ALevelGenerationActor::GenerateTiles()
 					SelectedTile = WallTile;
 				else if (Character == '-')
 					SelectedTile = GateTile;
+				else if (Character == 'S')
+					SelectedTile = WallTile;
 				else
 					check(false);
 
@@ -159,7 +161,8 @@ void ALevelGenerationActor::GenerateTiles()
 	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
+void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState,
+                                                   const EChompGameStateEnum NewState)
 {
 	if (NewState == EChompGameStateEnum::Playing)
 	{

@@ -56,7 +56,7 @@ void ULevelLoader::LoadLevel()
 	{
 		for (auto Y = 0; Y < NumberOfColumns; Y++)
 		{
-			if (auto Character = StringList[X][Y]; Character == 'W' || Character == 'x')
+			if (auto Character = StringList[X][Y]; Character == 'W' || Character == 'x' || Character == 'S')
 			{
 				Walls.insert(FGridLocation{X, Y});
 			}
