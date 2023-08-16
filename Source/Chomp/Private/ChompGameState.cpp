@@ -22,9 +22,30 @@ void AChompGameState::ConsumeDot()
 
 void AChompGameState::ConsumeEnergizerDot()
 {
-	UpdateScore(Score + ScoreMultiplier * 5);
+	UpdateScore(Score + 5 * ScoreMultiplier);
 	const auto World = FSafeGet::World(this);
 	CurrentSubstate.Frighten(World->GetTimeSeconds());
+}
+
+void AChompGameState::ConsumeGhost()
+{
+	// Pre-conditions.
+	const auto World = FSafeGet::World(this);
+	const auto OldNumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed(World->GetTimeSeconds());
+	check(OldNumGhostsConsumed >= 0);
+
+	// Bump.
+	CurrentSubstate.IncrementNumGhostsConsumed();
+
+	// Get new value.
+	const auto NumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed(World->GetTimeSeconds());
+	check(NumGhostsConsumed == OldNumGhostsConsumed + 1);
+
+	// NumGhostsConsumed == 1, 2, 3, 4
+	// GhostScalingFactor == 2**1, 2**2, 2**3, 2**4
+	// DesiredScore == 200, 400, 800, 1600
+	const auto GhostScalingFactor = FMath::Pow(2.0, NumGhostsConsumed);
+	UpdateScore(Score + GhostScalingFactor * ScoreMultiplier);
 }
 
 void AChompGameState::UpdateScore(const int NewScore)

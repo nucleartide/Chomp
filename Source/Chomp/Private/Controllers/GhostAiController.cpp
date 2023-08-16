@@ -581,6 +581,8 @@ bool AGhostAiController::IsNormal() const
 void AGhostAiController::Consume()
 {
 	SetGhostState(EGhostState::Eaten);
+	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+	ChompGameState->ConsumeGhost();
 }
 
 AGhostHouseQueue* AGhostAiController::GetGhostHouseQueue() const
