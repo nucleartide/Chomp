@@ -22,7 +22,7 @@ void AChompGameState::ConsumeDot()
 
 void AChompGameState::ConsumeEnergizerDot()
 {
-	UpdateScore(Score + ScoreMultiplier * 10);
+	UpdateScore(Score + ScoreMultiplier * 5);
 	const auto World = FSafeGet::World(this);
 	CurrentSubstate.Frighten(World->GetTimeSeconds());
 }
