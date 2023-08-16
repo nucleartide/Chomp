@@ -56,9 +56,13 @@ void ULevelLoader::LoadLevel()
 	{
 		for (auto Y = 0; Y < NumberOfColumns; Y++)
 		{
-			if (auto Character = StringList[X][Y]; Character == 'W' || Character == 'x' || Character == 'S')
+			if (auto Character = StringList[X][Y]; Character == 'W' || Character == 'x')
 			{
 				Walls.insert(FGridLocation{X, Y});
+			}
+			else if (Character == 'S')
+			{
+				WrapAroundTiles.insert(FGridLocation{X, Y});
 			}
 			else if (Character == '-')
 			{
@@ -74,6 +78,14 @@ void ULevelLoader::LoadLevel()
 				checkf(!RightOutsideGhostHouseTile.has_value(), TEXT("RightOutsideGhostHouseTile is being set multiple times. You have too many 'g' chars in your level file!"));
 				RightOutsideGhostHouseTile = FGridLocation{X, Y};
 			}
+			else if (Character == 'C') // 'C' == bottom left corner, intended to distinguish the wrap-around border from the actual bottom-left corner of the map
+			{
+				BottomLeftTile = FGridLocation{X, Y};
+			}
+			else if (Character == 'c') // 'c' == top right corner, intended to distinguish the wrap-around border from the actual top-right corner of the map
+	 		{
+				TopRightTile = FGridLocation{X, Y};
+			}
 			else if (Character == ' ' || Character == 'o' || Character == 'O') // ' ' = dot, 'o' = no dot
 			{
 				// No-op.
@@ -87,6 +99,10 @@ void ULevelLoader::LoadLevel()
 
 	// Post-conditions.
 	check(RightOutsideGhostHouseTile.has_value());
+	check(GateTile.has_value());
+	check(BottomLeftTile.has_value());
+	check(TopRightTile.has_value());
+	check(WrapAroundTiles.size() > 0);
 }
 
 void ULevelLoader::Clear()
@@ -99,23 +115,43 @@ void ULevelLoader::Clear()
 
 int ULevelLoader::GetLevelWidth() const
 {
-	check(NumberOfColumns % 2 == 0);
-	check(NumberOfColumns != 0);
+	const auto [BottomLeftX, BottomLeftY] = GetBottomLeftTile();
+	const auto [TopRightX, TopRightY] = GetTopRightTile();
+	const auto NumColumns = TopRightY - BottomLeftY + 1;
+	
+	check(NumColumns % 2 == 0);
+	check(NumColumns != 0);
+	
+	return NumColumns;
+}
+
+int ULevelLoader::GetActualLevelWidth() const
+{
 	return NumberOfColumns;
 }
 
 int ULevelLoader::GetLevelHeight() const
 {
-	check(NumberOfRows % 2 == 0);
-	check(NumberOfRows != 0);
+	const auto [BottomLeftX, BottomLeftY] = GetBottomLeftTile();
+	const auto [TopRightX, TopRightY] = GetTopRightTile();
+	const auto NumRows = TopRightX - BottomLeftX + 1;
+	
+	check(NumRows % 2 == 0);
+	check(NumRows != 0);
+	
+	return NumRows;
+}
+
+int ULevelLoader::GetActualLevelHeight() const
+{
 	return NumberOfRows;
 }
 
 FVector2D ULevelLoader::GridToWorld(const FGridLocation& GridPosition) const
 {
 	FVector2D WorldPosition;
-	WorldPosition.X = (static_cast<float>(GridPosition.X) - .5f * GetLevelHeight()) * 100.0f;
-	WorldPosition.Y = (static_cast<float>(GridPosition.Y) - .5f * GetLevelWidth()) * 100.0f;
+	WorldPosition.X = (static_cast<float>(GridPosition.X) - .5f * GetActualLevelHeight()) * 100.0f;
+	WorldPosition.Y = (static_cast<float>(GridPosition.Y) - .5f * GetActualLevelWidth()) * 100.0f;
 	return WorldPosition;
 }
 
@@ -123,10 +159,13 @@ FGridLocation ULevelLoader::WorldToGrid(const FVector2D WorldPosition) const
 {
 	// Note: this is the inverse operation of GridToWorld().
 	FGridLocation GridPosition;
+	
 	GridPosition.X = FMath::RoundToFloat(WorldPosition.X * .01f);
 	GridPosition.Y = FMath::RoundToFloat(WorldPosition.Y * .01f);
-	GridPosition.X += .5f * GetLevelHeight();
-	GridPosition.Y += .5f * GetLevelWidth();
+	
+	GridPosition.X += .5f * GetActualLevelHeight();
+	GridPosition.Y += .5f * GetActualLevelWidth();
+
 	return GridPosition;
 }
 
@@ -212,9 +251,9 @@ bool ULevelLoader::IsGateTile(const FGridLocation& Location) const
 bool ULevelLoader::InBounds(const FGridLocation& GridPosition) const
 {
 	return 0 <= GridPosition.X
-		&& GridPosition.X < GetLevelHeight()
+		&& GridPosition.X < GetActualLevelHeight()
 		&& 0 <= GridPosition.Y
-		&& GridPosition.Y < GetLevelWidth();
+		&& GridPosition.Y < GetActualLevelWidth();
 }
 
 std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
@@ -272,13 +311,27 @@ bool ULevelLoader::IsIntersectionTile(const FGridLocation& TileToTest) const
 
 FGridLocation ULevelLoader::GetGateTile() const
 {
-	check(GateTile.has_value());
-	return GateTile.value();
+	return GetTile(GateTile, this);
 }
 
 FGridLocation ULevelLoader::GetRightOutsideGhostHouseTile() const
 {
-	check(RightOutsideGhostHouseTile.has_value());
-	check(InBounds(RightOutsideGhostHouseTile.value()));
-	return RightOutsideGhostHouseTile.value();
+	return GetTile(RightOutsideGhostHouseTile, this);
+}
+
+FGridLocation ULevelLoader::GetBottomLeftTile() const
+{
+	return GetTile(BottomLeftTile, this);
+}
+
+FGridLocation ULevelLoader::GetTopRightTile() const
+{
+	return GetTile(TopRightTile, this);
+}
+
+FGridLocation ULevelLoader::GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance)
+{
+	check(MaybeTile.has_value());
+	check(LevelInstance->InBounds(MaybeTile.value()));
+	return MaybeTile.value();
 }

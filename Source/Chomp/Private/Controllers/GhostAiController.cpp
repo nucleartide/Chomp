@@ -300,10 +300,10 @@ void AGhostAiController::DebugAStar(
 	const std::unordered_map<FGridLocation, FGridLocation>& CameFrom,
 	ULevelLoader* LevelInstance)
 {
-	for (int X = LevelInstance->GetLevelHeight() - 1; X >= 0; X--)
+	for (int X = LevelInstance->GetActualLevelHeight() - 1; X >= 0; X--)
 	{
 		FString Line = TEXT("");
-		for (int Y = 0; Y < LevelInstance->GetLevelWidth(); Y++)
+		for (int Y = 0; Y < LevelInstance->GetActualLevelWidth(); Y++)
 		{
 			if (CameFrom.find(FGridLocation{X, Y}) == CameFrom.end())
 			{
@@ -644,6 +644,13 @@ AGhostAiController::ComputeDestinationNodeInFrightened(const FGridLocation& Grid
 		// Iterate at most MaxDimension times in Dir.
 		for (auto i = 1; i <= MaxDimension; i++)
 		{
+			const int X = FMath::RoundToInt(
+				FMathHelpers::NegativeFriendlyFmod(DirX * i, LevelInstance->GetLevelHeight())
+			);
+			const int Y = FMath::RoundToInt(
+				FMathHelpers::NegativeFriendlyFmod(DirX * i, LevelInstance->GetLevelWidth())
+			);
+			const auto Delta = FGridLocation{X, Y};
 			const auto PossibleIntersectionTile = GridLocation + FGridLocation{DirX * i, DirY * i};
 
 			if (ULevelLoader::GetInstance(Level)->IsWall(PossibleIntersectionTile))

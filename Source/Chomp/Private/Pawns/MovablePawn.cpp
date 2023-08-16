@@ -198,18 +198,14 @@ double AMovablePawn::GetMovementSpeed() const
 
 FVector AMovablePawn::WrapAroundWorld(FVector Location, const ULevelLoader* LevelInstance)
 {
-	// Grab references to stuff.
-	const auto LevelHeight = LevelInstance->GetLevelHeight();
-	const auto LevelWidth = LevelInstance->GetLevelWidth();
-
 	// Get bottom-left corner tile.
-	constexpr FGridLocation BottomLeft{0, 0};
+	const auto BottomLeft = LevelInstance->GetBottomLeftTile();
 	const auto BottomLeftWorldPos = LevelInstance->GridToWorld(BottomLeft);
 	const auto BottomBound = BottomLeftWorldPos.X - 50.0;
 	const auto LeftBound = BottomLeftWorldPos.Y - 50.0;
 
 	// Get top-right corner tile.
-	const FGridLocation TopRight{LevelHeight - 1, LevelWidth - 1};
+	const auto TopRight = LevelInstance->GetTopRightTile();
 	const auto TopRightWorldPos = LevelInstance->GridToWorld(TopRight);
 	const auto TopBound = TopRightWorldPos.X + 50.0;
 	const auto RightBound = TopRightWorldPos.Y + 50.0;

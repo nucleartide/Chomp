@@ -35,7 +35,7 @@ public:
 	/**
 	 * Grab a reference to a Blueprint asset's default instance of ULevelLoader.
 	 */
-	static ULevelLoader *GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass);
+	static ULevelLoader* GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass);
 
 	/**
 	 * Load the contents of a level file into this instance of ULevelLoader.
@@ -53,9 +53,19 @@ public:
 	int GetLevelWidth() const;
 
 	/**
+	 * Get the width (horizontal dimension) of the level, without adjustments for the border of wrap-around tiles.
+	 */
+	int GetActualLevelWidth() const;
+
+	/**
 	 * Get the height (vertical dimension) of the level.
 	 */
 	int GetLevelHeight() const;
+
+	/**
+     * Get the height (vertical dimension) of the level, without adjustments for the border of wrap-around tiles.
+     */
+	int GetActualLevelHeight() const;
 
 	/**
 	 * Given grid coordinates, convert them to world coordinates.
@@ -82,9 +92,9 @@ public:
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
 	bool Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const;
-	
+
 	bool Passable(const FGridLocation& TestLocation) const;
-	
+
 	bool Passable(const FVector& WorldTestLocation) const;
 
 	virtual bool IsWall(const FGridLocation& Location) const override;
@@ -123,6 +133,10 @@ public:
 
 	FGridLocation GetRightOutsideGhostHouseTile() const;
 
+	FGridLocation GetBottomLeftTile() const;
+
+	FGridLocation GetTopRightTile() const;
+
 private:
 	/**
 	 * The number of rows in the level.
@@ -145,8 +159,14 @@ private:
 	 * A set of FGridLocations that describe all the tiles within the ghost house in the level.
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
-	
+
+	std::unordered_set<FGridLocation> WrapAroundTiles;
+
 	std::optional<FGridLocation> RightOutsideGhostHouseTile;
+
+	std::optional<FGridLocation> BottomLeftTile;
+
+	std::optional<FGridLocation> TopRightTile;
 
 	/**
 	 * The cardinal directions.
@@ -154,4 +174,6 @@ private:
 	static std::array<FGridLocation, 4> CardinalDirections;
 
 	bool IsLoaded = false;
+
+	static FGridLocation GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance);
 };

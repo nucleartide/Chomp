@@ -54,14 +54,15 @@ void ALevelGenerationActor::GenerateTiles()
 {
 	auto Level = ULevelLoader::GetInstance(LevelLoader);
 	auto NumberOfDotsRemaining = 0;
+	const auto [BottomLeftX, BottomLeftY] = Level->GetBottomLeftTile();
 
-	for (int X = 0; X < Level->GetLevelHeight(); X++)
+	for (int X = BottomLeftX; X < Level->GetLevelHeight(); X++)
 	{
 		auto Row = Level->StringList[X];
 
-		for (int Y = 0; Y < Level->GetLevelWidth(); Y++)
+		for (int Y = BottomLeftY; Y < Level->GetLevelWidth(); Y++)
 		{
-			if (auto Character = Row[Y]; Character == 'W' || Character == '-' || Character == 'S')
+			if (auto Character = Row[Y]; Character == 'W' || Character == '-' || Character == 'C' || Character == 'c')
 			{
 				// Compute selected tile.
 				TSubclassOf<AStaticMeshActor> SelectedTile;
@@ -69,7 +70,7 @@ void ALevelGenerationActor::GenerateTiles()
 					SelectedTile = WallTile;
 				else if (Character == '-')
 					SelectedTile = GateTile;
-				else if (Character == 'S')
+				else if (Character == 'C' || Character == 'c')
 					SelectedTile = WallTile;
 				else
 					check(false);
@@ -147,7 +148,7 @@ void ALevelGenerationActor::GenerateTiles()
 				// Keep track of the generated actor for later cleanup.
 				Tiles.Add(Actor);
 			}
-			else if (Character == 'x' || Character == 'o' || Character == 'G')
+			else if (Character == 'x' || Character == 'o' || Character == 'G' || Character == 'S')
 			{
 				// No-op.
 			}

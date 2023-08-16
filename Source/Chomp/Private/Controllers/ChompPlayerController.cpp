@@ -23,7 +23,9 @@ FMovement NewMovement(
 	const ULevelLoader* LevelInstance)
 {
 	const auto CurrentGridLocation = Pawn->GetGridLocation();
-	const auto NextGridLocation = (CurrentGridLocation + Direction).Modulo(LevelInstance);
+	const auto BottomLeftTile = LevelInstance->GetBottomLeftTile();
+	const auto IntermediateResult = CurrentGridLocation - BottomLeftTile + Direction;
+	const auto NextGridLocation = IntermediateResult.Modulo(LevelInstance) + BottomLeftTile;
 	return FMovement(Direction, FMaybeGridLocation{true, NextGridLocation});
 }
 
