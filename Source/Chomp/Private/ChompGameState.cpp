@@ -44,7 +44,7 @@ void AChompGameState::ConsumeGhost()
 	// NumGhostsConsumed == 1, 2, 3, 4
 	// GhostScalingFactor == 2**1, 2**2, 2**3, 2**4
 	// DesiredScore == 200, 400, 800, 1600
-	const auto GhostScalingFactor = FMath::Pow(2.0, NumGhostsConsumed);
+	const auto GhostScalingFactor = FMath::Pow(2.0, NumGhostsConsumed) * 10;
 	UpdateScore(Score + GhostScalingFactor * ScoreMultiplier);
 }
 

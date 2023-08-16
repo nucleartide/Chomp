@@ -546,6 +546,9 @@ void AGhostAiController::ResetGhostState()
 		CurrentScatterOrigin = Pawn->GetScatterOrigin();
 		CurrentScatterDestination = Pawn->GetScatterDestination();
 	}
+
+	// Reset the movement path too.
+	MovementPath.Reset();
 }
 
 bool AGhostAiController::IsStartingPositionInGhostHouse() const

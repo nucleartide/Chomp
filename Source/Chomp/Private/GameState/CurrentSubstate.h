@@ -56,6 +56,7 @@ public:
 		const TArray<FWave>& WavesRef,
 		const double FrightenedDurationRef
 	):
+		FrightenedStartTime(-FrightenedDurationRef), // Needed to not violate a pre-condition.
 		WavesRef(WavesRef),
 		FrightenedDurationRef(FrightenedDurationRef)
 	{
