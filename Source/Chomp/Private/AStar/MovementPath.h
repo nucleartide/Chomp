@@ -151,44 +151,58 @@ public:
 		DEBUG_LOG(TEXT("%s"), *DynamicString);
 	}
 
-	// TODO: Unit test this guy. this gives a wrong result on start.
-	// 400,-100 to 400,0 returns 400,-197.93
-	FVector WrapFriendlyLerp(const FVector& A, const FVector& B, double T) const
+	static FVector WrapFriendlyLerp(const FVector& A, const FVector& B, double T, ILevelLoader* LevelInstance)
 	{
 		// Pre-conditions.
 		check(0.0 <= T && T <= 1.0);
-		
+		checkf(
+			(
+				FMath::Abs(A.X - B.X) <= 100.0 ||
+				FMath::Abs(A.X - B.X) >= (LevelInstance->GetLevelHeight() - 1) * 100.0
+			) &&
+			(
+				FMath::Abs(A.Y - B.Y) <= 100.0 ||
+				FMath::Abs(A.Y - B.Y) >= (LevelInstance->GetLevelWidth() - 1) * 100.0
+			),
+			TEXT("A and B are within one unit of each other.")
+		);
+
 		const auto XDiff = FMath::Abs(A.X - B.X);
 		const auto YDiff = FMath::Abs(A.Y - B.Y);
 
 		auto NewX = 0.0;
-		if (XDiff <= 100.0)
+		auto NewY = 0.0;
+
+		// Special case.
+		if (XDiff >= (LevelInstance->GetLevelHeight() - 1) * 100.0)
+		{
+			const auto Ax = A.X < 0.0 ? A.X + LevelInstance->GetLevelHeight() * 100.0 : A.X;
+			const auto Bx = B.X < 0.0 ? B.X + LevelInstance->GetLevelHeight() * 100.0 : B.X;
+			const auto IntermediateResult = FMath::Lerp(Ax, Bx, T);
+			NewX = IntermediateResult >= LevelInstance->GetLevelHeight() * 50.0 - 50.0 // half
+				       ? IntermediateResult - LevelInstance->GetLevelHeight() * 100.0
+				       : IntermediateResult;
+		}
+		// Normal case.
+		else
 		{
 			NewX = FMath::Lerp(A.X, B.X, T);
 		}
-		else
+		
+		// Special case.
+		if (YDiff >= (LevelInstance->GetLevelWidth() - 1) * 100.0)
 		{
-			const auto NormalizedAx = A.X < 0.0 ? A.X + LevelInstance->GetLevelHeight() * 100.0 : A.X;
-			const auto NormalizedBx = B.X < 0.0 ? B.X + LevelInstance->GetLevelHeight() * 100.0 : B.X;
-			const auto IntermediateResult = FMath::Lerp(NormalizedAx, NormalizedBx, T);
-			NewX = IntermediateResult >= LevelInstance->GetLevelHeight() * 50.0 // half
-				? IntermediateResult - LevelInstance->GetLevelHeight() * 100
-				: IntermediateResult;
+			const auto Ay = A.Y < 0.0 ? A.Y + LevelInstance->GetLevelWidth() * 100.0 : A.Y;
+			const auto By = B.Y < 0.0 ? B.Y + LevelInstance->GetLevelWidth() * 100.0 : B.Y;
+			const auto IntermediateResult = FMath::Lerp(Ay, By, T);
+			NewY = IntermediateResult >= LevelInstance->GetLevelWidth() * 50.0 - 50.0 // half
+				       ? IntermediateResult - LevelInstance->GetLevelWidth() * 100.0
+				       : IntermediateResult;
 		}
-
-		auto NewY = 0.0;
-		if (YDiff <= 100.0)
+		// Normal case.
+		else
 		{
 			NewY = FMath::Lerp(A.Y, B.Y, T);
-		}
-		else
-		{
-			const auto NormalizedAy = A.Y < 0.0 ? A.Y + LevelInstance->GetLevelWidth() * 100.0 : A.Y;
-			const auto NormalizedBy = B.Y < 0.0 ? B.Y + LevelInstance->GetLevelWidth() * 100.0 : B.Y;
-			const auto IntermediateResult = FMath::Lerp(NormalizedAy, NormalizedBy, T);
-			NewY = IntermediateResult >= LevelInstance->GetLevelWidth() * 50.0 // half
-				? IntermediateResult - LevelInstance->GetLevelWidth() * 100
-				: IntermediateResult;
 		}
 
 		return FVector{NewX, NewY, 0.0};
@@ -223,7 +237,7 @@ public:
 			const auto CurrentNode = WorldLocationPath[CurrentIndex];
 			const auto NextNode = WorldLocationPath[CurrentIndex + 1];
 			const auto T = FMathHelpers::NegativeFriendlyFmod(NewPathLocation, 100.0) * 0.01;
-			return WrapFriendlyLerp(CurrentNode, NextNode, T);
+			return WrapFriendlyLerp(CurrentNode, NextNode, T, LevelInstance);
 		}
 
 		// Compute the direction towards the StartNode.
