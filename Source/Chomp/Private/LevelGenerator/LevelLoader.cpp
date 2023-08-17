@@ -97,6 +97,7 @@ void ULevelLoader::LoadLevel()
 	check(RightOutsideGhostHouseTile.has_value());
 	check(GateTile.has_value());
 	check(WrapAroundTiles.size() > 0);
+	check(WrapAroundTiles.size() % 2 == 0);
 }
 
 void ULevelLoader::Clear()
