@@ -12,7 +12,7 @@ bool MovementPathTest::RunTest(const FString& Parameters)
 		const int Height = 28;
 
 	public:
-		~FTestLevelLoader() = default;
+		virtual ~FTestLevelLoader() = default;
 		
 		virtual FVector2D GridToWorld(const FGridLocation& GridPosition) const override
 		{
@@ -25,6 +25,16 @@ bool MovementPathTest::RunTest(const FString& Parameters)
 		virtual bool IsWall(const FGridLocation& Location) const override
 		{
 			return false;
+		}
+
+		virtual int GetLevelWidth() const override
+		{
+			return 0;
+		}
+		
+		virtual int GetLevelHeight() const override
+		{
+			return 0;
 		}
 	};
 

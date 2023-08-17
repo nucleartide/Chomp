@@ -37,7 +37,7 @@ private:
 	// Note: if you are adding more properties, you should also update the overloaded copy assignment operator.
 	ILevelLoader* LevelInstance;
 
-	std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation, TArray<FVector> WorldLocationPath) const
+	std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation) const
 	{
 		// Establish where the actor is along the path as a single value.
 		auto CurrentPathLocation = 0.0;
@@ -106,7 +106,7 @@ public:
 		}
 
 		// Sanity check.
-		check(GetCurrentPathLocation(ActorLocation, WorldLocationPath).has_value());
+		check(GetCurrentPathLocation(ActorLocation).has_value());
 		for (auto Location : NewLocationPath)
 			check(!LevelInstance->IsWall(Location));
 	}
@@ -128,7 +128,7 @@ public:
 
 	bool DidComplete(const FVector& ActorLocation, const int Index) const
 	{
-		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation, WorldLocationPath);
+		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation);
 		check(CurrentPathLocation.has_value());
 		check(
 			-50.0 <= CurrentPathLocation.value() &&
@@ -200,7 +200,7 @@ public:
 			return ActorLocation;
 
 		// Compute CurrentPathLocation.
-		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation, WorldLocationPath);
+		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation);
 		if (!CurrentPathLocation.has_value())
 		{
 			check(false);
@@ -216,14 +216,13 @@ public:
 
 		// From that single value, convert back to an ActorLocation that is along the path,
 		// and return.
-		// TODO.
 		if (NewPathLocation >= 0.0)
 		{
 			const auto CurrentIndex = FMath::FloorToInt(NewPathLocation * 0.01);
 			const auto CurrentNode = WorldLocationPath[CurrentIndex];
 			const auto NextNode = WorldLocationPath[CurrentIndex + 1];
 			const auto T = FMathHelpers::NegativeFriendlyFmod(NewPathLocation, 100.0) * 0.01;
-			return FMathHelpers::Lerp(CurrentNode, NextNode, T);
+			return WrapFriendlyLerp(CurrentNode, NextNode, T);
 		}
 
 		// Compute the direction towards the StartNode.
