@@ -145,7 +145,7 @@ void ALevelGenerationActor::GenerateTiles()
 				// Keep track of the generated actor for later cleanup.
 				Tiles.Add(Actor);
 			}
-			else if (Character == 'x' || Character == 'o' || Character == 'G')
+			else if (Character == 'x' || Character == 'o' || Character == 'G' || Character == 'S')
 			{
 				// No-op.
 			}
@@ -159,7 +159,8 @@ void ALevelGenerationActor::GenerateTiles()
 	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
+void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState,
+                                                   const EChompGameStateEnum NewState)
 {
 	if (NewState == EChompGameStateEnum::Playing)
 	{
