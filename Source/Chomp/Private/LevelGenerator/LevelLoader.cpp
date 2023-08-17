@@ -60,6 +60,10 @@ void ULevelLoader::LoadLevel()
 			{
 				Walls.insert(FGridLocation{X, Y});
 			}
+			else if (Character == 'S')
+			{
+				WrapAroundTiles.insert(FGridLocation{X, Y});
+			}
 			else if (Character == '-')
 			{
 				checkf(!GateTile.has_value(), TEXT("GateTile is being set multiple times. You have too many '-' chars in your level file!"));
@@ -87,6 +91,8 @@ void ULevelLoader::LoadLevel()
 
 	// Post-conditions.
 	check(RightOutsideGhostHouseTile.has_value());
+	check(GateTile.has_value());
+	check(WrapAroundTiles.size() > 0);
 }
 
 void ULevelLoader::Clear()
@@ -272,13 +278,17 @@ bool ULevelLoader::IsIntersectionTile(const FGridLocation& TileToTest) const
 
 FGridLocation ULevelLoader::GetGateTile() const
 {
-	check(GateTile.has_value());
-	return GateTile.value();
+	return GetTile(GateTile, this);
 }
 
 FGridLocation ULevelLoader::GetRightOutsideGhostHouseTile() const
 {
-	check(RightOutsideGhostHouseTile.has_value());
-	check(InBounds(RightOutsideGhostHouseTile.value()));
-	return RightOutsideGhostHouseTile.value();
+	return GetTile(RightOutsideGhostHouseTile, this);
+}
+
+FGridLocation ULevelLoader::GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance)
+{
+	check(MaybeTile.has_value());
+	check(LevelInstance->InBounds(MaybeTile.value()));
+	return MaybeTile.value();
 }

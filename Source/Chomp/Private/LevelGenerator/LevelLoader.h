@@ -35,7 +35,7 @@ public:
 	/**
 	 * Grab a reference to a Blueprint asset's default instance of ULevelLoader.
 	 */
-	static ULevelLoader *GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass);
+	static ULevelLoader* GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass);
 
 	/**
 	 * Load the contents of a level file into this instance of ULevelLoader.
@@ -82,9 +82,9 @@ public:
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
 	bool Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const;
-	
+
 	bool Passable(const FGridLocation& TestLocation) const;
-	
+
 	bool Passable(const FVector& WorldTestLocation) const;
 
 	virtual bool IsWall(const FGridLocation& Location) const override;
@@ -146,6 +146,8 @@ private:
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
 	
+	std::unordered_set<FGridLocation> WrapAroundTiles;
+
 	std::optional<FGridLocation> RightOutsideGhostHouseTile;
 
 	/**
@@ -154,4 +156,6 @@ private:
 	static std::array<FGridLocation, 4> CardinalDirections;
 
 	bool IsLoaded = false;
+
+	static FGridLocation GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance);
 };
