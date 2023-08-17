@@ -72,12 +72,13 @@ bool MovementPathTest::RunTest(const FString& Parameters)
 
 		const FVector A{0.0, -1500.0, 0.0};
 		const FVector B{0.0, 1400.0, 0.0};
-		const FVector C{-1500.0, 0.0, 0.0};
-		const FVector D{1400.0, 0.0, 0.0};
+		const FVector C{-1400.0, 0.0, 0.0};
+		const FVector D{1300.0, 0.0, 0.0};
 		const auto TestLevelLoader = new FTestLevelLoader;
-		
+
 		// ReSharper disable once CppTooWideScopeInitStatement
 		const std::vector Tests{
+			// A to B
 			FUnitTest{
 				FMovementPath::WrapFriendlyLerp(A, B, 0.0, TestLevelLoader),
 				FVector(0.0, -1500.0, 0.0),
@@ -99,30 +100,78 @@ bool MovementPathTest::RunTest(const FString& Parameters)
 				FVector(0.0, 1400.0, 0.0),
 			},
 
-			// test X too
+			// B to A
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(B, A, 0.0, TestLevelLoader),
+				FVector(0.0, 1400.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(B, A, 0.25, TestLevelLoader),
+				FVector(0.0, 1425.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(B, A, 0.5, TestLevelLoader),
+				FVector(0.0, -1550.0, 0.0), // doesn't flip until threshold is exceeded
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(B, A, 0.75, TestLevelLoader),
+				FVector(0.0, -1525.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(B, A, 1.0, TestLevelLoader),
+				FVector(0.0, -1500.0, 0.0),
+			},
+
+			// D to C
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(D, C, 0.0, TestLevelLoader),
+				FVector(1300.0, 0.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(D, C, 0.25, TestLevelLoader),
+				FVector(1325.0, 0.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(D, C, 0.5, TestLevelLoader),
+				FVector(-1450.0, 0.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(D, C, 0.75, TestLevelLoader),
+				FVector(-1425.0, 0.0, 0.0),
+			},
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(D, C, 1.0, TestLevelLoader),
+				FVector(-1400.0, 0.0, 0.0),
+			},
+
+			// C to D
 			FUnitTest{
 				FMovementPath::WrapFriendlyLerp(C, D, 0.0, TestLevelLoader),
-				FVector(-1500.0, 0.0, 0.0),
+				FVector(-1400.0, 0.0, 0.0),
 			},
 			FUnitTest{
 				FMovementPath::WrapFriendlyLerp(C, D, 0.25, TestLevelLoader),
-				FVector(-1525.0, 0.0, 0.0),
+				FVector(-1425.0, 0.0, 0.0),
 			},
 			FUnitTest{
 				FMovementPath::WrapFriendlyLerp(C, D, 0.5, TestLevelLoader),
-				FVector(-1550.0, 0.0, 0.0), // doesn't flip until threshold is exceeded
+				FVector(-1450.0, 0.0, 0.0), // doesn't flip until threshold is exceeded
 			},
 			FUnitTest{
 				FMovementPath::WrapFriendlyLerp(C, D, 0.75, TestLevelLoader),
-				FVector(1425.0, 0.0, 0.0),
+				FVector(1325.0, 0.0, 0.0),
 			},
 			FUnitTest{
 				FMovementPath::WrapFriendlyLerp(C, D, 1.0, TestLevelLoader),
-				FVector(1400.0, 0.0, 0.0),
+				FVector(1300.0, 0.0, 0.0),
+			},
+
+			// happy path case
+			FUnitTest{
+				FMovementPath::WrapFriendlyLerp(FVector(0.0, 100.0, 0.0), FVector(0.0, 200.0, 0.0), 0.66, TestLevelLoader),
+				FVector(0.0, 166.0, 0.0),
 			},
 		};
-
-		// TODO: I want to throw more test cases at this, what if you go from B to A? or the normal case?
 
 		for (const auto& [Actual, Expected] : Tests)
 		{
