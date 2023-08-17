@@ -41,52 +41,89 @@ FGridLocation FGridLocation::operator-(const FGridLocation& IntendedDir) const
 	return FGridLocation{X - IntendedDir.X, Y - IntendedDir.Y};
 }
 
-// Return whether a Location is in the range [WorldA, WorldB), and by how much.
-// TODO: unit test this
+FVector NormalizeForWrapAround(const FVector& Vec, const ILevelLoader* LevelInstance)
+{
+	const auto LevelWorldWidth = LevelInstance->GetLevelWidth() * 100.0;
+	const auto LevelWorldHeight = LevelInstance->GetLevelHeight() * 100.0;
+	return FVector(
+		Vec.X < 0.0 ? Vec.X + LevelWorldHeight : Vec.X,
+		Vec.Y < 0.0 ? Vec.Y + LevelWorldWidth : Vec.Y,
+		0.0
+	);
+}
+
+// Return whether a Location is in the range [A, B), and by how much.
 std::optional<double> FGridLocation::IsInBetween(
 	const FVector& Location,
-	const FVector& WorldA,
-	const FVector& WorldB,
+	const FVector& A,
+	const FVector& B,
 	const ILevelLoader* LevelInstance)
 {
-	const auto LevelWorldWidth = LevelInstance->GetLevelWidth() * 100;
-	const auto LevelWorldHeight = LevelInstance->GetLevelHeight() * 100;
-	
-	if (const auto IsMovingOnXAxis =
-		FMath::IsNearlyEqual(WorldA.X, WorldB.X) &&
-		FMath::IsNearlyEqual(Location.X, WorldA.X))
+	// Pre-conditions.
+	checkf(
+		(
+			FMath::Abs(A.X - B.X) <= 100.0 ||
+			FMath::Abs(A.X - B.X) >= (LevelInstance->GetLevelHeight() - 1) * 100.0
+		) &&
+		(
+			FMath::Abs(A.Y - B.Y) <= 100.0 ||
+			FMath::Abs(A.Y - B.Y) >= (LevelInstance->GetLevelWidth() - 1) * 100.0
+		),
+		TEXT("A and B are within one unit of each other.")
+	);
+
+	const auto XDiff = FMath::Abs(A.X - B.X);
+	const auto YDiff = FMath::Abs(A.Y - B.Y);
+	FVector NLoc;
+	FVector Na;
+	FVector Nb;
+
+	if (
+		XDiff >= (LevelInstance->GetLevelHeight() - 1) * 100.0 ||
+		YDiff >= (LevelInstance->GetLevelWidth() - 1) * 100.0)
 	{
-		if (WorldA.Y < WorldB.Y &&
-			WorldA.Y <= Location.Y && Location.Y < WorldB.Y)
+		NLoc = NormalizeForWrapAround(Location, LevelInstance);
+		Na = NormalizeForWrapAround(A, LevelInstance);
+		Nb = NormalizeForWrapAround(B, LevelInstance);
+	}
+	else
+	{
+		NLoc = Location;
+		Na = A;
+		Nb = B;
+	}
+
+	if (const auto IsMovingOnXAxis =
+		FMath::IsNearlyEqual(Na.X, Nb.X) &&
+		FMath::IsNearlyEqual(NLoc.X, Na.X))
+	{
+		if (Na.Y < Nb.Y &&
+			Na.Y <= NLoc.Y && NLoc.Y < Nb.Y)
 		{
-			const auto Diff = Location.Y - WorldA.Y;
-			return FMath::Min(LevelWorldWidth - Diff, Diff);
+			return NLoc.Y - Na.Y;
 		}
-	
-		if (WorldB.Y < WorldA.Y &&
-			WorldB.Y < Location.Y && Location.Y <= WorldA.Y)
+
+		if (Nb.Y < Na.Y &&
+			Nb.Y < NLoc.Y && NLoc.Y <= Na.Y)
 		{
-			const auto Diff = WorldA.Y - Location.Y;
-			return FMath::Min(LevelWorldWidth - Diff, Diff);
+			return Na.Y - NLoc.Y;
 		}
 	}
 
 	if (const auto IsMovingOnYAxis =
-		FMath::IsNearlyEqual(WorldA.Y, WorldB.Y) &&
-		FMath::IsNearlyEqual(Location.Y, WorldA.Y))
+		FMath::IsNearlyEqual(Na.Y, Nb.Y) &&
+		FMath::IsNearlyEqual(NLoc.Y, Na.Y))
 	{
-		if (WorldA.X < WorldB.X &&
-			WorldA.X <= Location.X && Location.X < WorldB.X)
+		if (Na.X < Nb.X &&
+			Na.X <= NLoc.X && NLoc.X < Nb.X)
 		{
-			const auto Diff = Location.X - WorldA.X;
-			return FMath::Min(LevelWorldHeight - Diff, Diff);
+			return NLoc.X - Na.X;
 		}
-		
-		if (WorldB.X < WorldA.X &&
-			WorldB.X < Location.X && Location.X <= WorldA.X)
+
+		if (Nb.X < Na.X &&
+			Nb.X < NLoc.X && NLoc.X <= Na.X)
 		{
-			const auto Diff = WorldA.X - Location.X;
-			return FMath::Min(LevelWorldHeight - Diff, Diff);
+			return Na.X - NLoc.X;
 		}
 	}
 

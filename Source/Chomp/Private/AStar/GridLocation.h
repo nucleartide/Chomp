@@ -31,8 +31,8 @@ struct FGridLocation
 
 	static std::optional<double> IsInBetween(
 		const FVector& Location,
-		const FVector& WorldA,
-		const FVector& WorldB,
+		const FVector& A,
+		const FVector& B,
 		const ILevelLoader* LevelInstance
 	);
 
