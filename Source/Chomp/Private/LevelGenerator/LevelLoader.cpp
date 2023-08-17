@@ -274,7 +274,9 @@ double ULevelLoader::Cost(FGridLocation FromNode, FGridLocation ToNode) const
 {
 	check(AreWithinOneUnit(FromNode, ToNode));
 	if (AreOnOppositeEnds(FromNode, ToNode))
+	{
 		return 5.0; // Greater cost when wrapping around.
+	}
 
 	return 1.0; // Arbitrary non-zero constant.
 }
