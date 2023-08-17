@@ -90,6 +90,8 @@ public:
 	virtual bool IsWall(const FGridLocation& Location) const override;
 
 	bool IsGhostHouse(const FGridLocation& Location) const;
+	
+	bool IsWrapAround(const FGridLocation& Location) const;
 
 	bool IsGateTile(const FGridLocation& Location) const;
 
@@ -158,4 +160,8 @@ private:
 	bool IsLoaded = false;
 
 	static FGridLocation GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance);
+
+	bool AreWithinOneUnit(const FGridLocation& A, const FGridLocation& B) const;
+
+	bool AreOnOppositeEnds(const FGridLocation& A, const FGridLocation& B) const;
 };

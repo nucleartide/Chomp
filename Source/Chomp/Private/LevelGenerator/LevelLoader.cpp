@@ -21,7 +21,7 @@ void ULevelLoader::LoadLevel()
 		return;
 	else
 		IsLoaded = true;
-	
+
 	// Load file into variable.
 	TArray<uint8> FileData;
 	FString FilePath = FPaths::ProjectContentDir() + LevelFilename; // Example: "Levels/level2.txt"
@@ -66,7 +66,8 @@ void ULevelLoader::LoadLevel()
 			}
 			else if (Character == '-')
 			{
-				checkf(!GateTile.has_value(), TEXT("GateTile is being set multiple times. You have too many '-' chars in your level file!"));
+				checkf(!GateTile.has_value(),
+				       TEXT("GateTile is being set multiple times. You have too many '-' chars in your level file!"));
 				GateTile = FGridLocation{X, Y};
 			}
 			else if (Character == 'G') // 'G' = inside ghost house
@@ -75,7 +76,10 @@ void ULevelLoader::LoadLevel()
 			}
 			else if (Character == 'g') // 'g' = right outside ghost house
 			{
-				checkf(!RightOutsideGhostHouseTile.has_value(), TEXT("RightOutsideGhostHouseTile is being set multiple times. You have too many 'g' chars in your level file!"));
+				checkf(!RightOutsideGhostHouseTile.has_value(),
+				       TEXT(
+					       "RightOutsideGhostHouseTile is being set multiple times. You have too many 'g' chars in your level file!"
+				       ));
 				RightOutsideGhostHouseTile = FGridLocation{X, Y};
 			}
 			else if (Character == ' ' || Character == 'o' || Character == 'O') // ' ' = dot, 'o' = no dot
@@ -157,20 +161,8 @@ FGridLocation ULevelLoader::SnapToGridDirection(const FVector2D WorldPosition)
 
 bool ULevelLoader::Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const
 {
-	if (FMath::Abs(FromLocation.X - ToLocation.X) + FMath::Abs(FromLocation.Y - ToLocation.Y) != 1)
-	{
+	if (!AreWithinOneUnit(FromLocation, ToLocation))
 		return false;
-	}
-
-#if false
-	// Don't include this, then ghosts can't return to ghost house.
-	// If ToLocation is an OnlyGoUpTile,
-	if (GateTiles.find(ToLocation) != GateTiles.end())
-	{
-		// Then ToLocation is only passable if FromLocation is directly below.
-		return ToLocation.Y == FromLocation.Y && ToLocation.X == FromLocation.X + 1;
-	}
-#endif
 
 	return Passable(ToLocation);
 }
@@ -209,6 +201,11 @@ bool ULevelLoader::IsGhostHouse(const FGridLocation& Location) const
 	return GhostHouseTiles.find(Location) != GhostHouseTiles.end();
 }
 
+bool ULevelLoader::IsWrapAround(const FGridLocation& Location) const
+{
+	return WrapAroundTiles.find(Location) != WrapAroundTiles.end();
+}
+
 bool ULevelLoader::IsGateTile(const FGridLocation& Location) const
 {
 	check(GateTile.has_value());
@@ -230,18 +227,38 @@ std::array<FGridLocation, 4> ULevelLoader::CardinalDirections = {
 	FGridLocation{0, 1} // West
 };
 
-// TODO: Add support for wraparound positions in this Neighbors function.
-// You can probably pass in a set of special wraparound positions.
-// Currently ghosts will never traverse to the wraparound positions.
 std::vector<FGridLocation> ULevelLoader::Neighbors(const FGridLocation GridPosition) const
 {
-	std::vector<FGridLocation> Results;
-
-	for (const auto [X, Y] : CardinalDirections)
+	// Construct set of adjacent nodes, starting with cardinal directions.
+	std::vector<FGridLocation> AdjacentNodes;
+	for (const auto& Dir : CardinalDirections)
 	{
-		FGridLocation Current{GridPosition.X, GridPosition.Y};
-		if (FGridLocation Next{GridPosition.X + X, GridPosition.Y + Y}; Passable(Current, Next))
-			Results.push_back(Next);
+		const auto Adj = GridPosition + Dir;
+		AdjacentNodes.push_back(Adj);
+	}
+
+	// Then, if the GridPosition is a wrap-around node, also add the corresponding wrap-around node.
+	if (IsWrapAround(GridPosition))
+	{
+		if (GridPosition.X == 0 || GridPosition.X == GetLevelHeight() - 1)
+		{
+			check(GridPosition.Y != 0 && GridPosition.Y != GetLevelWidth() - 1);
+			const auto Inverse = FGridLocation{GetLevelHeight() - 1 - GridPosition.X, GridPosition.Y};
+			AdjacentNodes.push_back(Inverse);
+		}
+		else if (GridPosition.Y == 0 || GridPosition.Y == GetLevelWidth() - 1)
+		{
+			check(GridPosition.X != 0 && GridPosition.X != GetLevelHeight() - 1);
+			const auto Inverse = FGridLocation{GridPosition.X, GetLevelWidth() - 1 - GridPosition.Y};
+			AdjacentNodes.push_back(Inverse);
+		}
+	}
+
+	std::vector<FGridLocation> Results;
+	for (const auto& Adj : AdjacentNodes)
+	{
+		if (Passable(GridPosition, Adj))
+			Results.push_back(Adj);
 	}
 
 	// Apparently we need this for ordering reasons.
@@ -255,7 +272,10 @@ std::vector<FGridLocation> ULevelLoader::Neighbors(const FGridLocation GridPosit
 
 double ULevelLoader::Cost(FGridLocation FromNode, FGridLocation ToNode) const
 {
-	check(FMath::Abs(FromNode.X - ToNode.X) + FMath::Abs(FromNode.Y - ToNode.Y) == 1);
+	check(AreWithinOneUnit(FromNode, ToNode));
+	if (AreOnOppositeEnds(FromNode, ToNode))
+		return 5.0; // Greater cost when wrapping around.
+
 	return 1.0; // Arbitrary non-zero constant.
 }
 
@@ -291,4 +311,20 @@ FGridLocation ULevelLoader::GetTile(std::optional<FGridLocation> MaybeTile, cons
 	check(MaybeTile.has_value());
 	check(LevelInstance->InBounds(MaybeTile.value()));
 	return MaybeTile.value();
+}
+
+bool ULevelLoader::AreWithinOneUnit(const FGridLocation& A, const FGridLocation& B) const
+{
+	const auto XDist = FMath::Abs(A.X - B.X);
+	const auto MinXDist = FMath::Min(XDist, GetLevelHeight() - XDist);
+	const auto YDist = FMath::Abs(A.Y - B.Y);
+	const auto MinYDist = FMath::Min(YDist, GetLevelWidth() - YDist);
+	return MinXDist + MinYDist == 1;
+}
+
+bool ULevelLoader::AreOnOppositeEnds(const FGridLocation& A, const FGridLocation& B) const
+{
+	const auto AreOnOppositeEndsOfX = FMath::Abs(A.X - B.X) == GetLevelHeight() - 1 && A.Y == B.Y;
+	const auto AreOnOppositeEndsOfY = FMath::Abs(A.Y - B.Y) == GetLevelWidth() - 1 && A.X == B.X;
+	return AreOnOppositeEndsOfX || AreOnOppositeEndsOfY;
 }
