@@ -42,6 +42,7 @@ FGridLocation FGridLocation::operator-(const FGridLocation& IntendedDir) const
 }
 
 // Return whether a Location is in the range [WorldA, WorldB), and by how much.
+// TODO: unit test this
 std::optional<double> FGridLocation::IsInBetween(
 	const FVector& Location,
 	const FVector& WorldA,

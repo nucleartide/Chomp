@@ -151,7 +151,8 @@ public:
 		DEBUG_LOG(TEXT("%s"), *DynamicString);
 	}
 
-	// TODO: Unit test this guy.
+	// TODO: Unit test this guy. this gives a wrong result on start.
+	// 400,-100 to 400,0 returns 400,-197.93
 	FVector WrapFriendlyLerp(const FVector& A, const FVector& B, double T) const
 	{
 		// Pre-conditions.
@@ -161,7 +162,7 @@ public:
 		const auto YDiff = FMath::Abs(A.Y - B.Y);
 
 		auto NewX = 0.0;
-		if (XDiff <= 1.0)
+		if (XDiff <= 100.0)
 		{
 			NewX = FMath::Lerp(A.X, B.X, T);
 		}
@@ -176,7 +177,7 @@ public:
 		}
 
 		auto NewY = 0.0;
-		if (YDiff <= 1.0)
+		if (YDiff <= 100.0)
 		{
 			NewY = FMath::Lerp(A.Y, B.Y, T);
 		}
