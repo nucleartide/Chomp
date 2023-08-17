@@ -5,6 +5,7 @@
 
 #include "GridLocation.generated.h"
 
+class ILevelLoader;
 class ULevelLoader;
 
 USTRUCT(BlueprintType)
@@ -25,10 +26,15 @@ struct FGridLocation
 	bool IsZero() const;
 
 	FGridLocation operator+(const FGridLocation& IntendedDir) const;
-	
+
 	FGridLocation operator-(const FGridLocation& IntendedDir) const;
 
-	static std::optional<double> IsInBetween(const FVector& Location, const FVector& WorldA, const FVector& WorldB);
+	static std::optional<double> IsInBetween(
+		const FVector& Location,
+		const FVector& WorldA,
+		const FVector& WorldB,
+		const ILevelLoader* LevelInstance
+	);
 
 	// Copy assignment operator.
 	FGridLocation& operator=(const FGridLocation& Other)

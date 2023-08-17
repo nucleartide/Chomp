@@ -50,12 +50,12 @@ public:
 	/**
 	 * Get the width (horizontal dimension) of the level.
 	 */
-	int GetLevelWidth() const;
+	virtual int GetLevelWidth() const override;
 
 	/**
 	 * Get the height (vertical dimension) of the level.
 	 */
-	int GetLevelHeight() const;
+	virtual int GetLevelHeight() const override;
 
 	/**
 	 * Given grid coordinates, convert them to world coordinates.

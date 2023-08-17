@@ -20,9 +20,9 @@ struct FMovementPath
 		return Lhs.GridLocationPath == RHS.GridLocationPath;
 	}
 
-	friend bool operator!=(const FMovementPath& Lhs, const FMovementPath& RHS)
+	friend bool operator!=(const FMovementPath& Lhs, const FMovementPath& Rhs)
 	{
-		return !(Lhs == RHS);
+		return !(Lhs == Rhs);
 	}
 
 private:
@@ -37,7 +37,7 @@ private:
 	// Note: if you are adding more properties, you should also update the overloaded copy assignment operator.
 	ILevelLoader* LevelInstance;
 
-	static std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation, TArray<FVector> WorldLocationPath)
+	std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation, TArray<FVector> WorldLocationPath) const
 	{
 		// Establish where the actor is along the path as a single value.
 		auto CurrentPathLocation = 0.0;
@@ -48,7 +48,8 @@ private:
 			auto CurrentNode = WorldLocationPath[i];
 			auto NextNode = WorldLocationPath[i + 1];
 
-			if (const auto Result = FGridLocation::IsInBetween(ActorLocation, CurrentNode, NextNode);
+			if (const auto Result =
+					FGridLocation::IsInBetween(ActorLocation, CurrentNode, NextNode, LevelInstance);
 				Result.has_value())
 			{
 				CurrentPathLocation += Result.value();
@@ -109,7 +110,7 @@ public:
 		for (auto Location : NewLocationPath)
 			check(!LevelInstance->IsWall(Location));
 	}
-	
+
 	void Reset()
 	{
 		GridLocationPath.Empty();
@@ -150,6 +151,48 @@ public:
 		DEBUG_LOG(TEXT("%s"), *DynamicString);
 	}
 
+	// TODO: Unit test this guy.
+	FVector WrapFriendlyLerp(const FVector& A, const FVector& B, double T) const
+	{
+		// Pre-conditions.
+		check(0.0 <= T && T <= 1.0);
+		
+		const auto XDiff = FMath::Abs(A.X - B.X);
+		const auto YDiff = FMath::Abs(A.Y - B.Y);
+
+		auto NewX = 0.0;
+		if (XDiff <= 1.0)
+		{
+			NewX = FMath::Lerp(A.X, B.X, T);
+		}
+		else
+		{
+			const auto NormalizedAx = A.X < 0.0 ? A.X + LevelInstance->GetLevelHeight() * 100.0 : A.X;
+			const auto NormalizedBx = B.X < 0.0 ? B.X + LevelInstance->GetLevelHeight() * 100.0 : B.X;
+			const auto IntermediateResult = FMath::Lerp(NormalizedAx, NormalizedBx, T);
+			NewX = IntermediateResult >= LevelInstance->GetLevelHeight() * 50.0 // half
+				? IntermediateResult - LevelInstance->GetLevelHeight() * 100
+				: IntermediateResult;
+		}
+
+		auto NewY = 0.0;
+		if (YDiff <= 1.0)
+		{
+			NewY = FMath::Lerp(A.Y, B.Y, T);
+		}
+		else
+		{
+			const auto NormalizedAy = A.Y < 0.0 ? A.Y + LevelInstance->GetLevelWidth() * 100.0 : A.Y;
+			const auto NormalizedBy = B.Y < 0.0 ? B.Y + LevelInstance->GetLevelWidth() * 100.0 : B.Y;
+			const auto IntermediateResult = FMath::Lerp(NormalizedAy, NormalizedBy, T);
+			NewY = IntermediateResult >= LevelInstance->GetLevelWidth() * 50.0 // half
+				? IntermediateResult - LevelInstance->GetLevelWidth() * 100
+				: IntermediateResult;
+		}
+
+		return FVector{NewX, NewY, 0.0};
+	}
+
 	FVector MoveAlongPath(const FVector& ActorLocation, const float DeltaDistance) const
 	{
 		if (WorldLocationPath.Num() == 0)
@@ -173,6 +216,7 @@ public:
 
 		// From that single value, convert back to an ActorLocation that is along the path,
 		// and return.
+		// TODO.
 		if (NewPathLocation >= 0.0)
 		{
 			const auto CurrentIndex = FMath::FloorToInt(NewPathLocation * 0.01);
@@ -184,6 +228,7 @@ public:
 
 		// Compute the direction towards the StartNode.
 		const auto Dir = (WorldLocationPath[0] - ActorLocation).GetSafeNormal();
+		check((WorldLocationPath[0] - ActorLocation).Length() <= 100.0);
 
 		// Then use the direction along with NewPathLocation to compute the new ActorLocation.
 		// Remember that NewPathLocation is negative here.

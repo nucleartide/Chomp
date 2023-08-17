@@ -45,19 +45,29 @@ FGridLocation FGridLocation::operator-(const FGridLocation& IntendedDir) const
 std::optional<double> FGridLocation::IsInBetween(
 	const FVector& Location,
 	const FVector& WorldA,
-	const FVector& WorldB)
+	const FVector& WorldB,
+	const ILevelLoader* LevelInstance)
 {
+	const auto LevelWorldWidth = LevelInstance->GetLevelWidth() * 100;
+	const auto LevelWorldHeight = LevelInstance->GetLevelHeight() * 100;
+	
 	if (const auto IsMovingOnXAxis =
 		FMath::IsNearlyEqual(WorldA.X, WorldB.X) &&
 		FMath::IsNearlyEqual(Location.X, WorldA.X))
 	{
 		if (WorldA.Y < WorldB.Y &&
 			WorldA.Y <= Location.Y && Location.Y < WorldB.Y)
-			return Location.Y - WorldA.Y;
+		{
+			const auto Diff = Location.Y - WorldA.Y;
+			return FMath::Min(LevelWorldWidth - Diff, Diff);
+		}
 	
 		if (WorldB.Y < WorldA.Y &&
 			WorldB.Y < Location.Y && Location.Y <= WorldA.Y)
-			return WorldA.Y - Location.Y;
+		{
+			const auto Diff = WorldA.Y - Location.Y;
+			return FMath::Min(LevelWorldWidth - Diff, Diff);
+		}
 	}
 
 	if (const auto IsMovingOnYAxis =
@@ -66,11 +76,17 @@ std::optional<double> FGridLocation::IsInBetween(
 	{
 		if (WorldA.X < WorldB.X &&
 			WorldA.X <= Location.X && Location.X < WorldB.X)
-			return Location.X - WorldA.X;
+		{
+			const auto Diff = Location.X - WorldA.X;
+			return FMath::Min(LevelWorldHeight - Diff, Diff);
+		}
 		
 		if (WorldB.X < WorldA.X &&
 			WorldB.X < Location.X && Location.X <= WorldA.X)
-			return WorldA.X - Location.X;
+		{
+			const auto Diff = WorldA.X - Location.X;
+			return FMath::Min(LevelWorldHeight - Diff, Diff);
+		}
 	}
 
 	return std::nullopt;
