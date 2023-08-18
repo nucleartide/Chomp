@@ -89,7 +89,7 @@ void ALevelGenerationActor::GenerateTiles()
 				// Keep reference to actor so we can destroy it later on.
 				Tiles.Add(SpawnedActor);
 			}
-			else if (Character == ' ' || Character == 'g')
+			else if (Character == ' ' || Character == 'g' || Character == 'S')
 			{
 				// Spawn dot actor.
 				auto BogusSpawn = Level->GridToWorld(FGridLocation{-100, -100});
@@ -159,7 +159,8 @@ void ALevelGenerationActor::GenerateTiles()
 	GetWorld()->GetGameState<AChompGameState>()->ResetDots(NumberOfDotsRemaining);
 }
 
-void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
+void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState,
+                                                   const EChompGameStateEnum NewState)
 {
 	if (NewState == EChompGameStateEnum::Playing)
 	{

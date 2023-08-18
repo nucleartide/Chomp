@@ -144,14 +144,15 @@ FMovementResult AMovablePawn::MoveAlongPath(
 	const auto DeltaDistance = DesiredMovementSpeed * DeltaTime;
 
 	// Call out to MovementPath->MoveAlongPath(ActorLocation, DeltaDistance), which will return an FVector.
-	const auto NewLocation = MovementPath.MoveAlongPath(Location, DeltaDistance);
+	const auto IntermediateLocation = MovementPath.MoveAlongPath(Location, DeltaDistance);
+	const auto NewLocation = WrapAroundWorld(IntermediateLocation, ULevelLoader::GetInstance(Level));
 
 	// Compute new rotation given the new position.
 	check(NewLocation != Location);
 	check(DeltaDistance > 0.0);
-	const auto Dir = (NewLocation - Location).GetSafeNormal();
-	check(Dir.SquaredLength() > 0.0);
-	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + Dir);
+	const auto MinDiff2D = MinDifferenceVector(Location, NewLocation, ULevelLoader::GetInstance(Level));
+	const FVector MinDiff{MinDiff2D.X, MinDiff2D.Y, 0.0};
+	const auto LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Location, Location + MinDiff);
 	const auto NewRotation = FMath::RInterpTo(Rotation, LookAtRotation, DeltaTime, RotationInterpSpeed);
 
 	// Return computed results.

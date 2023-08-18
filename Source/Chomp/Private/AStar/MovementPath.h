@@ -20,9 +20,9 @@ struct FMovementPath
 		return Lhs.GridLocationPath == RHS.GridLocationPath;
 	}
 
-	friend bool operator!=(const FMovementPath& Lhs, const FMovementPath& RHS)
+	friend bool operator!=(const FMovementPath& Lhs, const FMovementPath& Rhs)
 	{
-		return !(Lhs == RHS);
+		return !(Lhs == Rhs);
 	}
 
 private:
@@ -37,7 +37,7 @@ private:
 	// Note: if you are adding more properties, you should also update the overloaded copy assignment operator.
 	ILevelLoader* LevelInstance;
 
-	static std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation, TArray<FVector> WorldLocationPath)
+	std::optional<double> GetCurrentPathLocation(const FVector& ActorLocation) const
 	{
 		// Establish where the actor is along the path as a single value.
 		auto CurrentPathLocation = 0.0;
@@ -48,7 +48,8 @@ private:
 			auto CurrentNode = WorldLocationPath[i];
 			auto NextNode = WorldLocationPath[i + 1];
 
-			if (const auto Result = FGridLocation::IsInBetween(ActorLocation, CurrentNode, NextNode);
+			if (const auto Result =
+					FGridLocation::IsInBetween(ActorLocation, CurrentNode, NextNode, LevelInstance);
 				Result.has_value())
 			{
 				CurrentPathLocation += Result.value();
@@ -105,11 +106,11 @@ public:
 		}
 
 		// Sanity check.
-		check(GetCurrentPathLocation(ActorLocation, WorldLocationPath).has_value());
+		check(GetCurrentPathLocation(ActorLocation).has_value());
 		for (auto Location : NewLocationPath)
 			check(!LevelInstance->IsWall(Location));
 	}
-	
+
 	void Reset()
 	{
 		GridLocationPath.Empty();
@@ -127,7 +128,7 @@ public:
 
 	bool DidComplete(const FVector& ActorLocation, const int Index) const
 	{
-		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation, WorldLocationPath);
+		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation);
 		check(CurrentPathLocation.has_value());
 		check(
 			-50.0 <= CurrentPathLocation.value() &&
@@ -150,6 +151,63 @@ public:
 		DEBUG_LOG(TEXT("%s"), *DynamicString);
 	}
 
+	static FVector WrapFriendlyLerp(const FVector& A, const FVector& B, double T, ILevelLoader* LevelInstance)
+	{
+		// Pre-conditions.
+		check(0.0 <= T && T <= 1.0);
+		checkf(
+			(
+				FMath::Abs(A.X - B.X) <= 100.0 ||
+				FMath::Abs(A.X - B.X) >= (LevelInstance->GetLevelHeight() - 1) * 100.0
+			) &&
+			(
+				FMath::Abs(A.Y - B.Y) <= 100.0 ||
+				FMath::Abs(A.Y - B.Y) >= (LevelInstance->GetLevelWidth() - 1) * 100.0
+			),
+			TEXT("A and B are within one unit of each other.")
+		);
+
+		const auto XDiff = FMath::Abs(A.X - B.X);
+		const auto YDiff = FMath::Abs(A.Y - B.Y);
+
+		auto NewX = 0.0;
+		auto NewY = 0.0;
+
+		// Special case.
+		if (XDiff >= (LevelInstance->GetLevelHeight() - 1) * 100.0)
+		{
+			const auto Ax = A.X < 0.0 ? A.X + LevelInstance->GetLevelHeight() * 100.0 : A.X;
+			const auto Bx = B.X < 0.0 ? B.X + LevelInstance->GetLevelHeight() * 100.0 : B.X;
+			const auto IntermediateResult = FMath::Lerp(Ax, Bx, T);
+			NewX = IntermediateResult >= LevelInstance->GetLevelHeight() * 50.0 - 50.0 // half
+				       ? IntermediateResult - LevelInstance->GetLevelHeight() * 100.0
+				       : IntermediateResult;
+		}
+		// Normal case.
+		else
+		{
+			NewX = FMath::Lerp(A.X, B.X, T);
+		}
+		
+		// Special case.
+		if (YDiff >= (LevelInstance->GetLevelWidth() - 1) * 100.0)
+		{
+			const auto Ay = A.Y < 0.0 ? A.Y + LevelInstance->GetLevelWidth() * 100.0 : A.Y;
+			const auto By = B.Y < 0.0 ? B.Y + LevelInstance->GetLevelWidth() * 100.0 : B.Y;
+			const auto IntermediateResult = FMath::Lerp(Ay, By, T);
+			NewY = IntermediateResult >= LevelInstance->GetLevelWidth() * 50.0 - 50.0 // half
+				       ? IntermediateResult - LevelInstance->GetLevelWidth() * 100.0
+				       : IntermediateResult;
+		}
+		// Normal case.
+		else
+		{
+			NewY = FMath::Lerp(A.Y, B.Y, T);
+		}
+
+		return FVector{NewX, NewY, 0.0};
+	}
+
 	FVector MoveAlongPath(const FVector& ActorLocation, const float DeltaDistance) const
 	{
 		if (WorldLocationPath.Num() == 0)
@@ -157,7 +215,7 @@ public:
 			return ActorLocation;
 
 		// Compute CurrentPathLocation.
-		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation, WorldLocationPath);
+		const auto CurrentPathLocation = GetCurrentPathLocation(ActorLocation);
 		if (!CurrentPathLocation.has_value())
 		{
 			check(false);
@@ -179,11 +237,12 @@ public:
 			const auto CurrentNode = WorldLocationPath[CurrentIndex];
 			const auto NextNode = WorldLocationPath[CurrentIndex + 1];
 			const auto T = FMathHelpers::NegativeFriendlyFmod(NewPathLocation, 100.0) * 0.01;
-			return FMathHelpers::Lerp(CurrentNode, NextNode, T);
+			return WrapFriendlyLerp(CurrentNode, NextNode, T, LevelInstance);
 		}
 
 		// Compute the direction towards the StartNode.
 		const auto Dir = (WorldLocationPath[0] - ActorLocation).GetSafeNormal();
+		check((WorldLocationPath[0] - ActorLocation).Length() <= 100.0);
 
 		// Then use the direction along with NewPathLocation to compute the new ActorLocation.
 		// Remember that NewPathLocation is negative here.

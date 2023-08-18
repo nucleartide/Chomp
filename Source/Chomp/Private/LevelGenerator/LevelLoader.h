@@ -35,7 +35,7 @@ public:
 	/**
 	 * Grab a reference to a Blueprint asset's default instance of ULevelLoader.
 	 */
-	static ULevelLoader *GetInstance(const TSubclassOf<ULevelLoader> &BlueprintClass);
+	static ULevelLoader* GetInstance(const TSubclassOf<ULevelLoader>& BlueprintClass);
 
 	/**
 	 * Load the contents of a level file into this instance of ULevelLoader.
@@ -50,12 +50,12 @@ public:
 	/**
 	 * Get the width (horizontal dimension) of the level.
 	 */
-	int GetLevelWidth() const;
+	virtual int GetLevelWidth() const override;
 
 	/**
 	 * Get the height (vertical dimension) of the level.
 	 */
-	int GetLevelHeight() const;
+	virtual int GetLevelHeight() const override;
 
 	/**
 	 * Given grid coordinates, convert them to world coordinates.
@@ -82,14 +82,16 @@ public:
 	 * Check whether ToLocation is passable, given that we're coming from FromLocation.
 	 */
 	bool Passable(const FGridLocation& FromLocation, const FGridLocation& ToLocation) const;
-	
+
 	bool Passable(const FGridLocation& TestLocation) const;
-	
+
 	bool Passable(const FVector& WorldTestLocation) const;
 
 	virtual bool IsWall(const FGridLocation& Location) const override;
 
 	bool IsGhostHouse(const FGridLocation& Location) const;
+	
+	bool IsWrapAround(const FGridLocation& Location) const;
 
 	bool IsGateTile(const FGridLocation& Location) const;
 
@@ -146,6 +148,8 @@ private:
 	 */
 	std::unordered_set<FGridLocation> GhostHouseTiles;
 	
+	std::unordered_set<FGridLocation> WrapAroundTiles;
+
 	std::optional<FGridLocation> RightOutsideGhostHouseTile;
 
 	/**
@@ -154,4 +158,10 @@ private:
 	static std::array<FGridLocation, 4> CardinalDirections;
 
 	bool IsLoaded = false;
+
+	static FGridLocation GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance);
+
+	bool AreWithinOneUnit(const FGridLocation& A, const FGridLocation& B) const;
+
+	bool AreOnOppositeEnds(const FGridLocation& A, const FGridLocation& B) const;
 };
