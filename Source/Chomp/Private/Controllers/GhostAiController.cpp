@@ -461,7 +461,7 @@ void AGhostAiController::ResetGhostState()
 	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
 	const auto StartingWorldPosition = ULevelLoader::GetInstance(Level)->GridToWorld(StartingGridPosition);
 	const FVector StartingWorldPos(StartingWorldPosition.X, StartingWorldPosition.Y, 0.0f);
-	GetPawn()->SetActorLocation(StartingWorldPos);
+	GetPawn()->SetActorLocationAndRotation(StartingWorldPos, FQuat::Identity);
 
 	// Add this instance of AGhostAiController to our RuntimeSet if not added already.
 	if (IsStartingPositionInGhostHouse() && !GetGhostHouseQueue()->Contains(this))
