@@ -89,6 +89,8 @@ void AChompGameState::StartGame()
 	
 	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
 	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
+
+	NumberOfLives = StartingNumberOfLives;	
 	
 	TransitionTo(EChompGameStateEnum::Playing);
 }

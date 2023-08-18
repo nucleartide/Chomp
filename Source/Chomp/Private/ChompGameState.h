@@ -49,6 +49,12 @@ class AChompGameState : public AGameStateBase
 	int NumberOfDotsRemaining = 0;
 
 	UPROPERTY(VisibleInstanceOnly)
+	int NumberOfLives = 0;
+
+	UPROPERTY(EditDefaultsOnly)
+	int StartingNumberOfLives = 3;
+
+	UPROPERTY(VisibleInstanceOnly)
 	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(0, nullptr);
 
 	UPROPERTY(VisibleInstanceOnly)
