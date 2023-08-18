@@ -73,6 +73,14 @@ void AUIManager::HandlePlayerDeath(const EChompGameStateEnum OldState, const ECh
 	if (!DidLose)
 		return;
 
+	// [ ] add coros to project
+	// [ ] implement the below
+	// if number of lives is zero, continue
+	// else,
+	//     decrement one life
+	//     kick off a timer for 3s - use coros
+	//     once timer is elapsed, reset the round (keep the dots, reset the ghost state, reset the player)
+
 	DEBUG_LOG(TEXT("Player died, showing game over *lose* UI..."))
 
 	GameOverWidgetInstance = Cast<UGameOverWidget>(CreateWidget(GetWorld(), GameOverLoseWidgetClass));
