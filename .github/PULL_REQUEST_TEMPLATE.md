@@ -8,7 +8,7 @@
 
 ## Dev checklist
 
-* [ ] **First draft**. Implement a working first pass at the feature.
+* [ ] **First draft**. Implement a working first pass at the feature. If it helps, try thinking about data (model), presentation (view), and logic (controller).
 * [ ] **First playtest**. Thoroughly playtest until you are confident that the feature (and existing features) work.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
 * [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
