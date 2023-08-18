@@ -453,6 +453,9 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 
 void AGhostAiController::ResetGhostState()
 {
+	// Reset ghost state.
+	SetGhostState(EGhostState::Normal);
+	
 	// Set the starting position of the pawn.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
