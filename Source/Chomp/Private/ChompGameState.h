@@ -18,6 +18,9 @@ DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated,
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdated,
                                             int, NewDotsConsumed);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLivesChanged,
+                                            int, NewNumOfLives);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChanged,
                                              EChompGameStateEnum, OldState,
                                              EChompGameStateEnum, NewState);
@@ -67,6 +70,8 @@ class AChompGameState : public AGameStateBase
 
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 
+	void UpdateNumberOfLives(int NewNumOfLives);
+
 	void TransitionTo(EChompGameStateEnum NewState);
 
 protected:
@@ -76,19 +81,22 @@ protected:
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsCleared OnDotsClearedDelegate;
+	FOnDotsCleared OnDotsCleared;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsConsumedUpdated OnDotsConsumedUpdatedDelegate;
+	FOnDotsConsumedUpdated OnDotsConsumedUpdated;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGameStateChanged OnGameStateChangedDelegate;
+	FOnGameStateChanged OnGameStateChanged;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnScoreUpdated OnScoreUpdatedDelegate;
+	FOnScoreUpdated OnScoreUpdated;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGamePlayingStateChanged OnGamePlayingStateChangedDelegate;
+	FOnGamePlayingStateChanged OnGamePlayingStateChanged;
+	
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnLivesChanged OnLivesChanged;
 
 	AChompGameState();
 

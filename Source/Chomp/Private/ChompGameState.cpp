@@ -51,7 +51,7 @@ void AChompGameState::ConsumeGhost()
 void AChompGameState::UpdateScore(const int NewScore)
 {
 	Score = NewScore;
-	OnScoreUpdatedDelegate.Broadcast(NewScore);
+	OnScoreUpdated.Broadcast(NewScore);
 }
 
 void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemaining)
@@ -59,16 +59,22 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 	NumberOfDotsRemaining = NewNumberOfDotsRemaining;
 	if (NumberOfDotsRemaining == 0)
 	{
-		OnDotsClearedDelegate.Broadcast();
+		OnDotsCleared.Broadcast();
 		TransitionTo(EChompGameStateEnum::GameOverWin);
 	}
+}
+
+void AChompGameState::UpdateNumberOfLives(const int NewNumOfLives)
+{
+	NumberOfLives = NewNumOfLives;
+	OnLivesChanged.Broadcast(NewNumOfLives);
 }
 
 void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed)
 {
 	const auto World = FSafeGet::World(this);
 	NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(NewNumberOfDotsConsumed, World);
-	OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
+	OnDotsConsumedUpdated.Broadcast(NewNumberOfDotsConsumed);
 }
 
 EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFrightened) const
@@ -90,7 +96,7 @@ void AChompGameState::StartGame()
 	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
 	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
 
-	NumberOfLives = StartingNumberOfLives;	
+	UpdateNumberOfLives(StartingNumberOfLives);
 	
 	TransitionTo(EChompGameStateEnum::Playing);
 }
@@ -102,14 +108,14 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 	check(OldState != NewState);
 
 	GameState = NewState;
-	OnGameStateChangedDelegate.Broadcast(OldState, NewState);
+	OnGameStateChanged.Broadcast(OldState, NewState);
 
 	if (NewState != EChompGameStateEnum::Playing)
 	{
 		const auto World = FSafeGet::World(this);
 		const auto [OldSubstate, NewSubstate] = CurrentSubstate.StopPlaying(World->GetTimeSeconds());
 		check(OldSubstate != NewSubstate);
-		OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
+		OnGamePlayingStateChanged.Broadcast(OldSubstate, NewSubstate);
 	}
 }
 
@@ -147,7 +153,7 @@ void AChompGameState::Tick(const float DeltaTime)
 		const auto World = FSafeGet::World(this);
 		const auto [OldSubstate, NewSubstate] = CurrentSubstate.Tick(World->GetTimeSeconds());
 		if (OldSubstate != NewSubstate)
-			OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
+			OnGamePlayingStateChanged.Broadcast(OldSubstate, NewSubstate);
 	}
 }
 

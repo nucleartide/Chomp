@@ -9,14 +9,13 @@ class ULivesWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-#if false
-protected:
-	uproperty(meta = (BindWidget))
-	class UButton *RestartGameButton;
+public:
+	UPROPERTY(meta = (BindWidget))
+	class UHorizontalBox* LivesContainer;
 
-	virtual void NativeConstruct() override;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	TSubclassOf<UUserWidget> LifeWidget;
 
-	ufunction()
-	void HandleRestartGame();
-#endif
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	double HorizontalPadding = 7.5;
 };

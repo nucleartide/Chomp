@@ -4,6 +4,9 @@
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
 #include "ChompGameState.h"
+#include "LivesWidget.h"
+#include "Components/HorizontalBox.h"
+#include "Utils/SafeGet.h"
 
 AUIManager::AUIManager(): AActor()
 {
@@ -13,9 +16,37 @@ AUIManager::AUIManager(): AActor()
 void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	const auto World = FSafeGet::World(this);
+
+	ScoreWidgetInstance = CreateWidget(World, ScoreWidget);
+	check(ScoreWidgetInstance);
+	ScoreWidgetInstance->AddToViewport();
+
+	LivesWidgetInstance = CreateWidget(World, LivesWidget);
+	check(LivesWidgetInstance);
+	LivesWidgetInstance->AddToViewport();
+
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
-	GameState->OnDotsClearedDelegate.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
-	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
+	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
+	GameState->OnGameStateChanged.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
+	GameState->OnLivesChanged.AddUniqueDynamic(this, &AUIManager::HandleLivesChanged);
+}
+
+void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
+	GameState->OnDotsCleared.RemoveDynamic(this, &AUIManager::HandleDotsCleared);
+	GameState->OnGameStateChanged.RemoveDynamic(this, &AUIManager::HandlePlayerDeath);
+	GameState->OnLivesChanged.RemoveDynamic(this, &AUIManager::HandleLivesChanged);
+
+	ScoreWidgetInstance->RemoveFromParent();
+	LivesWidgetInstance->RemoveFromParent();
+
+	ScoreWidgetInstance = nullptr;
+	LivesWidgetInstance = nullptr;
 }
 
 void AUIManager::Tick(const float DeltaTime)
@@ -68,4 +99,21 @@ void AUIManager::HandleRestartGameClicked()
 	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
 	Controller->SetInputMode(FInputModeGameOnly());
+}
+
+void AUIManager::HandleLivesChanged(const int NumberOfLives)
+{
+	const auto LivesWidgetRef = Cast<ULivesWidget>(LivesWidgetInstance);
+	check(LivesWidgetRef);
+
+	const auto World = FSafeGet::World(this);
+
+	LivesWidgetRef->LivesContainer->ClearChildren();
+
+	for (auto i = 0; i < NumberOfLives; i++)
+	{
+		const auto LifeWidgetInstance = CreateWidget(World, LivesWidgetRef->LifeWidget);
+		LifeWidgetInstance->SetPadding(FMargin(LivesWidgetRef->HorizontalPadding, 0.0));
+		LivesWidgetRef->LivesContainer->AddChild(LifeWidgetInstance);
+	}
 }

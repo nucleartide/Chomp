@@ -138,11 +138,11 @@ void AGhostAiController::BeginPlay()
 
 	{
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+		GameState->OnGamePlayingStateChanged.AddUniqueDynamic(
 			this,
 			&AGhostAiController::UpdateWhenSubstateChanges
 		);
-		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
+		GameState->OnDotsConsumedUpdated.AddUniqueDynamic(
 			this,
 			&AGhostAiController::HandleDotsConsumedUpdated
 		);
@@ -157,11 +157,11 @@ void AGhostAiController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	{
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-		GameState->OnGamePlayingStateChangedDelegate.RemoveDynamic(
+		GameState->OnGamePlayingStateChanged.RemoveDynamic(
 			this,
 			&AGhostAiController::UpdateWhenSubstateChanges
 		);
-		GameState->OnDotsConsumedUpdatedDelegate.RemoveDynamic(
+		GameState->OnDotsConsumedUpdated.RemoveDynamic(
 			this,
 			&AGhostAiController::HandleDotsConsumedUpdated
 		);

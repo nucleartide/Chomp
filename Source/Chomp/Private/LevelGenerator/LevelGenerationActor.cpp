@@ -23,7 +23,7 @@ void ALevelGenerationActor::BeginPlay()
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
 	const auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
-	ChompGameMode->OnGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetStateOfEverything);
+	ChompGameMode->OnGameStateChanged.AddUniqueDynamic(this, &ALevelGenerationActor::ResetStateOfEverything);
 }
 
 void ALevelGenerationActor::PostInitializeComponents()
