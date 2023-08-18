@@ -6,6 +6,7 @@
 #include "ChompGameState.h"
 #include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
+#include "UE5Coro.h"
 #include "Utils/SafeGet.h"
 
 AUIManager::AUIManager(): AActor()
@@ -67,19 +68,33 @@ void AUIManager::HandleDotsCleared()
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
+UE5Coro::TCoroutine<> AsyncAction()
+{
+	co_await UE5Coro::Latent::Seconds(1.0);
+	DEBUG_LOG(TEXT("test blah blah"));
+}
+
 void AUIManager::HandlePlayerDeath(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
 {
 	const auto DidLose = OldState != NewState && NewState == EChompGameStateEnum::GameOverLose;
 	if (!DidLose)
 		return;
 
-	// [ ] add coros to project
-	// [ ] implement the below
+	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+	ChompGameState->LoseLife();
+	
+	// if (ChompGameState->)
+
+	// [x] add coros to project
+	// [x] implement the below
 	// if number of lives is zero, continue
 	// else,
 	//     decrement one life
 	//     kick off a timer for 3s - use coros
+	// ---
 	//     once timer is elapsed, reset the round (keep the dots, reset the ghost state, reset the player)
+
+	AsyncAction();
 
 	DEBUG_LOG(TEXT("Player died, showing game over *lose* UI..."))
 

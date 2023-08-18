@@ -12,5 +12,6 @@ public class ChompTarget : TargetRules
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 		ExtraModuleNames.Add("Chomp");
         bEnableCppCoroutinesForEvaluation = true;
+		CppStandard = CppStandardVersion.Cpp20;
 	}
 }

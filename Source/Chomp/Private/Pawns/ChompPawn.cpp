@@ -15,16 +15,20 @@ void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 		return;
 
 	if (const auto ConsumableDot = Cast<AConsumableDotActor>(Other))
+	{
 		ConsumableDot->Consume();
+	}
 	else if (const auto GhostPawn = Cast<AGhostPawn>(Other))
 	{
 		if (const auto GhostController = GhostPawn->GetController<AGhostAiController>();
 			GhostController->IsNormal())
 		{
-			ChompGameState->LoseGame();
+			ChompGameState->LoseLife();
 			Destroy();
 		}
 	}
 	else if (const auto EnergizerDot = Cast<AConsumableEnergizerActor>(Other))
+	{
 		EnergizerDot->Consume();
+	}
 }

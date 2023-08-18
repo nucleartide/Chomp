@@ -66,8 +66,9 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 
 void AChompGameState::UpdateNumberOfLives(const int NewNumOfLives)
 {
-	NumberOfLives = NewNumOfLives;
-	OnLivesChanged.Broadcast(NewNumOfLives);
+	const auto Bounded = FMath::Max(NewNumOfLives, 0);
+	NumberOfLives = Bounded;
+	OnLivesChanged.Broadcast(Bounded);
 }
 
 void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed)
@@ -81,6 +82,18 @@ EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFri
 {
 	const auto World = FSafeGet::World(this);
 	return CurrentSubstate.GetEnum(World->GetTimeSeconds(), ExcludeFrightened);
+}
+
+void AChompGameState::LoseLife()
+{
+	UpdateNumberOfLives(NumberOfLives - 1);
+	
+	// if number of lives is zero,
+	//     then LoseGame()
+	//     make LoseGame() private
+	// else,
+	//     kick off a timer for 3s
+	//     once timer is elapsed, ResetRound() (keep the dots, reset the ghost state, reset the player)
 }
 
 void AChompGameState::LoseGame()

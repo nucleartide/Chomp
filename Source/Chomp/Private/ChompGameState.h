@@ -70,9 +70,9 @@ class AChompGameState : public AGameStateBase
 
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 
-	void UpdateNumberOfLives(int NewNumOfLives);
-
 	void TransitionTo(EChompGameStateEnum NewState);
+	
+	void UpdateNumberOfLives(int NewNumOfLives);
 
 protected:
 	virtual void BeginPlay() override;
@@ -125,4 +125,8 @@ public:
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
 	EChompPlayingSubstateEnum GetSubstateEnum(const bool ExcludeFrightened = false) const;
+
+	void LoseLife();
+
+	int GetNumberOf
 };
