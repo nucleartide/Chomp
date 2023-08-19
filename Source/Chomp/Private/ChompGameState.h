@@ -13,6 +13,8 @@ struct FWave;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsCleared);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOneUp);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated,
                                             int, Score);
 
@@ -41,6 +43,9 @@ class AChompGameState : public AGameStateBase
 	int ScoreMultiplier = 10;
 
 	UPROPERTY(EditDefaultsOnly)
+	int OneUpThreshold = 2000;
+
+	UPROPERTY(EditDefaultsOnly)
 	TArray<FWave> Waves;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -48,6 +53,9 @@ class AChompGameState : public AGameStateBase
 
 	UPROPERTY(VisibleInstanceOnly)
 	int Score = 0;
+
+	UPROPERTY(VisibleInstanceOnly)
+	int OneUpCounter = 0;
 
 	UPROPERTY(VisibleInstanceOnly)
 	int NumberOfDotsRemaining = 0;
@@ -83,6 +91,9 @@ protected:
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnDotsCleared OnDotsCleared;
+	
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnOneUp OnOneUp;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
 	FOnDotsConsumedUpdated OnDotsConsumedUpdated;

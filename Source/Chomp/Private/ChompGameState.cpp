@@ -51,6 +51,23 @@ void AChompGameState::ConsumeGhost()
 
 void AChompGameState::UpdateScore(const int NewScore)
 {
+	// Update OneUpCounter.
+	const auto Diff = NewScore - Score;
+	OneUpCounter += Diff;
+
+	if (OneUpCounter >= OneUpThreshold && NumberOfLives < StartingNumberOfLives)
+	{
+		// Award a life.
+		UpdateNumberOfLives(NumberOfLives + 1);
+
+		// Zero out counter.
+		OneUpCounter = 0;
+
+		// Emit a message.
+		OnOneUp.Broadcast();
+	}
+
+	// Update Score.
 	Score = NewScore;
 	OnScoreUpdated.Broadcast(NewScore);
 }
