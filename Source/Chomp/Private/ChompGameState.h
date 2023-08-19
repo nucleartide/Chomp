@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UE5Coro.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameState/ChompGameStateEnum.h"
 #include "GameState/ChompPlayingSubstateEnum.h"
@@ -73,7 +74,7 @@ class AChompGameState : public AGameStateBase
 	void TransitionTo(EChompGameStateEnum NewState);
 	
 	void UpdateNumberOfLives(int NewNumOfLives);
-
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -118,15 +119,11 @@ public:
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;
 
-	void LoseGame();
-
 	void StartGame();
 
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
 	EChompPlayingSubstateEnum GetSubstateEnum(const bool ExcludeFrightened = false) const;
 
-	void LoseLife();
-
-	int GetNumberOf
+	UE5Coro::TCoroutine<> LoseLife();
 };

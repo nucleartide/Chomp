@@ -34,7 +34,7 @@ class AUIManager : public AActor
 	 * The UI to display when the player loses the game.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<UUserWidget> GameOverLoseWidgetClass;
+	TSubclassOf<UUserWidget> GameOverLoseWidget;
 	
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<UUserWidget> ScoreWidget;

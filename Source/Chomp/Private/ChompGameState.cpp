@@ -1,4 +1,5 @@
 #include "ChompGameState.h"
+#include "UE5Coro.h"
 #include "Utils/SafeGet.h"
 
 AChompGameState::AChompGameState()
@@ -84,33 +85,31 @@ EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFri
 	return CurrentSubstate.GetEnum(World->GetTimeSeconds(), ExcludeFrightened);
 }
 
-void AChompGameState::LoseLife()
+UE5Coro::TCoroutine<> AChompGameState::LoseLife()
 {
 	UpdateNumberOfLives(NumberOfLives - 1);
-	
-	// if number of lives is zero,
-	//     then LoseGame()
-	//     make LoseGame() private
-	// else,
-	//     kick off a timer for 3s
-	//     once timer is elapsed, ResetRound() (keep the dots, reset the ghost state, reset the player)
-}
-
-void AChompGameState::LoseGame()
-{
-	TransitionTo(EChompGameStateEnum::GameOverLose);
+	if (NumberOfLives == 0)
+	{
+		TransitionTo(EChompGameStateEnum::GameOverLose);
+	}
+	else
+	{
+		TransitionTo(EChompGameStateEnum::LostLife);
+		co_await UE5Coro::Latent::Seconds(3.0);
+		TransitionTo(EChompGameStateEnum::Playing);
+	}
 }
 
 void AChompGameState::StartGame()
 {
 	// Pre-conditions.
 	check(Waves.Num() > 0);
-	
+
 	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
 	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
 
 	UpdateNumberOfLives(StartingNumberOfLives);
-	
+
 	TransitionTo(EChompGameStateEnum::Playing);
 }
 

@@ -11,4 +11,5 @@ enum class EChompGameStateEnum : uint8
 	Playing,
 	GameOverWin,
 	GameOverLose,
+	LostLife,
 };

@@ -416,6 +416,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 	// If it's the same as the current end position, then force the end position to be the player instead.
 	auto EndPosition = GetChaseEndGridPosition();
 	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		GridLocationPath.Num() > 0 &&
 		EndPosition == GridLocationPath[GridLocationPath.Num() - 1])
 		EndPosition = PlayerPawn->GetGridLocation();
 

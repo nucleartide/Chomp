@@ -68,41 +68,27 @@ void AUIManager::HandleDotsCleared()
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
 
-UE5Coro::TCoroutine<> AsyncAction()
-{
-	co_await UE5Coro::Latent::Seconds(1.0);
-	DEBUG_LOG(TEXT("test blah blah"));
-}
-
 void AUIManager::HandlePlayerDeath(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
 {
-	const auto DidLose = OldState != NewState && NewState == EChompGameStateEnum::GameOverLose;
-	if (!DidLose)
+	// Pre-conditions.
+	check(OldState != NewState);
+
+	// Early return.
+	if (NewState != EChompGameStateEnum::GameOverLose)
 		return;
 
-	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
-	ChompGameState->LoseLife();
-	
-	// if (ChompGameState->)
-
-	// [x] add coros to project
-	// [x] implement the below
-	// if number of lives is zero, continue
-	// else,
-	//     decrement one life
-	//     kick off a timer for 3s - use coros
-	// ---
-	//     once timer is elapsed, reset the round (keep the dots, reset the ghost state, reset the player)
-
-	AsyncAction();
-
-	DEBUG_LOG(TEXT("Player died, showing game over *lose* UI..."))
-
-	GameOverWidgetInstance = Cast<UGameOverWidget>(CreateWidget(GetWorld(), GameOverLoseWidgetClass));
+	// Instantiate game over widget.
+	DEBUG_LOG(TEXT("Player died, showing game over (lose) UI..."))
+	const auto World = FSafeGet::World(this);
+	const auto WidgetInstance = CreateWidget(World, GameOverLoseWidget);
+	check(WidgetInstance);
+	GameOverWidgetInstance = Cast<UGameOverWidget>(WidgetInstance);
+	check(GameOverWidgetInstance);
 	GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
 	GameOverWidgetInstance->AddToViewport();
 
-	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	// Show and enable mouse cursor.
+	const auto Controller = FSafeGet::PlayerController(this, 0);
 	Controller->SetShowMouseCursor(true);
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
