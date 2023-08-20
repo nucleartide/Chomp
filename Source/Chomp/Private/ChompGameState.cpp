@@ -122,8 +122,8 @@ void AChompGameState::StartGame()
 	// Pre-conditions.
 	check(Waves.Num() > 0);
 
-	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
-	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
+	CurrentSubstate = FChompPlayingSubstate(Waves, FrightenedSubstateDuration);
+	CurrentSubstate.Start(GetWorld()->GetTimeSeconds());
 
 	UpdateNumberOfLives(StartingNumberOfLives);
 

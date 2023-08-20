@@ -5,7 +5,7 @@
 #include "GameFramework/GameStateBase.h"
 #include "GameState/ChompGameStateEnum.h"
 #include "GameState/ChompPlayingSubstateEnum.h"
-#include "GameState/CurrentSubstate.h"
+#include "GameState\ChompPlayingSubstate.h"
 #include "Utils/IntFieldWithLastUpdatedTime.h"
 #include "ChompGameState.generated.h"
 
@@ -73,7 +73,7 @@ class AChompGameState : public AGameStateBase
 	EChompGameStateEnum GameState = EChompGameStateEnum::None;
 
 	UPROPERTY(VisibleInstanceOnly)
-	FCurrentSubstate CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
+	FChompPlayingSubstate CurrentSubstate = FChompPlayingSubstate(Waves, FrightenedSubstateDuration);
 
 	void UpdateScore(int NewScore);
 

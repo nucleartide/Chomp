@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "ChompPlayingSubstate.h"
 #include "UObject/Object.h"
 #include "Wave.generated.h"
 
