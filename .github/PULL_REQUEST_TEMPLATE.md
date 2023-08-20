@@ -7,7 +7,7 @@
 * [ ] **First draft**. Implement a working first pass at the feature. If it helps, try thinking about data (model), presentation (view), and logic (controller).
 * [ ] **Design by contract**. Write pre-condition, post-condition, and invariant assertions to catch bugs before playtesting.
 * [ ] **Unit tests**. If needed, write unit tests to tease out edge cases.
-* [ ] **First playtest**. Thoroughly playtest until you are confident that the feature (and existing features) work.
+* [ ] **First playtest**. Thoroughly playtest until you are confident that the feature (and existing features) work. This also exercises the code paths with contracts.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
 * [ ] **Run unit tests**.
 * [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
