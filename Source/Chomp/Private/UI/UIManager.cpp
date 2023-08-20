@@ -6,7 +6,6 @@
 #include "ChompGameState.h"
 #include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
-#include "UE5Coro.h"
 #include "Utils/SafeGet.h"
 
 AUIManager::AUIManager(): AActor()

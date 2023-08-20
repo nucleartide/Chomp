@@ -135,6 +135,7 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 	// Pre-conditions.
 	const auto OldState = GameState;
 	check(OldState != NewState);
+	const auto OldOneUpCounter = OneUpCounter;
 
 	GameState = NewState;
 	OnGameStateChanged.Broadcast(OldState, NewState);
@@ -145,12 +146,21 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 		OnGamePlayingStateChanged.Broadcast(LastSubstateEnum, EChompPlayingSubstateEnum::None);
 		LastSubstateEnum = EChompPlayingSubstateEnum::None;
 	}
+	else if (NewState == EChompGameStateEnum::Playing)
+	{
+		OneUpCounter = 0;
+	}
 
 	// Post-conditions.
 	check(
 		NewState != EChompGameStateEnum::Playing
 		? !CurrentSubstate.IsRunning()
 		: true
+	);
+	check(
+		NewState == EChompGameStateEnum::Playing
+		? OneUpCounter == 0
+		: OldOneUpCounter == OneUpCounter
 	);
 }
 
