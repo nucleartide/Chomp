@@ -17,10 +17,18 @@ void AGhostHouseQueue::Tick(const float DeltaTime)
 
 	if (
 		const auto NumberOfDotsConsumed = GameState->GetNumberOfDotsConsumed();
-		TimeSeconds > NumberOfDotsConsumed.GetLastUpdatedTime() + TimeToForceGhostOutOfHouse &&
+		TimeSeconds >= NumberOfDotsConsumed.GetLastUpdatedTime() + TimeToForceGhostOutOfHouse &&
 		Things.Num() > 0)
 	{
 		Things.Pop();
 		GameState->UpdateNumberOfDotsConsumed(NumberOfDotsConsumed.GetValue());
 	}
+
+	// Post-conditions.
+	const auto DebugThis = this;
+	check(
+		Things.Num() > 0
+		? GameState->GetNumberOfDotsConsumed().GetLastUpdatedTime() + TimeToForceGhostOutOfHouse > TimeSeconds
+		: GameState->GetNumberOfDotsConsumed().GetLastUpdatedTime() <= TimeSeconds
+	);
 }

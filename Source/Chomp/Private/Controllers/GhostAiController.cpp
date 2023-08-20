@@ -23,6 +23,10 @@ void AGhostAiController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Pre-conditions.
+	const auto OldIsInGhostHouseQueue = IsInGhostHouseQueue();
+	const auto OldLocation = FSafeGet::Pawn<AGhostPawn>(this)->GetActorLocation();
+
 	// Early return if not playing.
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	if (GameState->GetEnum() != EChompGameStateEnum::Playing)
@@ -130,6 +134,18 @@ void AGhostAiController::Tick(float DeltaTime)
 		}
 	}
 #endif
+
+	// Post-conditions.
+	checkf(
+		OldIsInGhostHouseQueue == IsInGhostHouseQueue(),
+		TEXT("IsInGhostHouseQueue() value should not change within Tick() function.")
+	);
+	checkf(
+		IsInGhostHouseQueue()
+		? OldLocation.Equals(FSafeGet::Pawn<AGhostPawn>(this)->GetActorLocation())
+		: true,
+		TEXT("If in ghost house queue, ghost should not move.")
+	);
 }
 
 void AGhostAiController::BeginPlay()
@@ -305,7 +321,7 @@ void AGhostAiController::DebugAStar(
 		FString Line = TEXT("");
 		for (int Y = 0; Y < LevelInstance->GetLevelWidth(); Y++)
 		{
-			if (CameFrom.find(FGridLocation{X, Y}) == CameFrom.end())
+			if (!CameFrom.contains(FGridLocation{X, Y}))
 			{
 				Line += TEXT("W");
 			}
@@ -456,7 +472,7 @@ void AGhostAiController::ResetGhostState()
 {
 	// Reset ghost state.
 	SetGhostState(EGhostState::Normal);
-	
+
 	// Set the starting position of the pawn.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
@@ -609,7 +625,7 @@ AGhostAiController::ComputeDestinationNodeInFrightened(const FGridLocation& Grid
 				const auto PrevNode = GridLocationPath[i - 1];
 
 				// Remove it from AdjacentTiles.
-				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
+				if (auto It = std::ranges::find(AdjacentTiles, PrevNode);
 					It != AdjacentTiles.end())
 				{
 					DebugDidRemoveCameFrom = true;
@@ -628,7 +644,7 @@ AGhostAiController::ComputeDestinationNodeInFrightened(const FGridLocation& Grid
 		// Disabling lint rule because it's a C++20 feature, which doesn't work in Unreal 5.2.
 		// ReSharper disable once CppTooWideScopeInitStatement
 		const auto GateTile = ULevelLoader::GetInstance(Level)->GetGateTile();
-		if (const auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), GateTile);
+		if (const auto It = std::ranges::find(AdjacentTiles, GateTile);
 			It != AdjacentTiles.end())
 		{
 			DebugDidRemoveGateTile = true;
