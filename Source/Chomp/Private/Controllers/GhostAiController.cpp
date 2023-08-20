@@ -96,9 +96,12 @@ void AGhostAiController::Tick(float DeltaTime)
 	}
 	else if (GhostState == EGhostState::Eaten && MovementPath.WasCompleted(NewLocation))
 	{
-		// Find the underlying substate.
+		// Pre-conditions.
 		const auto NonFrightenedSubstate = GameState->GetSubstateEnum(true);
-		check(NonFrightenedSubstate != EChompPlayingSubstateEnum::Frightened);
+		check(
+			NonFrightenedSubstate == EChompPlayingSubstateEnum::Scatter ||
+			NonFrightenedSubstate == EChompPlayingSubstateEnum::Chase
+		);
 
 		// Compute new movement path depending on underlying substate.
 		if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Scatter)
@@ -106,10 +109,14 @@ void AGhostAiController::Tick(float DeltaTime)
 		else if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Chase)
 			DecideToUpdateMovementPathInChase(NewLocation);
 		else
-			checkf(false, TEXT("Movement path is %d"), NonFrightenedSubstate);
+			checkf(false, TEXT("Substate is %d"), NonFrightenedSubstate);
 
 		// Uncheck internal state for tracking whether ghost has been eaten.
 		SetGhostState(EGhostState::Normal);
+
+		// Post-conditions.
+		check(MovementPath.IsValid());
+		check(GhostState == EGhostState::Normal);
 	}
 
 #if WITH_EDITOR
@@ -213,22 +220,21 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
 	return PlayerPawn->GetActorLocation();
 }
 
-/**
- * Sync the GhostAIController with the playing sub-state of the game.
- */
-// ReSharper disable once CppMemberFunctionMayBeStatic
 void AGhostAiController::UpdateWhenSubstateChanges(EChompPlayingSubstateEnum OldState,
                                                    EChompPlayingSubstateEnum NewState)
 {
 	// Pre-conditions.
 	check(OldState != NewState);
-	DEBUG_LOG(TEXT("UpdateWhenSubstateChanges: %d to %d"), OldState, NewState);
 
-	// Early returns.
-	if (FSafeGet::GameState<AChompGameState>(this)->GetEnum() != EChompGameStateEnum::Playing)
+	if (NewState == EChompPlayingSubstateEnum::None)
+	{
 		return;
+	}
+
 	if (!IsPlayerAlive())
+	{
 		return;
+	}
 
 	if (GhostState != EGhostState::Eaten)
 	{
