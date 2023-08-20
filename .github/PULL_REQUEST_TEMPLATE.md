@@ -2,10 +2,6 @@
 
 > Describe the user story that was completed as part of this pull request.
 
-## Changelog
-
-> Make a bulleted list of things that you implemented.
-
 ## Dev checklist
 
 * [ ] **First draft**. Implement a working first pass at the feature. If it helps, try thinking about data (model), presentation (view), and logic (controller).
