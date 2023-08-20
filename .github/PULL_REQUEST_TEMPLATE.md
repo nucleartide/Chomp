@@ -2,6 +2,10 @@
 
 > Describe the user story that was completed as part of this pull request.
 
+## Playable build
+
+> Fill in a link to this pull request's build once complete.
+
 ## Dev checklist
 
 * [ ] **First draft**. Implement a working first pass at the feature. If it helps, try thinking about data (model), presentation (view), and logic (controller).
@@ -20,5 +24,6 @@
 * [ ] **Build**. Cut a new build in Unreal. If the game doesn't build, fix until it does.
 * [ ] **Tag**. Once built, tag the latest commit on `master` with the latest version string.
 * [ ] **Upload**. Upload build to Google Drive.
+* [ ] **Link**. Add link to this pull request.
 * [ ] **Priorities**. Prioritize items on work board.
 * [ ] **Next task**. Tee up a pull request for the next feature.
