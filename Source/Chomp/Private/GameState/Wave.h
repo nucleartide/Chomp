@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Misc/Optional.h"
 #include "UObject/Object.h"
 #include "Wave.generated.h"
 
@@ -12,9 +13,9 @@ struct FWave
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	EChompPlayingSubstateEnum PlayingState = EChompPlayingSubstateEnum::None;
 
-	UPROPERTY(EditDefaultsOnly)
+	UPROPERTY(EditAnywhere)
 	double Duration = 0.0;
 };

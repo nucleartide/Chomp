@@ -5,11 +5,13 @@ using System.Collections.Generic;
 
 public class ChompTarget : TargetRules
 {
-	public ChompTarget( TargetInfo Target) : base(Target)
+	public ChompTarget(TargetInfo Target) : base(Target)
 	{
 		Type = TargetType.Game;
 		DefaultBuildSettings = BuildSettingsVersion.V2;
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 		ExtraModuleNames.Add("Chomp");
+		bEnableCppCoroutinesForEvaluation = true;
+		CppStandard = CppStandardVersion.Cpp20;
 	}
 }

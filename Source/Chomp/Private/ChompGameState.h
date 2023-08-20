@@ -1,10 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UE5Coro.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameState/ChompGameStateEnum.h"
+#include "GameState/ChompPlayingSubstate.h"
 #include "GameState/ChompPlayingSubstateEnum.h"
-#include "GameState/CurrentSubstate.h"
 #include "Utils/IntFieldWithLastUpdatedTime.h"
 #include "ChompGameState.generated.h"
 
@@ -12,11 +13,16 @@ struct FWave;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsCleared);
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOneUp);
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnScoreUpdated,
                                             int, Score);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDotsConsumedUpdated,
                                             int, NewDotsConsumed);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnLivesChanged,
+                                            int, NewNumOfLives);
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnGameStateChanged,
                                              EChompGameStateEnum, OldState,
@@ -37,6 +43,9 @@ class AChompGameState : public AGameStateBase
 	int ScoreMultiplier = 10;
 
 	UPROPERTY(EditDefaultsOnly)
+	int OneUpThreshold = 2000;
+
+	UPROPERTY(EditDefaultsOnly)
 	TArray<FWave> Waves;
 
 	UPROPERTY(EditDefaultsOnly)
@@ -46,23 +55,37 @@ class AChompGameState : public AGameStateBase
 	int Score = 0;
 
 	UPROPERTY(VisibleInstanceOnly)
+	int OneUpCounter = 0;
+
+	UPROPERTY(VisibleInstanceOnly)
 	int NumberOfDotsRemaining = 0;
 
 	UPROPERTY(VisibleInstanceOnly)
-	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(0, nullptr);
+	int NumberOfLives = 0;
+
+	UPROPERTY(EditDefaultsOnly)
+	int StartingNumberOfLives = 3;
+
+	UPROPERTY(VisibleInstanceOnly)
+	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime();
 
 	UPROPERTY(VisibleInstanceOnly)
 	EChompGameStateEnum GameState = EChompGameStateEnum::None;
 
 	UPROPERTY(VisibleInstanceOnly)
-	FCurrentSubstate CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
+	FChompPlayingSubstate CurrentSubstate = FChompPlayingSubstate(FrightenedSubstateDuration, Waves);
+
+	UPROPERTY(VisibleInstanceOnly)
+	EChompPlayingSubstateEnum LastSubstateEnum = EChompPlayingSubstateEnum::None;
 
 	void UpdateScore(int NewScore);
 
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 
 	void TransitionTo(EChompGameStateEnum NewState);
-
+	
+	void UpdateNumberOfLives(int NewNumOfLives);
+	
 protected:
 	virtual void BeginPlay() override;
 
@@ -70,19 +93,25 @@ protected:
 
 public:
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsCleared OnDotsClearedDelegate;
+	FOnDotsCleared OnDotsCleared;
+	
+	UPROPERTY(BlueprintAssignable, BlueprintCallable)
+	FOnOneUp OnOneUp;
 
 	UPROPERTY(BlueprintAssignable, BlueprintCallable)
-	FOnDotsConsumedUpdated OnDotsConsumedUpdatedDelegate;
+	FOnDotsConsumedUpdated OnDotsConsumedUpdated;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGameStateChanged OnGameStateChangedDelegate;
+	FOnGameStateChanged OnGameStateChanged;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnScoreUpdated OnScoreUpdatedDelegate;
+	FOnScoreUpdated OnScoreUpdated;
 
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
-	FOnGamePlayingStateChanged OnGamePlayingStateChangedDelegate;
+	FOnGamePlayingStateChanged OnGamePlayingStateChanged;
+	
+	UPROPERTY(BlueprintCallable, BlueprintAssignable)
+	FOnLivesChanged OnLivesChanged;
 
 	AChompGameState();
 
@@ -104,11 +133,11 @@ public:
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;
 
-	void LoseGame();
-
 	void StartGame();
 
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
-	EChompPlayingSubstateEnum GetSubstateEnum(const bool ExcludeFrightened = false) const;
+	EChompPlayingSubstateEnum GetSubstateEnum(const bool GetUnderlyingSubstate = false) const;
+
+	UE5Coro::TCoroutine<> LoseLife();
 };

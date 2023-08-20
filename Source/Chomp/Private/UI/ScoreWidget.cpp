@@ -6,7 +6,7 @@ void UScoreWidget::NativeConstruct()
 {
     Super::NativeConstruct();
     const auto ChompGameState = GetWorld()->GetGameState<AChompGameState>();
-    ChompGameState->OnScoreUpdatedDelegate.AddUniqueDynamic(this, &UScoreWidget::HandleScoreUpdated);
+    ChompGameState->OnScoreUpdated.AddUniqueDynamic(this, &UScoreWidget::HandleScoreUpdated);
 }
 
 void UScoreWidget::HandleScoreUpdated(int Score)

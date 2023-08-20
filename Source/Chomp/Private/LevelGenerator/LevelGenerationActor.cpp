@@ -23,7 +23,7 @@ void ALevelGenerationActor::BeginPlay()
 
 	// Lastly, add a listener to regenerate tiles when the game restarts.
 	const auto ChompGameMode = GetWorld()->GetGameState<AChompGameState>();
-	ChompGameMode->OnGameStateChangedDelegate.AddUniqueDynamic(this, &ALevelGenerationActor::ResetStateOfEverything);
+	ChompGameMode->OnGameStateChanged.AddUniqueDynamic(this, &ALevelGenerationActor::ResetStateOfEverything);
 }
 
 void ALevelGenerationActor::PostInitializeComponents()
@@ -162,12 +162,16 @@ void ALevelGenerationActor::GenerateTiles()
 void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum OldState,
                                                    const EChompGameStateEnum NewState)
 {
-	if (NewState == EChompGameStateEnum::Playing)
+	// Pre-conditions.
+	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
+	const auto OldNumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
+
+	if (OldState != EChompGameStateEnum::LostLife && NewState == EChompGameStateEnum::Playing)
 	{
 		// First, clean up the map.
 		ClearLeftoverTiles();
 
-		// Then, reset the ghost positions.
+		// Then, reset the ghosts.
 		TArray<AActor*> FoundActors;
 		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhostAiController::StaticClass(), FoundActors);
 		for (const auto& Actor : FoundActors)
@@ -194,4 +198,38 @@ void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum Old
 
 		// Note that this particular ordering ensures that no overlap conditions are triggered.
 	}
+	else if (OldState == EChompGameStateEnum::LostLife && NewState == EChompGameStateEnum::Playing)
+	{
+		// Reset the ghosts.
+		TArray<AActor*> FoundActors;
+		UGameplayStatics::GetAllActorsOfClass(GetWorld(), AGhostAiController::StaticClass(), FoundActors);
+		for (const auto& Actor : FoundActors)
+		{
+			const auto Controller = Cast<AGhostAiController>(Actor);
+			check(Controller);
+			Controller->HandleGameStateChanged(OldState, NewState);
+		}
+
+		// Reset the player pawn position.
+		const auto ChompPawnManager = Cast<AChompPawnManager>(
+			UGameplayStatics::GetActorOfClass(GetWorld(), AChompPawnManager::StaticClass())
+		);
+		check(ChompPawnManager);
+		ChompPawnManager->HandleGameRestarted(OldState, NewState);
+
+		// Reset the movement brain.
+		const auto PlayerController = FSafeGet::PlayerController(this, 0);
+		if (const auto ChompPlayerController = Cast<AChompPlayerController>(PlayerController))
+			ChompPlayerController->HandleGameRestarted(OldState, NewState);
+
+		// Note that this particular ordering ensures that no overlap conditions are triggered.
+	}
+
+	// Post-conditions.
+	checkf(
+		OldState == EChompGameStateEnum::LostLife && NewState == EChompGameStateEnum::Playing
+		? OldNumberOfDotsConsumed.GetValue() == ChompGameState->GetNumberOfDotsConsumed().GetValue()
+		: true,
+		TEXT("Dots should not reset upon losing a life.")
+	);
 }

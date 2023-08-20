@@ -4,6 +4,9 @@
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
 #include "ChompGameState.h"
+#include "LivesWidget.h"
+#include "Components/HorizontalBox.h"
+#include "Utils/SafeGet.h"
 
 AUIManager::AUIManager(): AActor()
 {
@@ -13,9 +16,37 @@ AUIManager::AUIManager(): AActor()
 void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
+
+	const auto World = FSafeGet::World(this);
+
+	ScoreWidgetInstance = CreateWidget(World, ScoreWidget);
+	check(ScoreWidgetInstance);
+	ScoreWidgetInstance->AddToViewport();
+
+	LivesWidgetInstance = CreateWidget(World, LivesWidget);
+	check(LivesWidgetInstance);
+	LivesWidgetInstance->AddToViewport();
+
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
-	GameState->OnDotsClearedDelegate.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
-	GameState->OnGameStateChangedDelegate.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
+	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
+	GameState->OnGameStateChanged.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
+	GameState->OnLivesChanged.AddUniqueDynamic(this, &AUIManager::HandleLivesChanged);
+}
+
+void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
+	GameState->OnDotsCleared.RemoveDynamic(this, &AUIManager::HandleDotsCleared);
+	GameState->OnGameStateChanged.RemoveDynamic(this, &AUIManager::HandlePlayerDeath);
+	GameState->OnLivesChanged.RemoveDynamic(this, &AUIManager::HandleLivesChanged);
+
+	ScoreWidgetInstance->RemoveFromParent();
+	LivesWidgetInstance->RemoveFromParent();
+
+	ScoreWidgetInstance = nullptr;
+	LivesWidgetInstance = nullptr;
 }
 
 void AUIManager::Tick(const float DeltaTime)
@@ -38,17 +69,25 @@ void AUIManager::HandleDotsCleared()
 
 void AUIManager::HandlePlayerDeath(const EChompGameStateEnum OldState, const EChompGameStateEnum NewState)
 {
-	const auto DidLose = OldState != NewState && NewState == EChompGameStateEnum::GameOverLose;
-	if (!DidLose)
+	// Pre-conditions.
+	check(OldState != NewState);
+
+	// Early return.
+	if (NewState != EChompGameStateEnum::GameOverLose)
 		return;
 
-	DEBUG_LOG(TEXT("Player died, showing game over *lose* UI..."))
-
-	GameOverWidgetInstance = Cast<UGameOverWidget>(CreateWidget(GetWorld(), GameOverLoseWidgetClass));
+	// Instantiate game over widget.
+	DEBUG_LOG(TEXT("Player died, showing game over (lose) UI..."))
+	const auto World = FSafeGet::World(this);
+	const auto WidgetInstance = CreateWidget(World, GameOverLoseWidget);
+	check(WidgetInstance);
+	GameOverWidgetInstance = Cast<UGameOverWidget>(WidgetInstance);
+	check(GameOverWidgetInstance);
 	GameOverWidgetInstance->OnRestartGameClickedDelegate.AddUniqueDynamic(this, &AUIManager::HandleRestartGameClicked);
 	GameOverWidgetInstance->AddToViewport();
 
-	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	// Show and enable mouse cursor.
+	const auto Controller = FSafeGet::PlayerController(this, 0);
 	Controller->SetShowMouseCursor(true);
 	Controller->SetInputMode(FInputModeGameAndUI());
 }
@@ -68,4 +107,21 @@ void AUIManager::HandleRestartGameClicked()
 	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
 	Controller->SetInputMode(FInputModeGameOnly());
+}
+
+void AUIManager::HandleLivesChanged(const int NumberOfLives)
+{
+	const auto LivesWidgetRef = Cast<ULivesWidget>(LivesWidgetInstance);
+	check(LivesWidgetRef);
+
+	const auto World = FSafeGet::World(this);
+
+	LivesWidgetRef->LivesContainer->ClearChildren();
+
+	for (auto i = 0; i < NumberOfLives; i++)
+	{
+		const auto LifeWidgetInstance = CreateWidget(World, LivesWidgetRef->LifeWidget);
+		LifeWidgetInstance->SetPadding(FMargin(LivesWidgetRef->HorizontalPadding, 0.0));
+		LivesWidgetRef->LivesContainer->AddChild(LifeWidgetInstance);
+	}
 }

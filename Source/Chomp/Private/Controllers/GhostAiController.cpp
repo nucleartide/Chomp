@@ -23,6 +23,10 @@ void AGhostAiController::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
+	// Pre-conditions.
+	const auto OldIsInGhostHouseQueue = IsInGhostHouseQueue();
+	const auto OldLocation = FSafeGet::Pawn<AGhostPawn>(this)->GetActorLocation();
+
 	// Early return if not playing.
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	if (GameState->GetEnum() != EChompGameStateEnum::Playing)
@@ -92,9 +96,12 @@ void AGhostAiController::Tick(float DeltaTime)
 	}
 	else if (GhostState == EGhostState::Eaten && MovementPath.WasCompleted(NewLocation))
 	{
-		// Find the underlying substate.
+		// Pre-conditions.
 		const auto NonFrightenedSubstate = GameState->GetSubstateEnum(true);
-		check(NonFrightenedSubstate != EChompPlayingSubstateEnum::Frightened);
+		check(
+			NonFrightenedSubstate == EChompPlayingSubstateEnum::Scatter ||
+			NonFrightenedSubstate == EChompPlayingSubstateEnum::Chase
+		);
 
 		// Compute new movement path depending on underlying substate.
 		if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Scatter)
@@ -102,10 +109,14 @@ void AGhostAiController::Tick(float DeltaTime)
 		else if (NonFrightenedSubstate == EChompPlayingSubstateEnum::Chase)
 			DecideToUpdateMovementPathInChase(NewLocation);
 		else
-			checkf(false, TEXT("Movement path is %d"), NonFrightenedSubstate);
+			checkf(false, TEXT("Substate is %d"), NonFrightenedSubstate);
 
 		// Uncheck internal state for tracking whether ghost has been eaten.
 		SetGhostState(EGhostState::Normal);
+
+		// Post-conditions.
+		check(MovementPath.IsValid());
+		check(GhostState == EGhostState::Normal);
 	}
 
 #if WITH_EDITOR
@@ -130,6 +141,18 @@ void AGhostAiController::Tick(float DeltaTime)
 		}
 	}
 #endif
+
+	// Post-conditions.
+	checkf(
+		OldIsInGhostHouseQueue == IsInGhostHouseQueue(),
+		TEXT("IsInGhostHouseQueue() value should not change within Tick() function.")
+	);
+	checkf(
+		IsInGhostHouseQueue()
+		? OldLocation.Equals(FSafeGet::Pawn<AGhostPawn>(this)->GetActorLocation())
+		: true,
+		TEXT("If in ghost house queue, ghost should not move.")
+	);
 }
 
 void AGhostAiController::BeginPlay()
@@ -138,11 +161,11 @@ void AGhostAiController::BeginPlay()
 
 	{
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-		GameState->OnGamePlayingStateChangedDelegate.AddUniqueDynamic(
+		GameState->OnGamePlayingStateChanged.AddUniqueDynamic(
 			this,
 			&AGhostAiController::UpdateWhenSubstateChanges
 		);
-		GameState->OnDotsConsumedUpdatedDelegate.AddUniqueDynamic(
+		GameState->OnDotsConsumedUpdated.AddUniqueDynamic(
 			this,
 			&AGhostAiController::HandleDotsConsumedUpdated
 		);
@@ -157,11 +180,11 @@ void AGhostAiController::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	{
 		const auto GameState = FSafeGet::GameState<AChompGameState>(this);
-		GameState->OnGamePlayingStateChangedDelegate.RemoveDynamic(
+		GameState->OnGamePlayingStateChanged.RemoveDynamic(
 			this,
 			&AGhostAiController::UpdateWhenSubstateChanges
 		);
-		GameState->OnDotsConsumedUpdatedDelegate.RemoveDynamic(
+		GameState->OnDotsConsumedUpdated.RemoveDynamic(
 			this,
 			&AGhostAiController::HandleDotsConsumedUpdated
 		);
@@ -197,22 +220,21 @@ FVector AGhostAiController::GetPlayerWorldLocation() const
 	return PlayerPawn->GetActorLocation();
 }
 
-/**
- * Sync the GhostAIController with the playing sub-state of the game.
- */
-// ReSharper disable once CppMemberFunctionMayBeStatic
 void AGhostAiController::UpdateWhenSubstateChanges(EChompPlayingSubstateEnum OldState,
                                                    EChompPlayingSubstateEnum NewState)
 {
 	// Pre-conditions.
 	check(OldState != NewState);
-	DEBUG_LOG(TEXT("UpdateWhenSubstateChanges: %d to %d"), OldState, NewState);
 
-	// Early returns.
-	if (FSafeGet::GameState<AChompGameState>(this)->GetEnum() != EChompGameStateEnum::Playing)
+	if (NewState == EChompPlayingSubstateEnum::None)
+	{
 		return;
+	}
+
 	if (!IsPlayerAlive())
+	{
 		return;
+	}
 
 	if (GhostState != EGhostState::Eaten)
 	{
@@ -305,7 +327,7 @@ void AGhostAiController::DebugAStar(
 		FString Line = TEXT("");
 		for (int Y = 0; Y < LevelInstance->GetLevelWidth(); Y++)
 		{
-			if (CameFrom.find(FGridLocation{X, Y}) == CameFrom.end())
+			if (!CameFrom.contains(FGridLocation{X, Y}))
 			{
 				Line += TEXT("W");
 			}
@@ -416,6 +438,7 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 	// If it's the same as the current end position, then force the end position to be the player instead.
 	auto EndPosition = GetChaseEndGridPosition();
 	if (const auto GridLocationPath = MovementPath.GetGridLocationPath();
+		GridLocationPath.Num() > 0 &&
 		EndPosition == GridLocationPath[GridLocationPath.Num() - 1])
 		EndPosition = PlayerPawn->GetGridLocation();
 
@@ -455,7 +478,7 @@ void AGhostAiController::ResetGhostState()
 {
 	// Reset ghost state.
 	SetGhostState(EGhostState::Normal);
-	
+
 	// Set the starting position of the pawn.
 	const auto GhostPawn = FSafeGet::Pawn<AGhostPawn>(this);
 	const auto StartingGridPosition = GhostPawn->GetStartingPosition();
@@ -608,7 +631,7 @@ AGhostAiController::ComputeDestinationNodeInFrightened(const FGridLocation& Grid
 				const auto PrevNode = GridLocationPath[i - 1];
 
 				// Remove it from AdjacentTiles.
-				if (auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), PrevNode);
+				if (auto It = std::ranges::find(AdjacentTiles, PrevNode);
 					It != AdjacentTiles.end())
 				{
 					DebugDidRemoveCameFrom = true;
@@ -627,7 +650,7 @@ AGhostAiController::ComputeDestinationNodeInFrightened(const FGridLocation& Grid
 		// Disabling lint rule because it's a C++20 feature, which doesn't work in Unreal 5.2.
 		// ReSharper disable once CppTooWideScopeInitStatement
 		const auto GateTile = ULevelLoader::GetInstance(Level)->GetGateTile();
-		if (const auto It = std::find(AdjacentTiles.begin(), AdjacentTiles.end(), GateTile);
+		if (const auto It = std::ranges::find(AdjacentTiles, GateTile);
 			It != AdjacentTiles.end())
 		{
 			DebugDidRemoveGateTile = true;

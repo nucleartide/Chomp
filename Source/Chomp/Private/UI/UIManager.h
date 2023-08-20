@@ -7,6 +7,9 @@
 #include "Blueprint/UserWidget.h"
 #include "UIManager.generated.h"
 
+class ULivesWidget;
+class UScoreWidget;
+
 /**
  * AUIManager manages the lifetime of the user interface of the game.
  */
@@ -15,7 +18,6 @@ class AUIManager : public AActor
 {
 	GENERATED_BODY()
 	
-public:
 	/**
 	 * A reference to the map's LevelGenerationActor, so that we can listen for level cleared events.
 	 */
@@ -32,12 +34,26 @@ public:
 	 * The UI to display when the player loses the game.
 	 */
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
-	TSubclassOf<UUserWidget> GameOverLoseWidgetClass;
+	TSubclassOf<UUserWidget> GameOverLoseWidget;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<UUserWidget> ScoreWidget;
+	
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<UUserWidget> LivesWidget;
 
+	UPROPERTY(VisibleInstanceOnly)
+	UUserWidget* ScoreWidgetInstance;
+
+	UPROPERTY(VisibleInstanceOnly)
+	UUserWidget* LivesWidgetInstance;
+
+public:
 	AUIManager();
 
 protected:
 	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 	virtual void Tick(float DeltaTime) override;
 
 private:
@@ -52,4 +68,7 @@ private:
 
 	UFUNCTION()
 	void HandleRestartGameClicked();
+
+	UFUNCTION()
+	void HandleLivesChanged(const int NumberOfLives);
 };

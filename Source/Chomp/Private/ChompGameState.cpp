@@ -1,4 +1,5 @@
 #include "ChompGameState.h"
+#include "UE5Coro.h"
 #include "Utils/SafeGet.h"
 
 AChompGameState::AChompGameState()
@@ -24,21 +25,21 @@ void AChompGameState::ConsumeEnergizerDot()
 {
 	UpdateScore(Score + 5 * ScoreMultiplier);
 	const auto World = FSafeGet::World(this);
-	CurrentSubstate.Frighten(World->GetTimeSeconds());
+	CurrentSubstate.Frighten(World);
 }
 
 void AChompGameState::ConsumeGhost()
 {
 	// Pre-conditions.
 	const auto World = FSafeGet::World(this);
-	const auto OldNumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed(World->GetTimeSeconds());
+	const auto OldNumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed();
 	check(OldNumGhostsConsumed >= 0);
 
 	// Bump.
-	CurrentSubstate.IncrementNumGhostsConsumed();
+	CurrentSubstate.ConsumeGhost();
 
 	// Get new value.
-	const auto NumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed(World->GetTimeSeconds());
+	const auto NumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed();
 	check(NumGhostsConsumed == OldNumGhostsConsumed + 1);
 
 	// NumGhostsConsumed == 1, 2, 3, 4
@@ -50,8 +51,25 @@ void AChompGameState::ConsumeGhost()
 
 void AChompGameState::UpdateScore(const int NewScore)
 {
+	// Update OneUpCounter.
+	const auto Diff = NewScore - Score;
+	OneUpCounter += Diff;
+
+	if (OneUpCounter >= OneUpThreshold && NumberOfLives < StartingNumberOfLives)
+	{
+		// Award a life.
+		UpdateNumberOfLives(NumberOfLives + 1);
+
+		// Zero out counter.
+		OneUpCounter = 0;
+
+		// Emit a message.
+		OnOneUp.Broadcast();
+	}
+
+	// Update Score.
 	Score = NewScore;
-	OnScoreUpdatedDelegate.Broadcast(NewScore);
+	OnScoreUpdated.Broadcast(NewScore);
 }
 
 void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemaining)
@@ -59,37 +77,56 @@ void AChompGameState::UpdateNumberOfDotsRemaining(const int NewNumberOfDotsRemai
 	NumberOfDotsRemaining = NewNumberOfDotsRemaining;
 	if (NumberOfDotsRemaining == 0)
 	{
-		OnDotsClearedDelegate.Broadcast();
+		OnDotsCleared.Broadcast();
 		TransitionTo(EChompGameStateEnum::GameOverWin);
 	}
+}
+
+void AChompGameState::UpdateNumberOfLives(const int NewNumOfLives)
+{
+	const auto Bounded = FMath::Max(NewNumOfLives, 0);
+	NumberOfLives = Bounded;
+	OnLivesChanged.Broadcast(Bounded);
 }
 
 void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed)
 {
 	const auto World = FSafeGet::World(this);
 	NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(NewNumberOfDotsConsumed, World);
-	OnDotsConsumedUpdatedDelegate.Broadcast(NewNumberOfDotsConsumed);
+	OnDotsConsumedUpdated.Broadcast(NewNumberOfDotsConsumed);
 }
 
-EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFrightened) const
+EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool GetUnderlyingSubstate) const
 {
-	const auto World = FSafeGet::World(this);
-	return CurrentSubstate.GetEnum(World->GetTimeSeconds(), ExcludeFrightened);
+	return CurrentSubstate.GetEnum(GetUnderlyingSubstate);
 }
 
-void AChompGameState::LoseGame()
+UE5Coro::TCoroutine<> AChompGameState::LoseLife()
 {
-	TransitionTo(EChompGameStateEnum::GameOverLose);
+	UpdateNumberOfLives(NumberOfLives - 1);
+	if (NumberOfLives == 0)
+	{
+		TransitionTo(EChompGameStateEnum::GameOverLose);
+	}
+	else
+	{
+		TransitionTo(EChompGameStateEnum::LostLife);
+		co_await UE5Coro::Latent::Seconds(3.0);
+		TransitionTo(EChompGameStateEnum::Playing);
+	}
 }
 
 void AChompGameState::StartGame()
 {
 	// Pre-conditions.
 	check(Waves.Num() > 0);
-	
-	CurrentSubstate = FCurrentSubstate(Waves, FrightenedSubstateDuration);
-	CurrentSubstate.StartGame(GetWorld()->GetTimeSeconds());
-	
+
+	CurrentSubstate = FChompPlayingSubstate(FrightenedSubstateDuration, Waves);
+	const auto World = FSafeGet::World(this);
+	CurrentSubstate.Start(World);
+
+	UpdateNumberOfLives(StartingNumberOfLives);
+
 	TransitionTo(EChompGameStateEnum::Playing);
 }
 
@@ -98,17 +135,33 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 	// Pre-conditions.
 	const auto OldState = GameState;
 	check(OldState != NewState);
+	const auto OldOneUpCounter = OneUpCounter;
 
 	GameState = NewState;
-	OnGameStateChangedDelegate.Broadcast(OldState, NewState);
+	OnGameStateChanged.Broadcast(OldState, NewState);
 
 	if (NewState != EChompGameStateEnum::Playing)
 	{
-		const auto World = FSafeGet::World(this);
-		const auto [OldSubstate, NewSubstate] = CurrentSubstate.StopPlaying(World->GetTimeSeconds());
-		check(OldSubstate != NewSubstate);
-		OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
+		CurrentSubstate.Stop();
+		OnGamePlayingStateChanged.Broadcast(LastSubstateEnum, EChompPlayingSubstateEnum::None);
+		LastSubstateEnum = EChompPlayingSubstateEnum::None;
 	}
+	else if (NewState == EChompGameStateEnum::Playing)
+	{
+		OneUpCounter = 0;
+	}
+
+	// Post-conditions.
+	check(
+		NewState != EChompGameStateEnum::Playing
+		? !CurrentSubstate.IsRunning()
+		: true
+	);
+	check(
+		NewState == EChompGameStateEnum::Playing
+		? OneUpCounter == 0
+		: OldOneUpCounter == OneUpCounter
+	);
 }
 
 EChompGameStateEnum AChompGameState::GetEnum() const
@@ -142,10 +195,11 @@ void AChompGameState::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (GameState == EChompGameStateEnum::Playing)
 	{
-		const auto World = FSafeGet::World(this);
-		const auto [OldSubstate, NewSubstate] = CurrentSubstate.Tick(World->GetTimeSeconds());
-		if (OldSubstate != NewSubstate)
-			OnGamePlayingStateChangedDelegate.Broadcast(OldSubstate, NewSubstate);
+		if (const auto NewSubstate = CurrentSubstate.GetEnum(); LastSubstateEnum != NewSubstate)
+		{
+			OnGamePlayingStateChanged.Broadcast(LastSubstateEnum, NewSubstate);
+			LastSubstateEnum = NewSubstate;
+		}
 	}
 }
 

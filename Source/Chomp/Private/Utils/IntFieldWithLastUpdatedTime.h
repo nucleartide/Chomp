@@ -25,8 +25,9 @@ public:
 		const UWorld* WorldInstance
 	):
 		Value(Value),
-		LastUpdatedTime(WorldInstance ? WorldInstance->GetRealTimeSeconds() : 0.0)
+		LastUpdatedTime(WorldInstance ? WorldInstance->GetTimeSeconds() : 0.0)
 	{
+		check(WorldInstance);
 	}
 
 	FIntFieldWithLastUpdatedTime& operator=(const FIntFieldWithLastUpdatedTime& Other)
