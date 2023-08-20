@@ -21,6 +21,7 @@ public class Chomp : ModuleRules
 
 		// To include OnlineSubsystemSteam, add it to the plugins section in your uproject file with the Enabled attribute set to true
 
+		// Custom settings for UE5Coro.
 		CppStandard = CppStandardVersion.Cpp20;
 	}
 }

@@ -10,7 +10,7 @@ public class ChompEditorTarget : TargetRules
 		IncludeOrderVersion = EngineIncludeOrderVersion.Unreal5_1;
 		ExtraModuleNames.Add("Chomp");
 
-		// Get UE5Coro to compile
+		// Custom settings for UE5Coro.
 		bEnableCppCoroutinesForEvaluation = true;
 		CppStandard = CppStandardVersion.Cpp20;
 		bOverrideBuildEnvironment = true;
