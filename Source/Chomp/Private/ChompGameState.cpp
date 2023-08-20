@@ -25,21 +25,21 @@ void AChompGameState::ConsumeEnergizerDot()
 {
 	UpdateScore(Score + 5 * ScoreMultiplier);
 	const auto World = FSafeGet::World(this);
-	CurrentSubstate.Frighten(World->GetTimeSeconds());
+	CurrentSubstate.Frighten(World);
 }
 
 void AChompGameState::ConsumeGhost()
 {
 	// Pre-conditions.
 	const auto World = FSafeGet::World(this);
-	const auto OldNumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed(World->GetTimeSeconds());
+	const auto OldNumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed();
 	check(OldNumGhostsConsumed >= 0);
 
 	// Bump.
-	CurrentSubstate.IncrementNumGhostsConsumed();
+	CurrentSubstate.ConsumeGhost();
 
 	// Get new value.
-	const auto NumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed(World->GetTimeSeconds());
+	const auto NumGhostsConsumed = CurrentSubstate.GetNumGhostsConsumed();
 	check(NumGhostsConsumed == OldNumGhostsConsumed + 1);
 
 	// NumGhostsConsumed == 1, 2, 3, 4
@@ -96,10 +96,9 @@ void AChompGameState::UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsum
 	OnDotsConsumedUpdated.Broadcast(NewNumberOfDotsConsumed);
 }
 
-EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool ExcludeFrightened) const
+EChompPlayingSubstateEnum AChompGameState::GetSubstateEnum(const bool GetUnderlyingSubstate) const
 {
-	const auto World = FSafeGet::World(this);
-	return CurrentSubstate.GetEnum(World->GetTimeSeconds(), ExcludeFrightened);
+	return CurrentSubstate.GetEnum(GetUnderlyingSubstate);
 }
 
 UE5Coro::TCoroutine<> AChompGameState::LoseLife()
@@ -122,8 +121,9 @@ void AChompGameState::StartGame()
 	// Pre-conditions.
 	check(Waves.Num() > 0);
 
-	CurrentSubstate = FChompPlayingSubstate(Waves, FrightenedSubstateDuration);
-	CurrentSubstate.Start(GetWorld()->GetTimeSeconds());
+	CurrentSubstate = FChompPlayingSubstate(FrightenedSubstateDuration, Waves);
+	const auto World = FSafeGet::World(this);
+	CurrentSubstate.Start(World);
 
 	UpdateNumberOfLives(StartingNumberOfLives);
 
@@ -141,10 +141,9 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 
 	if (NewState != EChompGameStateEnum::Playing)
 	{
-		const auto World = FSafeGet::World(this);
-		const auto [OldSubstate, NewSubstate] = CurrentSubstate.StopPlaying(World->GetTimeSeconds());
-		check(OldSubstate != NewSubstate);
-		OnGamePlayingStateChanged.Broadcast(OldSubstate, NewSubstate);
+		CurrentSubstate.Stop();
+		OnGamePlayingStateChanged.Broadcast(LastSubstateEnum, EChompPlayingSubstateEnum::None);
+		LastSubstateEnum = EChompPlayingSubstateEnum::None;
 	}
 }
 
@@ -179,10 +178,11 @@ void AChompGameState::Tick(const float DeltaTime)
 	Super::Tick(DeltaTime);
 	if (GameState == EChompGameStateEnum::Playing)
 	{
-		const auto World = FSafeGet::World(this);
-		const auto [OldSubstate, NewSubstate] = CurrentSubstate.Tick(World->GetTimeSeconds());
-		if (OldSubstate != NewSubstate)
-			OnGamePlayingStateChanged.Broadcast(OldSubstate, NewSubstate);
+		if (const auto NewSubstate = CurrentSubstate.GetEnum(); LastSubstateEnum != NewSubstate)
+		{
+			OnGamePlayingStateChanged.Broadcast(LastSubstateEnum, NewSubstate);
+			LastSubstateEnum = NewSubstate;
+		}
 	}
 }
 

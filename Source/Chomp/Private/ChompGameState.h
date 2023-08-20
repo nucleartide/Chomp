@@ -4,8 +4,8 @@
 #include "UE5Coro.h"
 #include "GameFramework/GameStateBase.h"
 #include "GameState/ChompGameStateEnum.h"
+#include "GameState/ChompPlayingSubstate.h"
 #include "GameState/ChompPlayingSubstateEnum.h"
-#include "GameState\ChompPlayingSubstate.h"
 #include "Utils/IntFieldWithLastUpdatedTime.h"
 #include "ChompGameState.generated.h"
 
@@ -67,13 +67,16 @@ class AChompGameState : public AGameStateBase
 	int StartingNumberOfLives = 3;
 
 	UPROPERTY(VisibleInstanceOnly)
-	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime(0, nullptr);
+	FIntFieldWithLastUpdatedTime NumberOfDotsConsumed = FIntFieldWithLastUpdatedTime();
 
 	UPROPERTY(VisibleInstanceOnly)
 	EChompGameStateEnum GameState = EChompGameStateEnum::None;
 
 	UPROPERTY(VisibleInstanceOnly)
-	FChompPlayingSubstate CurrentSubstate = FChompPlayingSubstate(Waves, FrightenedSubstateDuration);
+	FChompPlayingSubstate CurrentSubstate = FChompPlayingSubstate(FrightenedSubstateDuration, Waves);
+
+	UPROPERTY(VisibleInstanceOnly)
+	EChompPlayingSubstateEnum LastSubstateEnum = EChompPlayingSubstateEnum::None;
 
 	void UpdateScore(int NewScore);
 
@@ -134,7 +137,7 @@ public:
 
 	void UpdateNumberOfDotsConsumed(const int NewNumberOfDotsConsumed);
 
-	EChompPlayingSubstateEnum GetSubstateEnum(const bool ExcludeFrightened = false) const;
+	EChompPlayingSubstateEnum GetSubstateEnum(const bool GetUnderlyingSubstate = false) const;
 
 	UE5Coro::TCoroutine<> LoseLife();
 };
