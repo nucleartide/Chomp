@@ -47,6 +47,9 @@ private:
 	UPROPERTY(VisibleInstanceOnly)
 	int NumGhostsConsumed = 0;
 
+	UPROPERTY(VisibleInstanceOnly)
+	bool IsWaveProgressionRunning = false;
+
 	UE5Coro::TCoroutine<> FrightenAsync(const UWorld* WorldInstance)
 	{
 		// Pre-conditions.
@@ -177,26 +180,46 @@ public:
 		// Pre-conditions.
 		check(GetEnum() != EChompPlayingSubstateEnum::Frightened);
 		checkf(WaveProgression.IsDone(), TEXT("Should not have already started the wave progression."));
+		check(!IsWaveProgressionRunning);
 
 		WaveProgression = StartAsync(WorldInstance, 0);
+		IsWaveProgressionRunning = true;
 
 		// Post-conditions.
 		check(GetEnum() != EChompPlayingSubstateEnum::Frightened);
 		check(CurrentWaveIndex == 0);
+		check(IsWaveProgressionRunning);
 	}
 
-	void Stop()
+	UE5Coro::TCoroutine<> Stop()
 	{
 		NumGhostsConsumed = 0;
+		IsWaveProgressionRunning = false;
 
 		if (!Frightened.IsDone())
+		{
 			Frightened.Cancel();
+		}
 
 		if (!WaveProgression.IsDone())
+		{
 			WaveProgression.Cancel();
+		}
 
-		// Post-conditions.
+		// Synchronous post-conditions.
 		check(NumGhostsConsumed == 0);
+		check(!IsWaveProgressionRunning);
+		
+		// Async post-conditions.
+		co_await Frightened;
+		co_await WaveProgression;
+		check(Frightened.IsDone());
+		check(WaveProgression.IsDone());
+	}
+
+	bool IsRunning() const
+	{
+		return IsWaveProgressionRunning;
 	}
 
 	void ConsumeGhost()

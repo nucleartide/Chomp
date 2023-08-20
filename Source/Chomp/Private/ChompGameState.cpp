@@ -145,6 +145,13 @@ void AChompGameState::TransitionTo(EChompGameStateEnum NewState)
 		OnGamePlayingStateChanged.Broadcast(LastSubstateEnum, EChompPlayingSubstateEnum::None);
 		LastSubstateEnum = EChompPlayingSubstateEnum::None;
 	}
+
+	// Post-conditions.
+	check(
+		NewState != EChompGameStateEnum::Playing
+		? !CurrentSubstate.IsRunning()
+		: true
+	);
 }
 
 EChompGameStateEnum AChompGameState::GetEnum() const
