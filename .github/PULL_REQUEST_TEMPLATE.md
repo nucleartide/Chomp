@@ -13,6 +13,7 @@
 * [ ] **Unit tests**. If needed, write unit tests to tease out edge cases.
 * [ ] **First playtest**. Thoroughly playtest until you are confident that the feature (and existing features) work.
 * [ ] **Final draft**. Perform a general review of `Files changed` and revise anything that needs to be cleaned up.
+* [ ] **Run unit tests**.
 * [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
 * [ ] **Fill out the pull request template**. Self-explanatory.
 * [ ] **Remember the GIFs**. Include a recording of what's going on!
