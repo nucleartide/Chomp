@@ -120,24 +120,27 @@ void AGhostAiController::Tick(float DeltaTime)
 	}
 
 #if WITH_EDITOR
-	if (const auto WorldLocationPath = MovementPath.GetWorldLocationPath(); WorldLocationPath.Num() >= 1)
+	if (DebugAStarMap)
 	{
-		for (const auto SphereCenter : WorldLocationPath)
+		if (const auto WorldLocationPath = MovementPath.GetWorldLocationPath(); WorldLocationPath.Num() >= 1)
 		{
-			constexpr float SphereRadius = 25.0f; // Radius of the sphere
-			const auto SphereColor = GhostPawn->GetDebugColor().ToFColor(false);
+			for (const auto SphereCenter : WorldLocationPath)
+			{
+				constexpr float SphereRadius = 25.0f; // Radius of the sphere
+				const auto SphereColor = GhostPawn->GetDebugColor().ToFColor(false);
 
-			// Draw the debug sphere
-			DrawDebugSphere(
-				GetWorld(),
-				SphereCenter,
-				SphereRadius,
-				12,
-				SphereColor,
-				false,
-				-1.0,
-				0,
-				4.0);
+				// Draw the debug sphere
+				DrawDebugSphere(
+					GetWorld(),
+					SphereCenter,
+					SphereRadius,
+					12,
+					SphereColor,
+					false,
+					-1.0,
+					0,
+					4.0);
+			}
 		}
 	}
 #endif
