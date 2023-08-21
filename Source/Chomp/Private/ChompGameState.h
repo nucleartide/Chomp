@@ -78,8 +78,6 @@ class AChompGameState : public AGameStateBase
 	UPROPERTY(VisibleInstanceOnly)
 	EChompPlayingSubstateEnum LastSubstateEnum = EChompPlayingSubstateEnum::None;
 
-	void UpdateScore(int NewScore);
-
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 
 	void TransitionTo(EChompGameStateEnum NewState);
@@ -130,6 +128,8 @@ public:
 	bool IsFrightened() const;
 
 	int GetScore() const;
+	
+	void UpdateScore(int NewScore);
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;
 

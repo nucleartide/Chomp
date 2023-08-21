@@ -45,8 +45,7 @@ void ABonusFruitSpawner::HandleDotsConsumedChanged(int DotsConsumed)
 		check(SpawnedSymbol);
 		
 		// [x] TODO: configure all this in the scene
-		// TODO: when consumed, award points from configured field
-		// TODO: pre-emptive create a LevelManager + Level classes + datatable (quick google)
-		// TODO: install editor debug symbols
+		// [ ] TODO: when consumed, award points from configured field
+		// [ ] TODO: install editor debug symbols
 	}
 }
