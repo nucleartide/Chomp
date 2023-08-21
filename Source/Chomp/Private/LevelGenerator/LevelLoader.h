@@ -64,6 +64,9 @@ public:
 	 */
 	virtual FVector2D GridToWorld(const FGridLocation& GridPosition) const override;
 
+	// More convenient version of GridToWorld().
+	FVector GridToWorld3D(const FGridLocation& GridPosition) const;
+
 	/**
 	 * Given world coordinates, convert them to grid coordinates.
 	 *
@@ -125,6 +128,8 @@ public:
 
 	FGridLocation GetRightOutsideGhostHouseTile() const;
 
+	FGridLocation GetBonusSymbolTile() const;
+
 private:
 	/**
 	 * The number of rows in the level.
@@ -142,6 +147,8 @@ private:
 	std::unordered_set<FGridLocation> Walls;
 
 	std::optional<FGridLocation> GateTile;
+
+	std::optional<FGridLocation> BonusSymbolTile;
 
 	/**
 	 * A set of FGridLocations that describe all the tiles within the ghost house in the level.

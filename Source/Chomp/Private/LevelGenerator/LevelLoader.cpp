@@ -86,6 +86,12 @@ void ULevelLoader::LoadLevel()
 			{
 				// No-op.
 			}
+			else if (Character == 'B')
+			{
+				checkf(!BonusSymbolTile.has_value(),
+				       TEXT("BonusSymbolTile is being set multiple times. You have too many 'B' chars in your level file!"));
+				BonusSymbolTile = FGridLocation{X, Y};
+			}
 			else
 			{
 				checkf(false, TEXT("Character is not supported in our level format."));
@@ -96,6 +102,7 @@ void ULevelLoader::LoadLevel()
 	// Post-conditions.
 	check(RightOutsideGhostHouseTile.has_value());
 	check(GateTile.has_value());
+	check(BonusSymbolTile.has_value());
 	check(WrapAroundTiles.size() > 0);
 	check(WrapAroundTiles.size() % 2 == 0);
 }
@@ -128,6 +135,12 @@ FVector2D ULevelLoader::GridToWorld(const FGridLocation& GridPosition) const
 	WorldPosition.X = (static_cast<float>(GridPosition.X) - .5f * GetLevelHeight()) * 100.0f;
 	WorldPosition.Y = (static_cast<float>(GridPosition.Y) - .5f * GetLevelWidth()) * 100.0f;
 	return WorldPosition;
+}
+
+FVector ULevelLoader::GridToWorld3D(const FGridLocation& GridPosition) const
+{
+	const auto Result = GridToWorld(GridPosition);
+	return FVector(Result.X, Result.Y, 0.0);
 }
 
 FGridLocation ULevelLoader::WorldToGrid(const FVector2D WorldPosition) const
@@ -307,6 +320,11 @@ FGridLocation ULevelLoader::GetGateTile() const
 FGridLocation ULevelLoader::GetRightOutsideGhostHouseTile() const
 {
 	return GetTile(RightOutsideGhostHouseTile, this);
+}
+
+FGridLocation ULevelLoader::GetBonusSymbolTile() const
+{
+	return GetTile(BonusSymbolTile, this);
 }
 
 FGridLocation ULevelLoader::GetTile(std::optional<FGridLocation> MaybeTile, const ULevelLoader* LevelInstance)
