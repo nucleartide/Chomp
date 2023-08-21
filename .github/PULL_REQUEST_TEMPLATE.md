@@ -1,5 +1,7 @@
 ## User Story
 
+todo: document prs in readme, useful for post-mortem writeup
+
 > Describe the user story that was completed as part of this pull request.
 
 ## Playable build
