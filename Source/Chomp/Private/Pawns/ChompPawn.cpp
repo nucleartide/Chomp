@@ -2,6 +2,7 @@
 #include "Actors/ConsumableDotActor.h"
 #include "Actors/ConsumableEnergizerActor.h"
 #include "ChompGameState.h"
+#include "Actors/BonusSymbol.h"
 #include "Controllers/GhostAiController.h"
 #include "Pawns/GhostPawn.h"
 #include "Utils/SafeGet.h"
@@ -30,5 +31,9 @@ void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 	else if (const auto EnergizerDot = Cast<AConsumableEnergizerActor>(Other))
 	{
 		EnergizerDot->Consume();
+	}
+	else if (const auto BonusSymbol = Cast<ABonusSymbol>(Other))
+	{
+		BonusSymbol->Consume();
 	}
 }

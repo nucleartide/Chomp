@@ -11,4 +11,7 @@ class CHOMP_API ABonusSymbol : public AStaticMeshActor
 
 	UPROPERTY(EditDefaultsOnly)
 	int PointsToAward = 1000;
+
+public:
+	void Consume();
 };
