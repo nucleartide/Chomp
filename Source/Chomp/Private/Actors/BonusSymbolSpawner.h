@@ -21,11 +21,16 @@ class CHOMP_API ABonusFruitSpawner : public AActor
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ABonusSymbol> BonusSymbolToSpawn;
 
+	UPROPERTY(VisibleInstanceOnly)
+	ABonusSymbol* SpawnedBonusSymbol;
+
 	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ULevelLoader> LevelLoader;
 
 	UFUNCTION()
 	void HandleDotsConsumedChanged(int DotsConsumed);
+
+	ABonusSymbol* SpawnBonusSymbol() const;
 
 protected:
 	virtual void BeginPlay() override;
