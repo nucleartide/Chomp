@@ -46,6 +46,6 @@ void ABonusFruitSpawner::HandleDotsConsumedChanged(int DotsConsumed)
 		
 		// [x] TODO: configure all this in the scene
 		// [x] TODO: when consumed, award points from configured field
-		// [ ] TODO: install editor debug symbols
+		// [x] TODO: install editor debug symbols
 	}
 }
