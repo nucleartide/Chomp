@@ -31,21 +31,15 @@ void ABonusFruitSpawner::HandleDotsConsumedChanged(int DotsConsumed)
 	
 	if (DotsConsumed == FirstSymbolDotThreshold)
 	{
-		SpawnedBonusSymbol = SpawnBonusSymbol();
-
-		// Post-conditions.
-		check(IsValid(SpawnedBonusSymbol));
+		SpawnBonusSymbol();
 	}
 	else if (DotsConsumed == SecondSymbolDotThreshold && !IsValid(SpawnedBonusSymbol))
 	{
-		SpawnedBonusSymbol = SpawnBonusSymbol();
-
-		// Post-conditions.
-		check(IsValid(SpawnedBonusSymbol));
+		SpawnBonusSymbol();
 	}
 }
 
-ABonusSymbol* ABonusFruitSpawner::SpawnBonusSymbol() const
+UE5Coro::TCoroutine<> ABonusFruitSpawner::SpawnBonusSymbol()
 {
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -55,15 +49,18 @@ ABonusSymbol* ABonusFruitSpawner::SpawnBonusSymbol() const
 	const auto SpawnLocation = LevelInstance->GetBonusSymbolTile();
 	const auto SpawnLocationWorld = LevelInstance->GridToWorld3D(SpawnLocation);
 
-	const auto BonusSymbol = World->SpawnActor<ABonusSymbol>(
+	SpawnedBonusSymbol = World->SpawnActor<ABonusSymbol>(
 		BonusSymbolToSpawn,
 		SpawnLocationWorld,
 		FRotator::ZeroRotator,
 		Params
 	);
+	check(SpawnedBonusSymbol);
 
-	// Post-conditions.
-	check(BonusSymbol);
-	
-	return BonusSymbol;
+	co_await UE5Coro::Latent::Seconds(NumSecondsUntilSymbolRemoval);
+
+	if (IsValid(SpawnedBonusSymbol))
+	{
+		SpawnedBonusSymbol->Destroy();
+	}
 }

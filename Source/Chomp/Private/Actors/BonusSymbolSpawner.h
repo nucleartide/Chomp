@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "UE5Coro.h"
 #include "GameFramework/Actor.h"
 #include "BonusSymbolSpawner.generated.h"
 
@@ -19,6 +20,9 @@ class CHOMP_API ABonusFruitSpawner : public AActor
 	int SecondSymbolDotThreshold = 170;
 
 	UPROPERTY(EditDefaultsOnly)
+	double NumSecondsUntilSymbolRemoval = 10.0;
+
+	UPROPERTY(EditDefaultsOnly)
 	TSubclassOf<ABonusSymbol> BonusSymbolToSpawn;
 
 	UPROPERTY(VisibleInstanceOnly)
@@ -30,7 +34,7 @@ class CHOMP_API ABonusFruitSpawner : public AActor
 	UFUNCTION()
 	void HandleDotsConsumedChanged(int DotsConsumed);
 
-	ABonusSymbol* SpawnBonusSymbol() const;
+	UE5Coro::TCoroutine<> SpawnBonusSymbol();
 
 protected:
 	virtual void BeginPlay() override;
