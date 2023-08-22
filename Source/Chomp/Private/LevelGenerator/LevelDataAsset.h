@@ -13,4 +13,10 @@ class CHOMP_API ULevelDataAsset : public UDataAsset
 
 	UPROPERTY(EditInstanceOnly)
 	TSubclassOf<ABonusSymbol> BonusSymbol;
+
+	UPROPERTY(EditInstanceOnly)
+	UMaterialInterface* BonusSymbolRenderTarget;
+	
+public:
+	UMaterialInterface* GetBonusSymbolRenderTarget() const;
 };

@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
 #include "ChompGameState.h"
+#include "LevelIndicatorWidget.h"
 #include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
 #include "Utils/SafeGet.h"
@@ -27,8 +28,9 @@ void AUIManager::BeginPlay()
 	check(LivesWidgetInstance);
 	LivesWidgetInstance->AddToViewport();
 	
-	LevelIndicatorWidgetInstance = CreateWidget(World, LevelIndicatorWidget);
-	check(LivesWidgetInstance);
+	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
+	check(LevelIndicatorWidgetInstance);
+	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
 	LevelIndicatorWidgetInstance->AddToViewport();
 
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();

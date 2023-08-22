@@ -13,4 +13,7 @@ class CHOMP_API ULevelSequenceDataAsset : public UDataAsset
 
 	UPROPERTY(EditInstanceOnly)
 	TArray<ULevelDataAsset*> LevelSequence;
+
+public:
+	TArray<ULevelDataAsset*> LastThree();
 };
