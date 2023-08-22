@@ -26,6 +26,10 @@ void AUIManager::BeginPlay()
 	LivesWidgetInstance = CreateWidget(World, LivesWidget);
 	check(LivesWidgetInstance);
 	LivesWidgetInstance->AddToViewport();
+	
+	LevelIndicatorWidgetInstance = CreateWidget(World, LevelIndicatorWidget);
+	check(LivesWidgetInstance);
+	LevelIndicatorWidgetInstance->AddToViewport();
 
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
 	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
@@ -44,9 +48,11 @@ void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	ScoreWidgetInstance->RemoveFromParent();
 	LivesWidgetInstance->RemoveFromParent();
+	LevelIndicatorWidgetInstance->RemoveFromParent();
 
 	ScoreWidgetInstance = nullptr;
 	LivesWidgetInstance = nullptr;
+	LevelIndicatorWidgetInstance = nullptr;
 }
 
 void AUIManager::Tick(const float DeltaTime)
@@ -109,6 +115,7 @@ void AUIManager::HandleRestartGameClicked()
 	Controller->SetInputMode(FInputModeGameOnly());
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AUIManager::HandleLivesChanged(const int NumberOfLives)
 {
 	const auto LivesWidgetRef = Cast<ULivesWidget>(LivesWidgetInstance);

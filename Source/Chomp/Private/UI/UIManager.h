@@ -42,11 +42,17 @@ class AUIManager : public AActor
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<UUserWidget> LivesWidget;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<UUserWidget> LevelIndicatorWidget;
+
 	UPROPERTY(VisibleInstanceOnly)
 	UUserWidget* ScoreWidgetInstance;
 
 	UPROPERTY(VisibleInstanceOnly)
 	UUserWidget* LivesWidgetInstance;
+	
+	UPROPERTY(VisibleInstanceOnly)
+	UUserWidget* LevelIndicatorWidgetInstance;
 
 public:
 	AUIManager();
