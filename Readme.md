@@ -32,4 +32,4 @@ A post-mortem write-up will be published when the project is done. Until then, h
 | AI | Implement .Pathfind | behavior for ghosts
 | AI, game loop | Add ghosts + lose condition
 | Pipeline | Add PR template
-| Game loop | Get game loop win condition only | fully functional
+| Game loop | Get game loop win condition only fully functional #2
