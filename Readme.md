@@ -4,4 +4,4 @@ An action maze chase video game about navigating a maze, eating dots, and avoidi
 
 ## 🎮 Play the game
 
-Please see the [latest releases](https://github.com/nucleartide/Chomp/releases) for a download link.
+Please see the [latest releases on Google Drive](https://drive.google.com/drive/folders/1OTklrCTUU66ITB8hdL5YUrdoOs1tV6-E?usp=sharing) (not GitHub Releases) for a download link.
