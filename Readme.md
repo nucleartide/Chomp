@@ -14,21 +14,21 @@ A post-mortem write-up will be published when the project is done. Until then, h
 
 | Gameplay System | Pull Request |
 | --- | --- |
-| consumables, scoring | Implement bonus fruit
-| health | Implement lives
-| AI, grid-aligned movement | Enable ghost wraparound
-| scoring | Update scoring upon consuming energizer dots and ghosts
-| consumables | Add ability to consume ghosts when game is in frightened state
-| consumables, game loop | Add energizers and frightened state
-| AI | Implement AI behavior for Pinky and Clyde
-| AI | Implement custom AI behavior for Inky cyan ghost |
-| AI | Implement timer-since-last-dot to force ghosts to leave house
-| UI | Add game menus, among other things
-| AI, grid-aligned movement | Add remaining ghosts & fix bugs in grid aligned movement
-| AI, grid-aligned movement | Re-implement AI controller using new grid-aligned movement algorithm
-| grid-aligned movement | Re-implement player movement to be grid-aligned
-| bug | Reset ghost upon restart, among other things
-| UI | Fix game over screens, among other things
+| consumables, scoring | https://github.com/nucleartide/Chomp/pull/22 Implement bonus fruit
+| health | https://github.com/nucleartide/Chomp/pull/21 Implement lives
+| AI, grid-aligned movement | https://github.com/nucleartide/Chomp/pull/20 Enable ghost wraparound
+| scoring | https://github.com/nucleartide/Chomp/pull/18 Update scoring upon consuming energizer dots and ghosts
+| consumables | https://github.com/nucleartide/Chomp/pull/17 Add ability to consume ghosts when game is in frightened state
+| consumables, game loop | https://github.com/nucleartide/Chomp/pull/16 Add energizers and frightened state
+| AI | https://github.com/nucleartide/Chomp/pull/15 Implement AI behavior for Pinky and Clyde
+| AI | https://github.com/nucleartide/Chomp/pull/14 Implement custom AI behavior for Inky cyan ghost |
+| AI | https://github.com/nucleartide/Chomp/pull/13 Implement timer-since-last-dot to force ghosts to leave house
+| UI | https://github.com/nucleartide/Chomp/pull/12 Add game menus, among other things
+| AI, grid-aligned movement | https://github.com/nucleartide/Chomp/pull/11 Add remaining ghosts & fix bugs in grid aligned movement
+| AI, grid-aligned movement | https://github.com/nucleartide/Chomp/pull/10 Re-implement AI controller using new grid-aligned movement algorithm
+| grid-aligned movement | https://github.com/nucleartide/Chomp/pull/9 Re-implement player movement to be grid-aligned
+| bug | https://github.com/nucleartide/Chomp/pull/8 Reset ghost upon restart, among other things
+| UI | https://github.com/nucleartide/Chomp/pull/6 Fix game over screens, among other things
 | AI | https://github.com/nucleartide/Chomp/pull/5 Implement `.Pathfind` behavior for ghosts
 | AI, game loop | https://github.com/nucleartide/Chomp/pull/4 Add ghosts + lose condition
 | pipeline | https://github.com/nucleartide/Chomp/pull/3 Add PR template
