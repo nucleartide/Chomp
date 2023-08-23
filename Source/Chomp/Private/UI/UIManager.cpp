@@ -30,8 +30,8 @@ void AUIManager::BeginPlay()
 	
 	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
 	check(LevelIndicatorWidgetInstance);
-	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
 	LevelIndicatorWidgetInstance->AddToViewport();
+	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
 
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
 	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);

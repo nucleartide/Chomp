@@ -10,17 +10,8 @@ void ULevelIndicatorWidget::RenderLastThreeLevelSymbols(UWorld* WorldInstance) c
 {
 	for (const auto LastThreeLevels = LevelSequence->LastThree(); const auto Level : LastThreeLevels)
 	{
-		// Create an image.
-		const auto WidgetInstance = CreateWidget<UUserWidget>(WorldInstance, LevelSymbolWidget);
+		const auto WidgetInstance = CreateWidget<UUserWidget>(WorldInstance, Level->BonusSymbolWidget);
 		check(WidgetInstance);
-
-		const auto LevelSymbolInstance = Cast<ULevelSymbolWidget>(WidgetInstance);
-		check(LevelSymbolInstance);
-
-		// Set the image's render target from the current loop iteration's level.
-		LevelSymbolInstance->LevelSymbolImage->SetBrushFromMaterial(Level->GetBonusSymbolRenderTarget());
-
-		// Add the image to the horizontal box.
-		LevelIndicatorContainer->AddChild(LevelSymbolInstance);
+		LevelIndicatorContainer->AddChild(WidgetInstance);
 	}
 }

@@ -19,9 +19,6 @@ class CHOMP_API ULevelIndicatorWidget : public UUserWidget
 	UPROPERTY(EditDefaultsOnly)
 	ULevelSequenceDataAsset* LevelSequence;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> LevelSymbolWidget;
-
 public:
 	void RenderLastThreeLevelSymbols(UWorld* WorldInstance) const;
 };
