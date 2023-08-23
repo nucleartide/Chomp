@@ -8,9 +8,9 @@ Please see the [latest releases on Google Drive](https://drive.google.com/drive/
 
 ## 👀 Review the development process
 
-In addition to the game itself, the Chomp project also intends to demonstrate how a game made in Unreal Engine comes together, and the tradeoffs that were made under particular time and resource constraints.
+In addition to the game itself, the Chomp project also intends to demonstrate how a game made in Unreal Engine 5 comes together, and the tradeoffs that were made under particular time and resource constraints.
 
-A post-mortem write-up will be published when the project is done. Until then, here is a list of pull requests (categorized by gameplay system) that document the development process:
+A post-mortem technical write-up will be published when the project is done. Until then, here is a list of pull requests (categorized by gameplay system) that document the development process:
 
 | Gameplay System | Pull Request |
 | --- | --- |
