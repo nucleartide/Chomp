@@ -17,6 +17,7 @@
 	* [ ] **Final playtest**. After the changes above, playtest through the game one last time to ensure that everything works.
 * [ ] **Fill out the pull request template**. Self-explanatory.
 * [ ] **Remember the GIFs**. Include a recording of what's going on!
+* [ ] **Update readme**. Maintain a list of pull requests for easy access later.
 * [ ] **Merge**. Merge into `master`.
 
 ## Release checklist
