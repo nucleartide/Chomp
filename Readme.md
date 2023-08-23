@@ -9,5 +9,5 @@ Please see the [latest releases on Google Drive](https://drive.google.com/drive/
 ## 👀 Review the development process
 
 | Gameplay System | Pull Request |
----
+| --- | --- |
 | blah | blah |
