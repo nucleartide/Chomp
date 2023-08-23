@@ -9,6 +9,7 @@ void UScoreWidget::NativeConstruct()
     ChompGameState->OnScoreUpdated.AddUniqueDynamic(this, &UScoreWidget::HandleScoreUpdated);
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void UScoreWidget::HandleScoreUpdated(int Score)
 {
     check(ScoreTextBlock);

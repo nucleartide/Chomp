@@ -4,6 +4,7 @@
 #include "GameFramework/PlayerController.h"
 #include "UI/GameOverWidget.h"
 #include "ChompGameState.h"
+#include "LevelIndicatorWidget.h"
 #include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
 #include "Utils/SafeGet.h"
@@ -26,6 +27,11 @@ void AUIManager::BeginPlay()
 	LivesWidgetInstance = CreateWidget(World, LivesWidget);
 	check(LivesWidgetInstance);
 	LivesWidgetInstance->AddToViewport();
+	
+	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
+	check(LevelIndicatorWidgetInstance);
+	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
+	LevelIndicatorWidgetInstance->AddToViewport();
 
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
 	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
@@ -44,9 +50,11 @@ void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 
 	ScoreWidgetInstance->RemoveFromParent();
 	LivesWidgetInstance->RemoveFromParent();
+	LevelIndicatorWidgetInstance->RemoveFromParent();
 
 	ScoreWidgetInstance = nullptr;
 	LivesWidgetInstance = nullptr;
+	LevelIndicatorWidgetInstance = nullptr;
 }
 
 void AUIManager::Tick(const float DeltaTime)
@@ -109,6 +117,7 @@ void AUIManager::HandleRestartGameClicked()
 	Controller->SetInputMode(FInputModeGameOnly());
 }
 
+// ReSharper disable once CppMemberFunctionMayBeConst
 void AUIManager::HandleLivesChanged(const int NumberOfLives)
 {
 	const auto LivesWidgetRef = Cast<ULivesWidget>(LivesWidgetInstance);

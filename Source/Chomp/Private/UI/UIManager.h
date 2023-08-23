@@ -7,6 +7,7 @@
 #include "Blueprint/UserWidget.h"
 #include "UIManager.generated.h"
 
+class ULevelIndicatorWidget;
 class ULivesWidget;
 class UScoreWidget;
 
@@ -42,11 +43,17 @@ class AUIManager : public AActor
 	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
 	TSubclassOf<UUserWidget> LivesWidget;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Custom Settings")
+	TSubclassOf<UUserWidget> LevelIndicatorWidget;
+
 	UPROPERTY(VisibleInstanceOnly)
 	UUserWidget* ScoreWidgetInstance;
 
 	UPROPERTY(VisibleInstanceOnly)
 	UUserWidget* LivesWidgetInstance;
+	
+	UPROPERTY(VisibleInstanceOnly)
+	ULevelIndicatorWidget* LevelIndicatorWidgetInstance;
 
 public:
 	AUIManager();

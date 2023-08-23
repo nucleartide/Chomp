@@ -89,7 +89,7 @@ void ALevelGenerationActor::GenerateTiles()
 				// Keep reference to actor so we can destroy it later on.
 				Tiles.Add(SpawnedActor);
 			}
-			else if (Character == ' ' || Character == 'S')
+			else if (Character == ' ' || Character == 'S' || Character == 'B')
 			{
 				// Spawn dot actor.
 				auto BogusSpawn = Level->GridToWorld(FGridLocation{-100, -100});
