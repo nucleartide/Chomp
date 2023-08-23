@@ -32,6 +32,6 @@ A post-mortem write-up will be published when the project is done. Until then, h
 | AI | Implement .Pathfind behavior for ghosts
 | AI, game loop | Add ghosts + lose condition
 | pipeline | Add PR template
-| game loop | Get game loop win condition only fully functional
+| game loop | https://github.com/nucleartide/Chomp/pull/2 Get game loop win condition only fully functional
 
 https://github.com/nucleartide/Chomp/labels/bug
