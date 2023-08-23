@@ -29,9 +29,9 @@ A post-mortem write-up will be published when the project is done. Until then, h
 | grid-aligned movement | Re-implement player movement to be grid-aligned
 | bug | Reset ghost upon restart, among other things
 | UI | Fix game over screens, among other things
-| AI | Implement .Pathfind behavior for ghosts
-| AI, game loop | Add ghosts + lose condition
-| pipeline | Add PR template
-| game loop | * https://github.com/nucleartide/Chomp/pull/2 Get game loop win condition only fully functional
+| AI | https://github.com/nucleartide/Chomp/pull/5 Implement `.Pathfind` behavior for ghosts
+| AI, game loop | https://github.com/nucleartide/Chomp/pull/4 Add ghosts + lose condition
+| pipeline | https://github.com/nucleartide/Chomp/pull/3 Add PR template
+| game loop | https://github.com/nucleartide/Chomp/pull/2 Get game loop win condition only fully functional
 
 https://github.com/nucleartide/Chomp/labels/bug
