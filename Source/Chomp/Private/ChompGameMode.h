@@ -10,4 +10,7 @@ UCLASS()
 class CHOMP_API AChompGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
+
+protected:
+	virtual void BeginPlay() override;
 };

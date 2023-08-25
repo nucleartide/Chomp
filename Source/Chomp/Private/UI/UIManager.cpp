@@ -1,14 +1,13 @@
 #include "UI/UIManager.h"
-#include "Utils/Debug.h"
-#include "Kismet/GameplayStatics.h"
-#include "CoreGlobals.h"
-#include "GameFramework/PlayerController.h"
-#include "UI/GameOverWidget.h"
 #include "ChompGameState.h"
+#include "CoreGlobals.h"
 #include "LevelIndicatorWidget.h"
 #include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
-#include "GameFramework/GameUserSettings.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
+#include "UI/GameOverWidget.h"
+#include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
 AUIManager::AUIManager(): AActor()
@@ -20,16 +19,6 @@ void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-
-		const auto GameUserSettings = UGameUserSettings::GetGameUserSettings();
-    	GameUserSettings->SetOverallScalabilityLevel(1);
-    	GameUserSettings->SetScreenResolution(GameUserSettings->GetDesktopResolution());
-    	GameUserSettings->SetResolutionScaleNormalized(1.0);
-    	GameUserSettings->SetFullscreenMode(EWindowMode::Windowed);
-    	GameUserSettings->ApplySettings(false);
-	DEBUG_LOG(TEXT("%s"), *GGameUserSettingsIni);
-	DEBUG_LOG(TEXT("test test test"));
-
 	const auto World = FSafeGet::World(this);
 
 	ScoreWidgetInstance = CreateWidget(World, ScoreWidget);
@@ -39,7 +28,7 @@ void AUIManager::BeginPlay()
 	LivesWidgetInstance = CreateWidget(World, LivesWidget);
 	check(LivesWidgetInstance);
 	LivesWidgetInstance->AddToViewport();
-	
+
 	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
 	check(LevelIndicatorWidgetInstance);
 	LevelIndicatorWidgetInstance->AddToViewport();
