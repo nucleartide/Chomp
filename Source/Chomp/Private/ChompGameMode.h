@@ -1,5 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -10,7 +8,4 @@ UCLASS()
 class CHOMP_API AChompGameMode : public AGameModeBase
 {
 	GENERATED_BODY()
-
-protected:
-	virtual void BeginPlay() override;
 };
