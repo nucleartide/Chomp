@@ -16,8 +16,5 @@ public class ChompTarget : TargetRules
 		bEnableCppCoroutinesForEvaluation = true;
 		CppStandard = CppStandardVersion.Cpp20;
 		bOverrideBuildEnvironment = true;
-		
-		// bUseChecksInShipping = true;
-		// bUseLoggingInShipping = true;
 	}
 }
