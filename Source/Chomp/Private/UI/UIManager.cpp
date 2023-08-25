@@ -1,12 +1,13 @@
 #include "UI/UIManager.h"
-#include "Utils/Debug.h"
-#include "Kismet/GameplayStatics.h"
-#include "GameFramework/PlayerController.h"
-#include "UI/GameOverWidget.h"
 #include "ChompGameState.h"
+#include "CoreGlobals.h"
 #include "LevelIndicatorWidget.h"
 #include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
+#include "GameFramework/PlayerController.h"
+#include "Kismet/GameplayStatics.h"
+#include "UI/GameOverWidget.h"
+#include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
 AUIManager::AUIManager(): AActor()
@@ -27,7 +28,7 @@ void AUIManager::BeginPlay()
 	LivesWidgetInstance = CreateWidget(World, LivesWidget);
 	check(LivesWidgetInstance);
 	LivesWidgetInstance->AddToViewport();
-	
+
 	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
 	check(LevelIndicatorWidgetInstance);
 	LevelIndicatorWidgetInstance->AddToViewport();
