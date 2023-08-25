@@ -384,7 +384,6 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInScatter()
 	);
 
 	const auto NewMovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
-	NewMovementPath.DebugLog(TEXT("Scatter"));
 
 	// Post-conditions.
 	check(NewMovementPath.IsValid());
@@ -420,8 +419,6 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInFrightened() const
 		Path,
 		ULevelLoader::GetInstance(Level)
 	);
-
-	NewMovementPath.DebugLog(TEXT("Frightened"));
 
 	return NewMovementPath;
 }
@@ -468,7 +465,6 @@ FMovementPath AGhostAiController::UpdateMovementPathWhenInChase() const
 
 	// Update movement path.
 	const auto NewMovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
-	NewMovementPath.DebugLog(TEXT("Chase"));
 
 	// Post-conditions.
 	check(NewMovementPath.IsValid());
@@ -589,7 +585,6 @@ FMovementPath AGhostAiController::ReturnToGhostHouse() const
 
 	// Construct FMovementPath.
 	const auto NewMovementPath = FMovementPath(Pawn->GetActorLocation(), Path, ULevelLoader::GetInstance(Level));
-	NewMovementPath.DebugLog(TEXT("Chase"));
 
 	// Post-conditions.
 	check(NewMovementPath.IsValid());

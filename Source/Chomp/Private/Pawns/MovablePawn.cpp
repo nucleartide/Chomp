@@ -101,22 +101,18 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 	FVector NewLocation;
 	if (CanTravelInIntendedDir)
 	{
-		DEBUG_LOG(TEXT("first"));
 		NewLocation = TargetWorld;
 	}
 	else if (MovedPastTarget && CanTravelInDirection(TargetWorld, Movement.GetDirection()))
 	{
-		DEBUG_LOG(TEXT("second"));
 		NewLocation = WrappedLocation;
 	}
 	else if (MovedPastTarget)
 	{
-		DEBUG_LOG(TEXT("third"));
 		NewLocation = TargetWorld;
 	}
 	else
 	{
-		DEBUG_LOG(TEXT("fourth"));
 		NewLocation = WrappedLocation;
 	}
 
