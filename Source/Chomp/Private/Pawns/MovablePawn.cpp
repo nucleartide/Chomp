@@ -98,14 +98,23 @@ FMoveInDirectionResult AMovablePawn::MoveInDirection(
 		MovementIntention.GetDirection().IsNonZero() &&
 		Movement.GetDirection() != MovementIntention.GetDirection() &&
 		CanTravelInDirection(TargetWorld, MovementIntention.GetDirection());
-	const auto NewLocation =
-		CanTravelInIntendedDir
-			? TargetWorld
-			: MovedPastTarget && CanTravelInDirection(TargetWorld, Movement.GetDirection())
-			? WrappedLocation
-			: MovedPastTarget
-			? TargetWorld
-			: WrappedLocation;
+	FVector NewLocation;
+	if (CanTravelInIntendedDir)
+	{
+		NewLocation = TargetWorld;
+	}
+	else if (MovedPastTarget && CanTravelInDirection(TargetWorld, Movement.GetDirection()))
+	{
+		NewLocation = WrappedLocation;
+	}
+	else if (MovedPastTarget)
+	{
+		NewLocation = TargetWorld;
+	}
+	else
+	{
+		NewLocation = WrappedLocation;
+	}
 
 	// Finally, compute new rotation. Be cognizant of Pac-Man's wrap-around! May need to do modular arithmetic.
 	const auto ActorRotation = ComputeNewRotation(GetActorLocation(), NewLocation, DeltaTime);
