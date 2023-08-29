@@ -1,12 +1,11 @@
 #include "StartMenuWidget.h"
 #include "Components/Button.h"
+#include "GameState/HighScoreSubsystem.h"
+#include "Utils/SafeGet.h"
 
 void UStartMenuWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-
-	// Pre-conditions.
-	check(BonusSymbolWidget);
 
 	StartButton->OnHovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleStartHover);
 	StartButton->OnUnhovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleStartUnhover);
@@ -32,19 +31,28 @@ void UStartMenuWidget::NativeDestruct()
 	QuitButton->OnUnhovered.RemoveDynamic(this, &UStartMenuWidget::HandleQuitUnhover);
 }
 
-void UStartMenuWidget::Render(UWorld* WorldInstance) const
+void UStartMenuWidget::Render(APlayerController* PlayerController) const
 {
 	// Pre-conditions.
-	check(WorldInstance);
-	
-	const auto DummyHighScore = FText::FromString(TEXT("blah"));
-	HighScoreValue->SetText(DummyHighScore);
+	check(PlayerController);
+	const auto WorldInstance = FSafeGet::World(PlayerController);
+
+	// Grab references to data.
+	const auto HighScoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<UHighScoreSubsystem>();
+	check(HighScoreSubsystem);
+
+	// Set high score value.
+	auto HighScoreText = FText::FromString(FString::Printf(TEXT("%d"), HighScoreSubsystem->GetHighScore()));
+	HighScoreValue->SetText(HighScoreText);
+
+	// Set high score new indicator.
+	const auto IsHighScoreNew = HighScoreSubsystem->GetIsHighScoreNew();
 	HighScoreNewIndicator->SetVisibility(IsHighScoreNew ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
-	
-	if (BonusSymbolWidget)
+
+	// Set high score bonus symbol widget, if present.
+	if (const auto HighScoreBonusSymbolWidget = HighScoreSubsystem->GetHighScoreBonusSymbolWidget())
 	{
-		// Then render instance of bonus symbol into box.
-		const auto WidgetInstance = CreateWidget(WorldInstance, BonusSymbolWidget);
+		const auto WidgetInstance = CreateWidget(WorldInstance, HighScoreBonusSymbolWidget);
 		check(WidgetInstance);
 		HighScoreLevelSymbolBox->AddChild(WidgetInstance);
 	}

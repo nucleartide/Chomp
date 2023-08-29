@@ -1,7 +1,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "LevelSymbolWidget.h"
 #include "Blueprint/UserWidget.h"
 #include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
@@ -13,12 +12,6 @@ UCLASS(Blueprintable, BlueprintType)
 class CHOMP_API UStartMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
-
-	UPROPERTY(EditDefaultsOnly)
-	bool IsHighScoreNew = true;
-	
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<ULevelSymbolWidget> BonusSymbolWidget;
 
 	UFUNCTION()
 	void HandleStartHover();
@@ -71,7 +64,6 @@ protected:
 	virtual void NativeDestruct() override;
 
 public:
-	// Note: you should call this function in your Blueprint.
 	UFUNCTION(BlueprintCallable)
-	void Render(UWorld* WorldInstance) const;
+	void Render(APlayerController* PlayerController) const;
 };

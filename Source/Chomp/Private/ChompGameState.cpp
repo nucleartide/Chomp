@@ -1,5 +1,7 @@
 #include "ChompGameState.h"
 #include "UE5Coro.h"
+#include "LevelGenerator/LevelDataAsset.h"
+#include "UI/LevelSymbolWidget.h"
 #include "Utils/SafeGet.h"
 
 AChompGameState::AChompGameState()
@@ -183,6 +185,7 @@ int AChompGameState::GetScore() const
 {
 	return Score;
 }
+
 
 void AChompGameState::BeginPlay()
 {

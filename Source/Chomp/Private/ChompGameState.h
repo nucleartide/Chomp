@@ -9,6 +9,9 @@
 #include "Utils/IntFieldWithLastUpdatedTime.h"
 #include "ChompGameState.generated.h"
 
+class ULevelSymbolWidget;
+class ULevelDataAsset;
+class ULevelSequenceDataAsset;
 struct FWave;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDotsCleared);
@@ -128,7 +131,7 @@ public:
 	bool IsFrightened() const;
 
 	int GetScore() const;
-	
+
 	void UpdateScore(int NewScore);
 
 	FIntFieldWithLastUpdatedTime GetNumberOfDotsConsumed() const;

@@ -34,6 +34,17 @@ T* FSafeGet::GameState(const AActor* Actor)
 template
 AChompGameState* FSafeGet::GameState(const AActor* Actor);
 
+template <typename T>
+T* FSafeGet::GameState(const UWorld* WorldInstance)
+{
+	auto GameState = WorldInstance->GetGameState<T>();
+	check(GameState);
+	return GameState;
+}
+
+template
+AChompGameState* FSafeGet::GameState(const UWorld* WorldInstance);
+
 UWorld* FSafeGet::World(const AActor* Actor)
 {
 	auto World = Actor->GetWorld();
