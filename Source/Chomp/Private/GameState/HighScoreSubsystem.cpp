@@ -14,10 +14,14 @@ bool UHighScoreSubsystem::GetIsHighScoreNew() const
 
 TSubclassOf<UUserWidget> UHighScoreSubsystem::GetHighScoreBonusSymbolWidget() const
 {
+#if false
 	if (!HighScoreLevel)
 	{
 		return nullptr;
 	}
 	
 	return TSubclassOf<UUserWidget>(HighScoreLevel->BonusSymbolWidget);
+#endif
+	
+	return nullptr;
 }

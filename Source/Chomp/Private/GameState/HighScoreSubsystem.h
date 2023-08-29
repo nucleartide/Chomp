@@ -17,9 +17,6 @@ class CHOMP_API UHighScoreSubsystem : public UGameInstanceSubsystem
 	UPROPERTY(VisibleInstanceOnly)
 	bool IsHighScoreNew = false;
 
-	UPROPERTY(EditDefaultsOnly)
-	ULevelDataAsset* HighScoreLevel;
-
 public:
 	int GetHighScore() const;
 
