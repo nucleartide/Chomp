@@ -36,9 +36,10 @@ void UStartMenuWidget::Render(APlayerController* PlayerController) const
 {
 	// Pre-conditions.
 	check(PlayerController);
-	const auto WorldInstance = FSafeGet::World(PlayerController);
 
 	// Grab references to data.
+	const auto WorldInstance = FSafeGet::World(PlayerController);
+	check(WorldInstance);
 	const auto SessionStoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<ULocalStorageSubsystem>();
 	check(SessionStoreSubsystem);
 
