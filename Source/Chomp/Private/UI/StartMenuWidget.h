@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Components/HorizontalBox.h"
 #include "Components/TextBlock.h"
 #include "StartMenuWidget.generated.h"
 
@@ -12,6 +13,24 @@ class CHOMP_API UStartMenuWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+	UFUNCTION()
+	void HandleStartHover();
+
+	UFUNCTION()
+	void HandleStartUnhover();
+
+	UFUNCTION()
+	void HandleOptionsHover();
+
+	UFUNCTION()
+	void HandleOptionsUnhover();
+
+	UFUNCTION()
+	void HandleQuitHover();
+
+	UFUNCTION()
+	void HandleQuitUnhover();
+
 protected:
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* StartButton;
@@ -21,6 +40,15 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* QuitButton;
+
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	UTextBlock* HighScoreValue;
+	
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	UTextBlock* HighScoreNewIndicator;
+
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	UHorizontalBox* HighScoreLevelSymbolBox;
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* StartButtonBullet;
@@ -33,22 +61,9 @@ protected:
 
 	virtual void NativeConstruct() override;
 
-private:
-	UFUNCTION()
-	void HandleStartHover();
-	
-	UFUNCTION()
-	void HandleStartUnhover();
-	
-	UFUNCTION()
-	void HandleOptionsHover();
-	
-	UFUNCTION()
-	void HandleOptionsUnhover();
-		
-	UFUNCTION()
-	void HandleQuitHover();
-	
-	UFUNCTION()
-	void HandleQuitUnhover();
+	virtual void NativeDestruct() override;
+
+public:
+	UFUNCTION(BlueprintCallable)
+	void Render(APlayerController* PlayerController) const;
 };
