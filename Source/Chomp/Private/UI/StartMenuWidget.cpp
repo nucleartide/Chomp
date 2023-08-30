@@ -1,6 +1,7 @@
 #include "StartMenuWidget.h"
 #include "Components/Button.h"
-#include "..\GameState\SessionStoreSubsystem.h"
+#include "GameState/ChompSaveGame.h"
+#include "GameState/SessionStoreSubsystem.h"
 #include "Utils/SafeGet.h"
 
 void UStartMenuWidget::NativeConstruct()
@@ -38,19 +39,20 @@ void UStartMenuWidget::Render(APlayerController* PlayerController) const
 	const auto WorldInstance = FSafeGet::World(PlayerController);
 
 	// Grab references to data.
-	const auto HighScoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<USessionStoreSubsystem>();
-	check(HighScoreSubsystem);
+	const auto SessionStoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<USessionStoreSubsystem>();
+	check(SessionStoreSubsystem);
 
 	// Set high score value.
-	auto HighScoreText = FText::FromString(FString::Printf(TEXT("%d"), HighScoreSubsystem->GetHighScore()));
+	auto HighScoreText = FText::FromString(
+		FString::Printf(TEXT("%d"), SessionStoreSubsystem->GetSaveGame()->GetHighScore()));
 	HighScoreValue->SetText(HighScoreText);
 
 	// Set high score new indicator.
-	const auto IsHighScoreNew = HighScoreSubsystem->GetIsHighScoreNew();
+	const auto IsHighScoreNew = SessionStoreSubsystem->GetSaveGame()->IsHighScoreNew();
 	HighScoreNewIndicator->SetVisibility(IsHighScoreNew ? ESlateVisibility::Visible : ESlateVisibility::Hidden);
 
 	// Set high score bonus symbol widget, if present.
-	if (const auto HighScoreBonusSymbolWidget = HighScoreSubsystem->GetHighScoreBonusSymbolWidget())
+	if (const auto HighScoreBonusSymbolWidget = SessionStoreSubsystem->GetSaveGame()->GetHighScoreLevelWidget())
 	{
 		const auto WidgetInstance = CreateWidget(WorldInstance, HighScoreBonusSymbolWidget);
 		check(WidgetInstance);

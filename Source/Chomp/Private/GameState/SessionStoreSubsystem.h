@@ -7,13 +7,16 @@
 class UChompSaveGame;
 class ULevelDataAsset;
 
-UCLASS(BlueprintType, Blueprintable)
+UCLASS(BlueprintType)
 class CHOMP_API USessionStoreSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
 	UPROPERTY(VisibleInstanceOnly)
 	UChompSaveGame* ChompSaveGame;
+	
+	UPROPERTY(VisibleInstanceOnly)
+	bool IsSaveGameDirty = false;
 
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
@@ -21,5 +24,6 @@ protected:
 	virtual void Deinitialize() override;
 
 public:
+	UFUNCTION(BlueprintCallable)
 	UChompSaveGame* GetSaveGame() const;
 };

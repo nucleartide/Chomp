@@ -1,5 +1,7 @@
 #include "ChompSaveGame.h"
 #include "Kismet/GameplayStatics.h"
+#include "LevelGenerator/LevelDataAsset.h"
+#include "UI/LevelSymbolWidget.h"
 #include "Utils/Debug.h"
 
 UChompSaveGame* UChompSaveGame::Load(const FString SaveSlotName, const int UserIndex)
@@ -21,10 +23,17 @@ UChompSaveGame* UChompSaveGame::Load(const FString SaveSlotName, const int UserI
 
 void UChompSaveGame::Save(const FString SaveSlotName, const int UserIndex)
 {
+	if (!IsDirty)
+	{
+		return;
+	}
+	
 	if (!UGameplayStatics::SaveGameToSlot(this, SaveSlotName, UserIndex))
 	{
 		DEBUG_LOGERROR(TEXT("Failed to save game. Note that high score won't be persisted."));
 	}
+
+	IsDirty = false;
 }
 
 int UChompSaveGame::GetHighScore() const
@@ -43,9 +52,14 @@ bool UChompSaveGame::IsHighScoreNew() const
 	return IsDirty;
 }
 
-ULevelDataAsset* UChompSaveGame::GetHighScoreLevel() const
+TSubclassOf<UUserWidget> UChompSaveGame::GetHighScoreLevelWidget() const
 {
-	return HighScoreLevel;
+	if (!HighScoreLevel)
+	{
+		return nullptr;
+	}
+	
+	return HighScoreLevel->BonusSymbolWidget;
 }
 
 void UChompSaveGame::SetHighScoreLevel(ULevelDataAsset* NewHighScoreLevel)

@@ -17,8 +17,8 @@ class CHOMP_API UChompSaveGame : public USaveGame
 	UPROPERTY(EditAnywhere, Category = "High Score")
 	ULevelDataAsset* HighScoreLevel;
 
-	UPROPERTY(VisibleInstanceOnly, Category = "High Score")
-	bool IsDirty = false;
+	UPROPERTY(Transient)
+	bool IsDirty;
 
 public:
 	static UChompSaveGame* Load(
@@ -31,13 +31,18 @@ public:
 		const int UserIndex = 0
 	);
 
+	UFUNCTION(BlueprintCallable)
 	int GetHighScore() const;
 
+	UFUNCTION(BlueprintCallable)
 	void SetHighScore(int NewHighScore);
 
+	UFUNCTION(BlueprintCallable)
 	bool IsHighScoreNew() const;
 
-	ULevelDataAsset* GetHighScoreLevel() const;
+	UFUNCTION(BlueprintCallable)
+	TSubclassOf<UUserWidget> GetHighScoreLevelWidget() const;
 
+	UFUNCTION(BlueprintCallable)
 	void SetHighScoreLevel(ULevelDataAsset* NewHighScoreLevel);
 };

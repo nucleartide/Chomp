@@ -1,7 +1,5 @@
 #include "SessionStoreSubsystem.h"
-
 #include "ChompSaveGame.h"
-#include "UI/LevelSymbolWidget.h"
 
 void USessionStoreSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 {
