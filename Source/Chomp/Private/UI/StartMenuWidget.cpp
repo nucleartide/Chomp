@@ -1,7 +1,7 @@
 #include "StartMenuWidget.h"
 #include "Components/Button.h"
 #include "GameState/ChompSaveGame.h"
-#include "GameState/SessionStoreSubsystem.h"
+#include "GameState/LocalStorageSubsystem.h"
 #include "Utils/SafeGet.h"
 
 void UStartMenuWidget::NativeConstruct()
@@ -39,7 +39,7 @@ void UStartMenuWidget::Render(APlayerController* PlayerController) const
 	const auto WorldInstance = FSafeGet::World(PlayerController);
 
 	// Grab references to data.
-	const auto SessionStoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<USessionStoreSubsystem>();
+	const auto SessionStoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<ULocalStorageSubsystem>();
 	check(SessionStoreSubsystem);
 
 	// Set high score value.

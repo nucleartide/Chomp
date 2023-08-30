@@ -2,13 +2,13 @@
 
 #include "CoreMinimal.h"
 #include "Subsystems/GameInstanceSubsystem.h"
-#include "SessionStoreSubsystem.generated.h"
+#include "LocalStorageSubsystem.generated.h"
 
 class UChompSaveGame;
 class ULevelDataAsset;
 
 UCLASS(BlueprintType)
-class CHOMP_API USessionStoreSubsystem : public UGameInstanceSubsystem
+class CHOMP_API ULocalStorageSubsystem : public UGameInstanceSubsystem
 {
 	GENERATED_BODY()
 
