@@ -4,14 +4,19 @@
 #include "Blueprint/UserWidget.h"
 #include "SettingsWidget.generated.h"
 
-UCLASS()
+class UButton;
+
+UCLASS(BlueprintType, Blueprintable)
 class CHOMP_API USettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
 protected:
-	// UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
-	// UButton* QuitButton;
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	UButton* BackButton;
+	
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	UButton* ApplyButton;
 	
 	virtual void NativeConstruct() override;
 };
