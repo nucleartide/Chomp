@@ -14,6 +14,7 @@ A post-mortem technical write-up will be published when the project is done. Unt
 
 | Gameplay System | Pull Request |
 | --- | --- |
+| https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/27 Finalize start menu UI/UX design
 | https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/24 Fix scalability, resolution, aspect ratio, and fullscreen mode in shipping build
 | https://github.com/nucleartide/Chomp/labels/consumables https://github.com/nucleartide/Chomp/labels/scoring | https://github.com/nucleartide/Chomp/pull/22 Implement bonus fruit
 | https://github.com/nucleartide/Chomp/labels/health | https://github.com/nucleartide/Chomp/pull/21 Implement lives
