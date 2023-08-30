@@ -8,4 +8,10 @@ UCLASS()
 class CHOMP_API USettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
+
+protected:
+	// UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	// UButton* QuitButton;
+	
+	virtual void NativeConstruct() override;
 };
