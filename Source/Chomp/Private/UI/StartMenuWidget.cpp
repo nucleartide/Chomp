@@ -1,6 +1,6 @@
 #include "StartMenuWidget.h"
 #include "Components/Button.h"
-#include "GameState/HighScoreSubsystem.h"
+#include "..\GameState\SessionStoreSubsystem.h"
 #include "Utils/SafeGet.h"
 
 void UStartMenuWidget::NativeConstruct()
@@ -38,7 +38,7 @@ void UStartMenuWidget::Render(APlayerController* PlayerController) const
 	const auto WorldInstance = FSafeGet::World(PlayerController);
 
 	// Grab references to data.
-	const auto HighScoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<UHighScoreSubsystem>();
+	const auto HighScoreSubsystem = WorldInstance->GetGameInstance()->GetSubsystem<USessionStoreSubsystem>();
 	check(HighScoreSubsystem);
 
 	// Set high score value.
