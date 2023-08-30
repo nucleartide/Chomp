@@ -15,9 +15,6 @@ class CHOMP_API USessionStoreSubsystem : public UGameInstanceSubsystem
 	UPROPERTY(VisibleInstanceOnly)
 	UChompSaveGame* ChompSaveGame;
 	
-	UPROPERTY(VisibleInstanceOnly)
-	bool IsSaveGameDirty = false;
-
 protected:
 	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
 

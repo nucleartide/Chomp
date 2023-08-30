@@ -27,7 +27,7 @@ void UChompSaveGame::Save(const FString SaveSlotName, const int UserIndex)
 	{
 		return;
 	}
-	
+
 	if (!UGameplayStatics::SaveGameToSlot(this, SaveSlotName, UserIndex))
 	{
 		DEBUG_LOGERROR(TEXT("Failed to save game. Note that high score won't be persisted."));
@@ -41,10 +41,13 @@ int UChompSaveGame::GetHighScore() const
 	return HighScore;
 }
 
-void UChompSaveGame::SetHighScore(int NewHighScore)
+void UChompSaveGame::SetHighScore(const int NewHighScore)
 {
-	HighScore = NewHighScore;
-	IsDirty = true;
+	if (NewHighScore > HighScore)
+	{
+		HighScore = NewHighScore;
+		IsDirty = true;
+	}
 }
 
 bool UChompSaveGame::IsHighScoreNew() const
@@ -58,7 +61,7 @@ TSubclassOf<UUserWidget> UChompSaveGame::GetHighScoreLevelWidget() const
 	{
 		return nullptr;
 	}
-	
+
 	return HighScoreLevel->BonusSymbolWidget;
 }
 

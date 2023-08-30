@@ -1,5 +1,7 @@
 #include "ChompGameState.h"
 #include "UE5Coro.h"
+#include "GameState/ChompSaveGame.h"
+#include "GameState/SessionStoreSubsystem.h"
 #include "LevelGenerator/LevelDataAsset.h"
 #include "UI/LevelSymbolWidget.h"
 #include "Utils/SafeGet.h"
@@ -71,6 +73,8 @@ void AChompGameState::UpdateScore(const int NewScore)
 
 	// Update Score.
 	Score = NewScore;
+	const auto SaveGame = GetGameInstance()->GetSubsystem<USessionStoreSubsystem>()->GetSaveGame();
+	SaveGame->SetHighScore(Score);
 	OnScoreUpdated.Broadcast(NewScore);
 }
 
@@ -185,7 +189,6 @@ int AChompGameState::GetScore() const
 {
 	return Score;
 }
-
 
 void AChompGameState::BeginPlay()
 {
