@@ -12,7 +12,4 @@ public:
 
 	template <typename T>
 	static T* GameState(const AActor* Actor);
-
-	template <typename T>
-	static T* GameState(const UWorld* WorldInstance);
 };
