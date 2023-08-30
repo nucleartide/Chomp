@@ -1,5 +1,6 @@
 #include "SettingsWidget.h"
 
+#include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Utils/Debug.h"
@@ -9,12 +10,24 @@ void USettingsWidget::NativeConstruct()
 	Super::NativeConstruct();
 	Render();
 
+	WindowModeLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeLeftButtonClicked);
+	WindowModeRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeRightButtonClicked);
+
+	// TODO: remember to set these remaining fields.
 #if false
 	const auto FrameRateLimit = GameUserSettings->GetFrameRateLimit();
 	const auto ResScaleNormalized = GameUserSettings->GetResolutionScaleNormalized();
 	const auto ScreenResolution = GameUserSettings->GetScreenResolution();
 	DEBUG_LOG(TEXT("test"));
 #endif
+}
+
+void USettingsWidget::NativeDestruct()
+{
+	Super::NativeDestruct();
+	
+	WindowModeLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleWindowModeLeftButtonClicked);
+	WindowModeRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleWindowModeRightButtonClicked);
 }
 
 void USettingsWidget::Render() const
@@ -57,4 +70,35 @@ void USettingsWidget::Render() const
 		break;
 	}
 	GraphicsSelection->SetText(FText::FromString(ScalabilityText));
+	
+	const auto ScreenResolution = GameUserSettings->GetScreenResolution();
+	ResolutionSelection->SetText(FText::FromString(FString::Printf(TEXT("%d x %d"), ScreenResolution.X, ScreenResolution.Y)));
+}
+
+void USettingsWidget::HandleWindowModeLeftButtonClicked()
+{
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+	check(GameUserSettings);
+	
+	auto FullscreenMode = static_cast<int>(GameUserSettings->GetFullscreenMode());
+	FullscreenMode -= 1;
+	FullscreenMode %= EWindowMode::NumWindowModes;
+	GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(FullscreenMode));
+
+	Render();
+}
+
+void USettingsWidget::HandleWindowModeRightButtonClicked()
+{
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+	check(GameUserSettings);
+	
+	auto FullscreenMode = static_cast<int>(GameUserSettings->GetFullscreenMode());
+	FullscreenMode += 1;
+	FullscreenMode %= EWindowMode::NumWindowModes;
+	GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(FullscreenMode));
+
+	Render();
 }

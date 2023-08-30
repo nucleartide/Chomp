@@ -57,6 +57,14 @@ protected:
 
 	virtual void NativeConstruct() override;
 
+	virtual void NativeDestruct() override;
+
 	UFUNCTION(BlueprintCallable)
 	void Render() const;
+	
+	UFUNCTION(BlueprintCallable)
+	void HandleWindowModeLeftButtonClicked();
+	
+	UFUNCTION(BlueprintCallable)
+	void HandleWindowModeRightButtonClicked();
 };
