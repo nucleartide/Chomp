@@ -72,7 +72,7 @@ protected:
 	virtual void NativeConstruct() override;
 
 	virtual void NativeDestruct() override;
-
+	
 	// Revert the Pending* fields to the values returned by GameUserSettings.
 	UFUNCTION(BlueprintCallable)
 	void RevertPendingState();
@@ -89,7 +89,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void HandleWindowModeRightButtonClicked();
-
+	
 	UFUNCTION(BlueprintCallable)
 	void HandleVSyncButtonClicked();
 

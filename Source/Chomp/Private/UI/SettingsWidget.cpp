@@ -1,18 +1,17 @@
 #include "SettingsWidget.h"
-
 #include <functional>
 #include "DynamicRHI.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameUserSettings.h"
 #include "Kismet/KismetSystemLibrary.h"
-#include "Utils/Debug.h"
 #include "Utils/MathHelpers.h"
 
 void USettingsWidget::RevertPendingState()
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
+	check(GameUserSettings);
 
 	// Initialize component state.
 	PendingWindowMode = GameUserSettings->GetFullscreenMode();
@@ -73,13 +72,16 @@ void USettingsWidget::Render()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
+	// Update window mode selection.
 	const auto FullscreenMode = LexToString(PendingWindowMode);
 	WindowModeSelection->SetText(FText::FromString(FullscreenMode));
 
+	// Update VSync selection.
 	const auto VSync = PendingVSyncEnabled;
 	VSyncSelection->SetText(FText::FromString(VSync ? TEXT("Enabled") : TEXT("Disabled")));
 
-	// @param Value -1:custom, 0:low, 1:medium, 2:high, 3:epic, 4:cinematic
+	// Update graphics (quality) selection.
+	// Note, the values are -1:custom, 0:low, 1:medium, 2:high, 3:epic, 4:cinematic.
 	const auto ScalabilityLevel = PendingGraphicsQuality;
 	FString ScalabilityText("");
 	switch (ScalabilityLevel)
@@ -108,6 +110,7 @@ void USettingsWidget::Render()
 	}
 	GraphicsSelection->SetText(FText::FromString(ScalabilityText));
 
+	// Update resolution selection.
 	const auto ScreenResolution = PendingGraphicsResolution;
 	ResolutionSelection->SetText(
 		FText::FromString(FString::Printf(TEXT("%d x %d"), ScreenResolution.X, ScreenResolution.Y)));
@@ -117,10 +120,9 @@ void USettingsWidget::Render()
 
 void USettingsWidget::UpdateWindowMode(const int NewWindowMode)
 {
-	// If the new fullscreen mode is different than existing,
+	// Whenever we change window mode, reset the selected resolution because it may be invalid.
 	if (NewWindowMode != PendingWindowMode)
 	{
-		// Fetch resolutions based on new window mode.
 		TArray<FIntPoint> Resolutions;
 		if (NewWindowMode == EWindowMode::Fullscreen)
 		{
@@ -131,16 +133,10 @@ void USettingsWidget::UpdateWindowMode(const int NewWindowMode)
 			UKismetSystemLibrary::GetConvenientWindowedResolutions(Resolutions);
 		}
 
-		// Reset pending screen resolution.
 		PendingGraphicsResolution = Resolutions[0];
 	}
 
-	// Finally, save out the new fullscreen mode.
 	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(NewWindowMode);
-
-	// TODO: gotta make same adjustments to right button clicked
-	// ...
-
 	Render();
 }
 
@@ -178,24 +174,25 @@ static FORCEINLINE int GetMonitorRefreshRate()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	const auto ScreenResolution = GameUserSettings->GetScreenResolution();
-
+	// ReSharper disable once CppTooWideScopeInitStatement
 	FScreenResolutionArray Resolutions;
 	if (RHIGetAvailableResolutions(Resolutions, false))
 	{
 		// Pre-conditions.
 		check(Resolutions.Num() > 0);
-		const auto ExpectedRefreshRate = Resolutions[0].RefreshRate;
+
+		const auto MonitorRefreshRate = Resolutions[0].RefreshRate;
+
+		// Post-conditions.
 		for (const auto [_, __, RefreshRate] : Resolutions)
 		{
-			check(RefreshRate == ExpectedRefreshRate);
+			checkf(RefreshRate == MonitorRefreshRate, TEXT("All refresh rates should have been the same."));
 		}
 
-		return ExpectedRefreshRate;
+		return MonitorRefreshRate;
 	}
 
-	DEBUG_LOGERROR(TEXT("Screen Resolutions could not be obtained"));
-	check(false);
+	checkf(false, TEXT("Monitor refresh rate could not be obtained."));
 	return -1;
 }
 
@@ -227,6 +224,7 @@ void USettingsWidget::HandleGraphicsLeftButtonClicked()
 	auto Scalability = PendingGraphicsQuality;
 	if (const auto IsCustom = Scalability == -1)
 	{
+		// Wrap around from -1 to 4.
 		Scalability = 4;
 	}
 	else
@@ -234,10 +232,12 @@ void USettingsWidget::HandleGraphicsLeftButtonClicked()
 		// 5 scalability levels: low, medium, high, epic, cinematic
 		Scalability -= 1;
 		Scalability = FMathHelpers::NegativeFriendlyMod(Scalability, 5);
-		check(Scalability != -1);
 	}
-	PendingGraphicsQuality = Scalability;
 
+	// Post-conditions.
+	check(Scalability != -1);
+
+	PendingGraphicsQuality = Scalability;
 	Render();
 }
 
@@ -251,7 +251,6 @@ void USettingsWidget::HandleGraphicsRightButtonClicked()
 	auto Scalability = PendingGraphicsQuality;
 	Scalability += 1;
 	Scalability %= 5; // 5 scalability levels: low, medium, high, epic, cinematic
-	// TODO: use negative friendly mod here
 	PendingGraphicsQuality = Scalability;
 
 	Render();
@@ -263,7 +262,7 @@ void USettingsWidget::HandleResolutionButtonClicked(std::function<int(int, int)>
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	// Get list of supported resolutions depending on screen mode.
+	// Get list of supported resolutions depending on window mode.
 	TArray<FIntPoint> SupportedResolutions;
 	if (PendingWindowMode == EWindowMode::Fullscreen)
 	{
@@ -274,23 +273,15 @@ void USettingsWidget::HandleResolutionButtonClicked(std::function<int(int, int)>
 		UKismetSystemLibrary::GetConvenientWindowedResolutions(SupportedResolutions);
 	}
 
-	// Get the current resolution's index within the supported resolutions.
+	// Find the new resolution index.
 	auto CurrentResolutionIndex = SupportedResolutions.IndexOfByKey(PendingGraphicsResolution);
-
 	const auto NewResolutionIndex = UpdateResolutionIndex(CurrentResolutionIndex, SupportedResolutions.Num());
-
-#if false
-
-#endif
 
 	// Find the new resolution.
 	check(0 <= NewResolutionIndex && NewResolutionIndex < SupportedResolutions.Num());
 	const auto NewResolution = SupportedResolutions[NewResolutionIndex];
 
-	// Assign the new resolution to the PendingResolution field.
 	PendingGraphicsResolution = NewResolution;
-
-	// Re-render.
 	Render();
 }
 
@@ -299,12 +290,12 @@ void USettingsWidget::HandleResolutionLeftButtonClicked()
 {
 	HandleResolutionButtonClicked([](int CurrentResolutionIndex, const int NumResolutions)
 	{
-		// Decrement the index while using negative friendly mod.
 		if (CurrentResolutionIndex == INDEX_NONE)
 		{
-			// Start at zero, in preparation for the decrement below.
+			// Start at zero in preparation for the decrement below.
 			CurrentResolutionIndex = 0;
 		}
+
 		CurrentResolutionIndex -= 1;
 		CurrentResolutionIndex = FMathHelpers::NegativeFriendlyMod(CurrentResolutionIndex, NumResolutions);
 		return CurrentResolutionIndex;
@@ -335,7 +326,6 @@ void USettingsWidget::UpdateEnabledStateOfActionButtons()
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 
-	// Initialize component state.
 	const auto OldWindowMode = GameUserSettings->GetFullscreenMode();
 	const auto OldVSyncEnabled = GameUserSettings->IsVSyncEnabled();
 	const auto OldGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
@@ -361,27 +351,17 @@ void USettingsWidget::HandleApplyClicked()
 
 	GameUserSettings->SetFullscreenMode(PendingWindowMode);
 	GameUserSettings->SetVSyncEnabled(PendingVSyncEnabled);
-	const auto OldGraphics = GameUserSettings->GetOverallScalabilityLevel();
+	const auto OldGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
 	GameUserSettings->SetOverallScalabilityLevel(PendingGraphicsQuality);
-	if (OldGraphics == -1 && PendingGraphicsQuality != OldGraphics)
-	{
-		const auto NewGraphics = GameUserSettings->GetOverallScalabilityLevel();
-		check(NewGraphics == PendingGraphicsQuality);
-	}
 	GameUserSettings->SetScreenResolution(PendingGraphicsResolution);
 	GameUserSettings->SetFrameRateLimit(PendingFrameRateLimit);
 	GameUserSettings->SetResolutionScaleNormalized(1.0);
-	DEBUG_MOVE(TEXT("pending graphics resolution %d %d"), PendingGraphicsResolution.X, PendingGraphicsResolution.Y);
 
 	GameUserSettings->ApplySettings(false);
 
-	// Sometimes this still returns -1 (meaning custom), so let's refresh PendingGraphicsQuality with that knowledge in mind.
-	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();	
-		if (OldGraphics == -1 && PendingGraphicsQuality != OldGraphics)
-    	{
-    		const auto NewGraphics = GameUserSettings->GetOverallScalabilityLevel();
-    		// check(NewGraphics == PendingGraphicsQuality);
-    	}
+	// Sometimes this still returns -1 (meaning custom), so let's refresh PendingGraphicsQuality
+	// with that knowledge in mind.
+	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
 
 	Render();
 }
