@@ -9,6 +9,21 @@
 #include "Utils/Debug.h"
 #include "Utils/MathHelpers.h"
 
+void USettingsWidget::ResetPendingState()
+{
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+
+	// Initialize component state.
+	PendingWindowMode = GameUserSettings->GetFullscreenMode();
+	PendingVSyncEnabled = GameUserSettings->IsVSyncEnabled();
+	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
+	PendingGraphicsResolution = GameUserSettings->GetScreenResolution();
+	PendingFrameRateLimit = GameUserSettings->GetFrameRateLimit();
+
+	Render();
+}
+
 void USettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -25,18 +40,10 @@ void USettingsWidget::NativeConstruct()
 	ResolutionLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleResolutionLeftButtonClicked);
 	ResolutionRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleResolutionRightButtonClicked);
 
+	RevertButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::ResetPendingState);
 	ApplyButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleApplyClicked);
 
-	// Pre-conditions.
-	const auto GameUserSettings = GEngine->GetGameUserSettings();
-
-	// Initialize component state.
-	PendingWindowMode = GameUserSettings->GetFullscreenMode();
-	PendingVSyncEnabled = GameUserSettings->IsVSyncEnabled();
-	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
-	PendingGraphicsResolution = GameUserSettings->GetScreenResolution();
-	PendingFrameRateLimit = GameUserSettings->GetFrameRateLimit();
-
+	ResetPendingState();
 	Render();
 }
 
@@ -56,10 +63,11 @@ void USettingsWidget::NativeDestruct()
 	ResolutionLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleResolutionLeftButtonClicked);
 	ResolutionRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleResolutionRightButtonClicked);
 
+	RevertButton->OnClicked.RemoveDynamic(this, &USettingsWidget::ResetPendingState);
 	ApplyButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleApplyClicked);
 }
 
-void USettingsWidget::Render() const
+void USettingsWidget::Render()
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
@@ -103,6 +111,8 @@ void USettingsWidget::Render() const
 	const auto ScreenResolution = PendingGraphicsResolution;
 	ResolutionSelection->SetText(
 		FText::FromString(FString::Printf(TEXT("%d x %d"), ScreenResolution.X, ScreenResolution.Y)));
+
+	UpdateEnabledStateOfActionButtons();
 }
 
 void USettingsWidget::UpdateFullscreenMode(int NewFullscreenMode)
@@ -319,7 +329,30 @@ void USettingsWidget::HandleResolutionRightButtonClicked()
 	});
 }
 
-// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
+void USettingsWidget::UpdateEnabledStateOfActionButtons()
+{
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+
+	// Initialize component state.
+	const auto OldWindowMode = GameUserSettings->GetFullscreenMode();
+	const auto OldVSyncEnabled = GameUserSettings->IsVSyncEnabled();
+	const auto OldGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
+	const auto OldGraphicsResolution = GameUserSettings->GetScreenResolution();
+	const auto OldFrameRateLimit = GameUserSettings->GetFrameRateLimit();
+
+	const bool IsDirty = OldWindowMode != PendingWindowMode
+		|| OldVSyncEnabled != PendingVSyncEnabled
+		|| OldGraphicsQuality != PendingGraphicsQuality
+		|| OldGraphicsResolution != PendingGraphicsResolution
+		|| OldFrameRateLimit != PendingFrameRateLimit;
+
+	RevertButton->SetIsEnabled(IsDirty);
+	ApplyButton->SetIsEnabled(IsDirty);
+}
+
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
 void USettingsWidget::HandleApplyClicked()
 {
 	// Pre-conditions.
@@ -328,10 +361,27 @@ void USettingsWidget::HandleApplyClicked()
 
 	GameUserSettings->SetFullscreenMode(PendingWindowMode);
 	GameUserSettings->SetVSyncEnabled(PendingVSyncEnabled);
+	const auto OldGraphics = GameUserSettings->GetOverallScalabilityLevel();
 	GameUserSettings->SetOverallScalabilityLevel(PendingGraphicsQuality);
+	if (OldGraphics == -1 && PendingGraphicsQuality != OldGraphics)
+	{
+		const auto NewGraphics = GameUserSettings->GetOverallScalabilityLevel();
+		check(NewGraphics == PendingGraphicsQuality);
+	}
 	GameUserSettings->SetScreenResolution(PendingGraphicsResolution);
 	GameUserSettings->SetFrameRateLimit(PendingFrameRateLimit);
 	GameUserSettings->SetResolutionScaleNormalized(1.0);
 	DEBUG_MOVE(TEXT("pending graphics resolution %d %d"), PendingGraphicsResolution.X, PendingGraphicsResolution.Y);
+
 	GameUserSettings->ApplySettings(false);
+
+	// Sometimes this still returns -1 (meaning custom), so let's refresh PendingGraphicsQuality with that knowledge in mind.
+	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();	
+		if (OldGraphics == -1 && PendingGraphicsQuality != OldGraphics)
+    	{
+    		const auto NewGraphics = GameUserSettings->GetOverallScalabilityLevel();
+    		// check(NewGraphics == PendingGraphicsQuality);
+    	}
+
+	Render();
 }

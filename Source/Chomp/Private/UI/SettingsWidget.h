@@ -65,16 +65,21 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* BackButton;
+	
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	UButton* RevertButton;
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* ApplyButton;
 
+	UFUNCTION(BlueprintCallable)
+	void ResetPendingState();
 	virtual void NativeConstruct() override;
 
 	virtual void NativeDestruct() override;
 
 	UFUNCTION(BlueprintCallable)
-	void Render() const;
+	void Render();
 	void UpdateFullscreenMode(int NewFullscreenMode);
 
 	UFUNCTION(BlueprintCallable)
@@ -98,6 +103,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void HandleResolutionRightButtonClicked();
+
+	UFUNCTION(BlueprintCallable)
+	void UpdateEnabledStateOfActionButtons();
 
 	UFUNCTION(BlueprintCallable)
 	void HandleApplyClicked();
