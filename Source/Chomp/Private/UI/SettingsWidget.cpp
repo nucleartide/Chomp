@@ -1,5 +1,6 @@
 #include "SettingsWidget.h"
 
+#include <functional>
 #include "DynamicRHI.h"
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
@@ -104,6 +105,35 @@ void USettingsWidget::Render() const
 		FText::FromString(FString::Printf(TEXT("%d x %d"), ScreenResolution.X, ScreenResolution.Y)));
 }
 
+void USettingsWidget::UpdateFullscreenMode(int NewFullscreenMode)
+{
+	// If the new fullscreen mode is different than existing,
+	if (NewFullscreenMode != PendingWindowMode)
+	{
+		// Fetch resolutions based on new window mode.
+		TArray<FIntPoint> Resolutions;
+		if (NewFullscreenMode == EWindowMode::Fullscreen)
+		{
+			UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
+		}
+		else
+		{
+			UKismetSystemLibrary::GetConvenientWindowedResolutions(Resolutions);
+		}
+
+		// Reset pending screen resolution.
+		PendingGraphicsResolution = Resolutions[0];
+	}
+
+	// Finally, save out the new fullscreen mode.
+	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(NewFullscreenMode);
+
+	// TODO: gotta make same adjustments to right button clicked
+	// ...
+
+	Render();
+}
+
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
 void USettingsWidget::HandleWindowModeLeftButtonClicked()
 {
@@ -114,9 +144,8 @@ void USettingsWidget::HandleWindowModeLeftButtonClicked()
 	auto FullscreenMode = static_cast<int>(PendingWindowMode);
 	FullscreenMode -= 1;
 	FullscreenMode %= EWindowMode::NumWindowModes;
-	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(FullscreenMode);
 
-	Render();
+	UpdateFullscreenMode(FullscreenMode);
 }
 
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
@@ -129,9 +158,8 @@ void USettingsWidget::HandleWindowModeRightButtonClicked()
 	auto FullscreenMode = static_cast<int>(PendingWindowMode);
 	FullscreenMode += 1;
 	FullscreenMode %= EWindowMode::NumWindowModes;
-	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(FullscreenMode);
 
-	Render();
+	UpdateFullscreenMode(FullscreenMode);
 }
 
 static FORCEINLINE int GetMonitorRefreshRate()
@@ -219,8 +247,7 @@ void USettingsWidget::HandleGraphicsRightButtonClicked()
 	Render();
 }
 
-// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
-void USettingsWidget::HandleResolutionLeftButtonClicked()
+void USettingsWidget::HandleResolutionButtonClicked(std::function<int(int, int)> SomeFunction)
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
@@ -237,31 +264,59 @@ void USettingsWidget::HandleResolutionLeftButtonClicked()
 		UKismetSystemLibrary::GetConvenientWindowedResolutions(SupportedResolutions);
 	}
 
-	// Assert that the current PendingResolution is within the list of supported resolutions.
-	check(SupportedResolutions.Contains(PendingGraphicsResolution));
+	// Get the current resolution's index within the supported resolutions.
+	auto CurrentResolutionIndex = SupportedResolutions.IndexOfByKey(PendingGraphicsResolution);
 
-	// TODO: Get the current resolution's index within the supported resolutions.
-	// ...
+	const auto NewResolutionIndex = SomeFunction(CurrentResolutionIndex, SupportedResolutions.Num());
 
-	// TODO: Decrement the index while using negative friendly mod.
-	// ...
+#if false
 
-	// TODO: Find the new resolution.
-	// ...
+#endif
 
-	// TODO: Assign the new resolution to the PendingResolution field.
-	// ...
+	// Find the new resolution.
+	check(0 <= NewResolutionIndex && NewResolutionIndex < SupportedResolutions.Num());
+	const auto NewResolution = SupportedResolutions[NewResolutionIndex];
 
-	// TODO: Re-render.
-	// ...
+	// Assign the new resolution to the PendingResolution field.
+	PendingGraphicsResolution = NewResolution;
 
-	// TODO: Ensure that when fullscreen mode is switched, the pending resolution is switched as well.
-	// ...
+	// Re-render.
+	Render();
+}
+
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
+void USettingsWidget::HandleResolutionLeftButtonClicked()
+{
+	HandleResolutionButtonClicked([](int CurrentResolutionIndex, const int NumResolutions)
+	{
+		// Decrement the index while using negative friendly mod.
+		if (CurrentResolutionIndex == INDEX_NONE)
+		{
+			// Start at zero, in preparation for the decrement below.
+			CurrentResolutionIndex = 0;
+		}
+		CurrentResolutionIndex -= 1;
+		CurrentResolutionIndex = FMathHelpers::NegativeFriendlyMod(CurrentResolutionIndex, NumResolutions);
+		return CurrentResolutionIndex;
+	});
 }
 
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
 void USettingsWidget::HandleResolutionRightButtonClicked()
 {
+	HandleResolutionButtonClicked([](int CurrentResolutionIndex, const int NumResolutions)
+	{
+		if (CurrentResolutionIndex == INDEX_NONE)
+		{
+			CurrentResolutionIndex = 0;
+		}
+		else
+		{
+			CurrentResolutionIndex += 1;
+			CurrentResolutionIndex = FMathHelpers::NegativeFriendlyMod(CurrentResolutionIndex, NumResolutions);
+		}
+		return CurrentResolutionIndex;
+	});
 }
 
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic

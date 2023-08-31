@@ -1,5 +1,7 @@
 #pragma once
 
+#include <__functional/function.h>
+
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "SettingsWidget.generated.h"
@@ -73,6 +75,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void Render() const;
+	void UpdateFullscreenMode(int NewFullscreenMode);
 
 	UFUNCTION(BlueprintCallable)
 	void HandleWindowModeLeftButtonClicked();
@@ -88,6 +91,7 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void HandleGraphicsRightButtonClicked();
+	void HandleResolutionButtonClicked(std::function<int(int, int)> SomeFunction);
 
 	UFUNCTION(BlueprintCallable)
 	void HandleResolutionLeftButtonClicked();
