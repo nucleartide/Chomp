@@ -4,12 +4,13 @@
 #include "Components/Button.h"
 #include "Components/TextBlock.h"
 #include "GameFramework/GameUserSettings.h"
+#include "Kismet/KismetSystemLibrary.h"
 #include "Utils/Debug.h"
+#include "Utils/MathHelpers.h"
 
 void USettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
-	Render();
 
 	WindowModeLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeLeftButtonClicked);
 	WindowModeRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeRightButtonClicked);
@@ -20,7 +21,22 @@ void USettingsWidget::NativeConstruct()
 	GraphicsLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleGraphicsLeftButtonClicked);
 	GraphicsRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleGraphicsRightButtonClicked);
 
+	ResolutionLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleResolutionLeftButtonClicked);
+	ResolutionRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleResolutionRightButtonClicked);
+
 	ApplyButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleApplyClicked);
+
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+
+	// Initialize component state.
+	PendingWindowMode = GameUserSettings->GetFullscreenMode();
+	PendingVSyncEnabled = GameUserSettings->IsVSyncEnabled();
+	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
+	PendingGraphicsResolution = GameUserSettings->GetScreenResolution();
+	PendingFrameRateLimit = GameUserSettings->GetFrameRateLimit();
+
+	Render();
 }
 
 void USettingsWidget::NativeDestruct()
@@ -35,7 +51,10 @@ void USettingsWidget::NativeDestruct()
 
 	GraphicsLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleGraphicsLeftButtonClicked);
 	GraphicsRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleGraphicsRightButtonClicked);
-	
+
+	ResolutionLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleResolutionLeftButtonClicked);
+	ResolutionRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleResolutionRightButtonClicked);
+
 	ApplyButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleApplyClicked);
 }
 
@@ -45,14 +64,14 @@ void USettingsWidget::Render() const
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	const auto FullscreenMode = LexToString(GameUserSettings->GetFullscreenMode());
+	const auto FullscreenMode = LexToString(PendingWindowMode);
 	WindowModeSelection->SetText(FText::FromString(FullscreenMode));
 
-	const auto VSync = GameUserSettings->IsVSyncEnabled();
+	const auto VSync = PendingVSyncEnabled;
 	VSyncSelection->SetText(FText::FromString(VSync ? TEXT("Enabled") : TEXT("Disabled")));
 
 	// @param Value -1:custom, 0:low, 1:medium, 2:high, 3:epic, 4:cinematic
-	const auto ScalabilityLevel = GameUserSettings->GetOverallScalabilityLevel();
+	const auto ScalabilityLevel = PendingGraphicsQuality;
 	FString ScalabilityText("");
 	switch (ScalabilityLevel)
 	{
@@ -80,7 +99,7 @@ void USettingsWidget::Render() const
 	}
 	GraphicsSelection->SetText(FText::FromString(ScalabilityText));
 
-	const auto ScreenResolution = GameUserSettings->GetScreenResolution();
+	const auto ScreenResolution = PendingGraphicsResolution;
 	ResolutionSelection->SetText(
 		FText::FromString(FString::Printf(TEXT("%d x %d"), ScreenResolution.X, ScreenResolution.Y)));
 }
@@ -92,10 +111,10 @@ void USettingsWidget::HandleWindowModeLeftButtonClicked()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	auto FullscreenMode = static_cast<int>(GameUserSettings->GetFullscreenMode());
+	auto FullscreenMode = static_cast<int>(PendingWindowMode);
 	FullscreenMode -= 1;
 	FullscreenMode %= EWindowMode::NumWindowModes;
-	GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(FullscreenMode));
+	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(FullscreenMode);
 
 	Render();
 }
@@ -107,15 +126,15 @@ void USettingsWidget::HandleWindowModeRightButtonClicked()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	auto FullscreenMode = static_cast<int>(GameUserSettings->GetFullscreenMode());
+	auto FullscreenMode = static_cast<int>(PendingWindowMode);
 	FullscreenMode += 1;
 	FullscreenMode %= EWindowMode::NumWindowModes;
-	GameUserSettings->SetFullscreenMode(EWindowMode::ConvertIntToWindowMode(FullscreenMode));
+	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(FullscreenMode);
 
 	Render();
 }
 
-static int GetMonitorRefreshRate()
+static FORCEINLINE int GetMonitorRefreshRate()
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
@@ -149,13 +168,13 @@ void USettingsWidget::HandleVSyncButtonClicked()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	const auto NewIsSyncEnabledValue = !GameUserSettings->IsVSyncEnabled();
-	GameUserSettings->SetVSyncEnabled(NewIsSyncEnabledValue);
+	const auto NewIsSyncEnabledValue = !PendingVSyncEnabled;
+	PendingVSyncEnabled = NewIsSyncEnabledValue;
 
 	// Note that 0 disables frame rate limiting, as per the docs:
 	// https://docs.unrealengine.com/5.2/en-US/API/Runtime/Engine/GameFramework/UGameUserSettings/SetFrameRateLimit/
 	const auto NewFrameRateLimit = NewIsSyncEnabledValue ? GetMonitorRefreshRate() : 0;
-	GameUserSettings->SetFrameRateLimit(GetMonitorRefreshRate());
+	PendingFrameRateLimit = NewFrameRateLimit;
 
 	Render();
 }
@@ -167,17 +186,19 @@ void USettingsWidget::HandleGraphicsLeftButtonClicked()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	auto Scalability = GameUserSettings->GetOverallScalabilityLevel();
+	auto Scalability = PendingGraphicsQuality;
 	if (const auto IsCustom = Scalability == -1)
 	{
 		Scalability = 4;
 	}
 	else
 	{
+		// 5 scalability levels: low, medium, high, epic, cinematic
 		Scalability -= 1;
-		Scalability %= 5; // 5 scalability levels: low, medium, high, epic, cinematic
+		Scalability = FMathHelpers::NegativeFriendlyMod(Scalability, 5);
+		check(Scalability != -1);
 	}
-	GameUserSettings->SetOverallScalabilityLevel(Scalability);
+	PendingGraphicsQuality = Scalability;
 
 	Render();
 }
@@ -189,12 +210,58 @@ void USettingsWidget::HandleGraphicsRightButtonClicked()
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	auto Scalability = GameUserSettings->GetOverallScalabilityLevel();
+	auto Scalability = PendingGraphicsQuality;
 	Scalability += 1;
 	Scalability %= 5; // 5 scalability levels: low, medium, high, epic, cinematic
-	GameUserSettings->SetOverallScalabilityLevel(Scalability);
+	// TODO: use negative friendly mod here
+	PendingGraphicsQuality = Scalability;
 
 	Render();
+}
+
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
+void USettingsWidget::HandleResolutionLeftButtonClicked()
+{
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+	check(GameUserSettings);
+
+	// Get list of supported resolutions depending on screen mode.
+	TArray<FIntPoint> SupportedResolutions;
+	if (PendingWindowMode == EWindowMode::Fullscreen)
+	{
+		UKismetSystemLibrary::GetSupportedFullscreenResolutions(SupportedResolutions);
+	}
+	else
+	{
+		UKismetSystemLibrary::GetConvenientWindowedResolutions(SupportedResolutions);
+	}
+
+	// Assert that the current PendingResolution is within the list of supported resolutions.
+	check(SupportedResolutions.Contains(PendingGraphicsResolution));
+
+	// TODO: Get the current resolution's index within the supported resolutions.
+	// ...
+
+	// TODO: Decrement the index while using negative friendly mod.
+	// ...
+
+	// TODO: Find the new resolution.
+	// ...
+
+	// TODO: Assign the new resolution to the PendingResolution field.
+	// ...
+
+	// TODO: Re-render.
+	// ...
+
+	// TODO: Ensure that when fullscreen mode is switched, the pending resolution is switched as well.
+	// ...
+}
+
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
+void USettingsWidget::HandleResolutionRightButtonClicked()
+{
 }
 
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeStatic
@@ -203,7 +270,13 @@ void USettingsWidget::HandleApplyClicked()
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
-	
+
+	GameUserSettings->SetFullscreenMode(PendingWindowMode);
+	GameUserSettings->SetVSyncEnabled(PendingVSyncEnabled);
+	GameUserSettings->SetOverallScalabilityLevel(PendingGraphicsQuality);
+	GameUserSettings->SetScreenResolution(PendingGraphicsResolution);
+	GameUserSettings->SetFrameRateLimit(PendingFrameRateLimit);
 	GameUserSettings->SetResolutionScaleNormalized(1.0);
+	DEBUG_MOVE(TEXT("pending graphics resolution %d %d"), PendingGraphicsResolution.X, PendingGraphicsResolution.Y);
 	GameUserSettings->ApplySettings(false);
 }

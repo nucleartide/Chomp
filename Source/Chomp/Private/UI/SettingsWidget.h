@@ -14,13 +14,23 @@ class CHOMP_API USettingsWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
+	EWindowMode::Type PendingWindowMode;
+
+	bool PendingVSyncEnabled;
+
+	float PendingFrameRateLimit;
+
+	int PendingGraphicsQuality;
+
+	FIntPoint PendingGraphicsResolution;
+
 protected:
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* WindowModeLeftButton;
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* WindowModeRightButton;
-	
+
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UTextBlock* WindowModeSelection;
 
@@ -29,7 +39,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* VSyncRightButton;
-	
+
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UTextBlock* VSyncSelection;
 
@@ -38,7 +48,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* GraphicsRightButton;
-	
+
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UTextBlock* GraphicsSelection;
 
@@ -47,7 +57,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* ResolutionRightButton;
-	
+
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UTextBlock* ResolutionSelection;
 
@@ -63,21 +73,27 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void Render() const;
-	
+
 	UFUNCTION(BlueprintCallable)
 	void HandleWindowModeLeftButtonClicked();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void HandleWindowModeRightButtonClicked();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void HandleVSyncButtonClicked();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void HandleGraphicsLeftButtonClicked();
-	
+
 	UFUNCTION(BlueprintCallable)
 	void HandleGraphicsRightButtonClicked();
+
+	UFUNCTION(BlueprintCallable)
+	void HandleResolutionLeftButtonClicked();
+
+	UFUNCTION(BlueprintCallable)
+	void HandleResolutionRightButtonClicked();
 
 	UFUNCTION(BlueprintCallable)
 	void HandleApplyClicked();
