@@ -7,6 +7,8 @@
 class UTextBlock;
 class UButton;
 
+// TODO: maintain your own pending state independent of GameUserSettings
+
 UCLASS(BlueprintType, Blueprintable)
 class CHOMP_API USettingsWidget : public UUserWidget
 {
@@ -67,4 +69,16 @@ protected:
 	
 	UFUNCTION(BlueprintCallable)
 	void HandleWindowModeRightButtonClicked();
+	
+	UFUNCTION(BlueprintCallable)
+	void HandleVSyncButtonClicked();
+	
+	UFUNCTION(BlueprintCallable)
+	void HandleGraphicsLeftButtonClicked();
+	
+	UFUNCTION(BlueprintCallable)
+	void HandleGraphicsRightButtonClicked();
+
+	UFUNCTION(BlueprintCallable)
+	void HandleApplyClicked();
 };

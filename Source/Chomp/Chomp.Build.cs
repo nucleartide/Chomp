@@ -9,7 +9,7 @@ public class Chomp : ModuleRules
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
 		PublicDependencyModuleNames.AddRange(new[]
-			{ "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "UE5Coro" });
+			{ "Core", "CoreUObject", "Engine", "InputCore", "EnhancedInput", "UMG", "UE5Coro", "RHI" });
 
 		PrivateDependencyModuleNames.AddRange(new string[] { });
 
