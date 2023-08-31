@@ -1,15 +1,12 @@
 #pragma once
 
-#include <__functional/function.h>
-
+#include <functional>
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
 #include "SettingsWidget.generated.h"
 
 class UTextBlock;
 class UButton;
-
-// TODO: maintain your own pending state independent of GameUserSettings
 
 UCLASS(BlueprintType, Blueprintable)
 class CHOMP_API USettingsWidget : public UUserWidget
@@ -65,22 +62,27 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* BackButton;
-	
+
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* RevertButton;
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UButton* ApplyButton;
 
-	UFUNCTION(BlueprintCallable)
-	void ResetPendingState();
 	virtual void NativeConstruct() override;
 
 	virtual void NativeDestruct() override;
 
+	// Revert the Pending* fields to the values returned by GameUserSettings.
+	UFUNCTION(BlueprintCallable)
+	void RevertPendingState();
+
+	// Update the display fields of UUserWidgets on the screen.
 	UFUNCTION(BlueprintCallable)
 	void Render();
-	void UpdateFullscreenMode(int NewFullscreenMode);
+
+	// Encapsulate some thorny logic when updating window mode.
+	void UpdateWindowMode(const int NewWindowMode);
 
 	UFUNCTION(BlueprintCallable)
 	void HandleWindowModeLeftButtonClicked();
@@ -96,7 +98,9 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void HandleGraphicsRightButtonClicked();
-	void HandleResolutionButtonClicked(std::function<int(int, int)> SomeFunction);
+
+	// Encapsulate some duplicated logic when updating screen resolution.
+	void HandleResolutionButtonClicked(std::function<int(int, int)> UpdateResolutionIndex);
 
 	UFUNCTION(BlueprintCallable)
 	void HandleResolutionLeftButtonClicked();

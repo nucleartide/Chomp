@@ -9,7 +9,7 @@
 #include "Utils/Debug.h"
 #include "Utils/MathHelpers.h"
 
-void USettingsWidget::ResetPendingState()
+void USettingsWidget::RevertPendingState()
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
@@ -40,10 +40,10 @@ void USettingsWidget::NativeConstruct()
 	ResolutionLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleResolutionLeftButtonClicked);
 	ResolutionRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleResolutionRightButtonClicked);
 
-	RevertButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::ResetPendingState);
+	RevertButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::RevertPendingState);
 	ApplyButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleApplyClicked);
 
-	ResetPendingState();
+	RevertPendingState();
 	Render();
 }
 
@@ -63,7 +63,7 @@ void USettingsWidget::NativeDestruct()
 	ResolutionLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleResolutionLeftButtonClicked);
 	ResolutionRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleResolutionRightButtonClicked);
 
-	RevertButton->OnClicked.RemoveDynamic(this, &USettingsWidget::ResetPendingState);
+	RevertButton->OnClicked.RemoveDynamic(this, &USettingsWidget::RevertPendingState);
 	ApplyButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleApplyClicked);
 }
 
@@ -115,14 +115,14 @@ void USettingsWidget::Render()
 	UpdateEnabledStateOfActionButtons();
 }
 
-void USettingsWidget::UpdateFullscreenMode(int NewFullscreenMode)
+void USettingsWidget::UpdateWindowMode(const int NewWindowMode)
 {
 	// If the new fullscreen mode is different than existing,
-	if (NewFullscreenMode != PendingWindowMode)
+	if (NewWindowMode != PendingWindowMode)
 	{
 		// Fetch resolutions based on new window mode.
 		TArray<FIntPoint> Resolutions;
-		if (NewFullscreenMode == EWindowMode::Fullscreen)
+		if (NewWindowMode == EWindowMode::Fullscreen)
 		{
 			UKismetSystemLibrary::GetSupportedFullscreenResolutions(Resolutions);
 		}
@@ -136,7 +136,7 @@ void USettingsWidget::UpdateFullscreenMode(int NewFullscreenMode)
 	}
 
 	// Finally, save out the new fullscreen mode.
-	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(NewFullscreenMode);
+	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(NewWindowMode);
 
 	// TODO: gotta make same adjustments to right button clicked
 	// ...
@@ -155,7 +155,7 @@ void USettingsWidget::HandleWindowModeLeftButtonClicked()
 	FullscreenMode -= 1;
 	FullscreenMode %= EWindowMode::NumWindowModes;
 
-	UpdateFullscreenMode(FullscreenMode);
+	UpdateWindowMode(FullscreenMode);
 }
 
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
@@ -169,7 +169,7 @@ void USettingsWidget::HandleWindowModeRightButtonClicked()
 	FullscreenMode += 1;
 	FullscreenMode %= EWindowMode::NumWindowModes;
 
-	UpdateFullscreenMode(FullscreenMode);
+	UpdateWindowMode(FullscreenMode);
 }
 
 static FORCEINLINE int GetMonitorRefreshRate()
@@ -257,7 +257,7 @@ void USettingsWidget::HandleGraphicsRightButtonClicked()
 	Render();
 }
 
-void USettingsWidget::HandleResolutionButtonClicked(std::function<int(int, int)> SomeFunction)
+void USettingsWidget::HandleResolutionButtonClicked(std::function<int(int, int)> UpdateResolutionIndex)
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
@@ -277,7 +277,7 @@ void USettingsWidget::HandleResolutionButtonClicked(std::function<int(int, int)>
 	// Get the current resolution's index within the supported resolutions.
 	auto CurrentResolutionIndex = SupportedResolutions.IndexOfByKey(PendingGraphicsResolution);
 
-	const auto NewResolutionIndex = SomeFunction(CurrentResolutionIndex, SupportedResolutions.Num());
+	const auto NewResolutionIndex = UpdateResolutionIndex(CurrentResolutionIndex, SupportedResolutions.Num());
 
 #if false
 
