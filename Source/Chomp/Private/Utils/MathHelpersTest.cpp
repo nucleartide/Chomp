@@ -42,6 +42,42 @@ bool MathHelpersTest::RunTest(const FString& Parameters)
 		TestEqual(TEXT("fifth"), Actual, Expected);
 	}
 
+	{
+		constexpr auto Expected = 200;
+		const auto Actual = FMathHelpers::NegativeFriendlyMod(-100, 300);
+		TestEqual(TEXT("first"), Actual, Expected);
+	}
+
+	{
+		constexpr auto Expected = 200;
+		const auto Actual = FMathHelpers::NegativeFriendlyMod(200, 300);
+		TestEqual(TEXT("second"), Actual, Expected);
+	}
+
+	{
+		constexpr auto Expected = 200;
+		const auto Actual = FMathHelpers::NegativeFriendlyMod(500, 300);
+		TestEqual(TEXT("third"), Actual, Expected);
+	}
+
+	{
+		constexpr auto Expected = 200;
+		const auto Actual = FMathHelpers::NegativeFriendlyMod(-400, 300);
+		TestEqual(TEXT("fourth"), Actual, Expected);
+	}
+
+	{
+		constexpr auto Expected = 0;
+		const auto Actual = FMathHelpers::NegativeFriendlyMod(-400, 100);
+		TestEqual(TEXT("fifth"), Actual, Expected);
+	}
+
+	{
+		constexpr auto Expected = 2;
+		const auto Actual = FMathHelpers::NegativeFriendlyMod(-4, 3);
+		TestEqual(TEXT("fifth"), Actual, Expected);
+	}
+
 	// Make the test pass by returning true, or fail by returning false.
 	return true;
 }
