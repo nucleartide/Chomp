@@ -8,6 +8,8 @@
 
 class UButton;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnOptionsButtonClicked);
+
 UCLASS(Blueprintable, BlueprintType)
 class CHOMP_API UStartMenuWidget : public UUserWidget
 {
@@ -43,7 +45,7 @@ protected:
 
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UTextBlock* HighScoreValue;
-	
+
 	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	UTextBlock* HighScoreNewIndicator;
 
@@ -63,7 +65,13 @@ protected:
 
 	virtual void NativeDestruct() override;
 
+	UFUNCTION()
+	void HandleOptionsButtonClicked();
+
 public:
 	UFUNCTION(BlueprintCallable)
 	void Render(APlayerController* PlayerController) const;
+
+	UPROPERTY(BlueprintAssignable)
+	FOnOptionsButtonClicked OnOptionsButtonClicked;
 };

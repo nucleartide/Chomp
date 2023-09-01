@@ -8,6 +8,12 @@
 class UTextBlock;
 class UButton;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnScreenResolutionChanged,
+	FIntPoint, OldScreenResolution,
+	FIntPoint, NewScreenResolution);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnBackButtonClicked);
+
 UCLASS(BlueprintType, Blueprintable)
 class CHOMP_API USettingsWidget : public UUserWidget
 {
@@ -110,4 +116,14 @@ protected:
 
 	UFUNCTION(BlueprintCallable)
 	void HandleApplyClicked();
+	
+	UFUNCTION(BlueprintCallable)
+	void HandleBackButtonClicked();
+
+public:
+	UPROPERTY(BlueprintAssignable)	
+	FOnScreenResolutionChanged OnScreenResolutionChanged;
+	
+	UPROPERTY(BlueprintAssignable)	
+	FOnBackButtonClicked OnBackButtonClicked;
 };

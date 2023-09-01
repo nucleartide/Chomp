@@ -16,6 +16,8 @@ void UStartMenuWidget::NativeConstruct()
 
 	QuitButton->OnHovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleQuitHover);
 	QuitButton->OnUnhovered.AddUniqueDynamic(this, &UStartMenuWidget::HandleQuitUnhover);
+
+	OptionsButton->OnClicked.AddUniqueDynamic(this, &UStartMenuWidget::HandleOptionsButtonClicked);
 }
 
 void UStartMenuWidget::NativeDestruct()
@@ -30,6 +32,14 @@ void UStartMenuWidget::NativeDestruct()
 
 	QuitButton->OnHovered.RemoveDynamic(this, &UStartMenuWidget::HandleQuitHover);
 	QuitButton->OnUnhovered.RemoveDynamic(this, &UStartMenuWidget::HandleQuitUnhover);
+	
+	OptionsButton->OnClicked.RemoveDynamic(this, &UStartMenuWidget::HandleOptionsButtonClicked);
+}
+
+// ReSharper disable once CppMemberFunctionMayBeConst
+void UStartMenuWidget::HandleOptionsButtonClicked()
+{
+	OnOptionsButtonClicked.Broadcast();
 }
 
 void UStartMenuWidget::Render(APlayerController* PlayerController) const

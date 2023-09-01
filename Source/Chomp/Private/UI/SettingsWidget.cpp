@@ -41,6 +41,7 @@ void USettingsWidget::NativeConstruct()
 
 	RevertButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::RevertPendingState);
 	ApplyButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleApplyClicked);
+	BackButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleBackButtonClicked);
 
 	RevertPendingState();
 	Render();
@@ -64,6 +65,7 @@ void USettingsWidget::NativeDestruct()
 
 	RevertButton->OnClicked.RemoveDynamic(this, &USettingsWidget::RevertPendingState);
 	ApplyButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleApplyClicked);
+	BackButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleBackButtonClicked);
 }
 
 void USettingsWidget::Render()
@@ -114,6 +116,20 @@ void USettingsWidget::Render()
 	const auto ScreenResolution = PendingGraphicsResolution;
 	ResolutionSelection->SetText(
 		FText::FromString(FString::Printf(TEXT("%d x %d"), ScreenResolution.X, ScreenResolution.Y)));
+
+	// Update enabled state of resolution arrows.
+	TArray<FIntPoint> SupportedResolutions;
+	if (PendingWindowMode == EWindowMode::Fullscreen)
+	{
+		UKismetSystemLibrary::GetSupportedFullscreenResolutions(SupportedResolutions);
+	}
+	else
+	{
+		UKismetSystemLibrary::GetConvenientWindowedResolutions(SupportedResolutions);
+	}
+	const auto ShouldEnableResolutionArrows = SupportedResolutions.Num() > 1;
+	ResolutionLeftButton->SetIsEnabled(ShouldEnableResolutionArrows);
+	ResolutionRightButton->SetIsEnabled(ShouldEnableResolutionArrows);
 
 	UpdateEnabledStateOfActionButtons();
 }
@@ -338,15 +354,27 @@ void USettingsWidget::HandleApplyClicked()
 	GameUserSettings->SetVSyncEnabled(PendingVSyncEnabled);
 	const auto OldGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
 	GameUserSettings->SetOverallScalabilityLevel(PendingGraphicsQuality);
+	const auto OldScreenResolution = GameUserSettings->GetScreenResolution();
 	GameUserSettings->SetScreenResolution(PendingGraphicsResolution);
 	GameUserSettings->SetFrameRateLimit(PendingFrameRateLimit);
 	GameUserSettings->SetResolutionScaleNormalized(1.0);
-
+	
 	GameUserSettings->ApplySettings(false);
+
+	if (const auto NewScreenResolution = GameUserSettings->GetScreenResolution();
+		OldScreenResolution != NewScreenResolution)
+	{
+		OnScreenResolutionChanged.Broadcast(OldScreenResolution, NewScreenResolution);
+	}
 
 	// Sometimes this still returns -1 (meaning custom), so let's refresh PendingGraphicsQuality
 	// with that knowledge in mind.
 	PendingGraphicsQuality = GameUserSettings->GetOverallScalabilityLevel();
-
 	Render();
+}
+
+// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
+void USettingsWidget::HandleBackButtonClicked()
+{
+	OnBackButtonClicked.Broadcast();
 }
