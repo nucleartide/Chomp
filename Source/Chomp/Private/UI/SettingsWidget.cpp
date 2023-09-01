@@ -27,8 +27,8 @@ void USettingsWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
 
-	WindowModeLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeLeftButtonClicked);
-	WindowModeRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeRightButtonClicked);
+	WindowModeLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeButtonClicked);
+	WindowModeRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleWindowModeButtonClicked);
 
 	VSyncLeftButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleVSyncButtonClicked);
 	VSyncRightButton->OnClicked.AddUniqueDynamic(this, &USettingsWidget::HandleVSyncButtonClicked);
@@ -50,8 +50,8 @@ void USettingsWidget::NativeDestruct()
 {
 	Super::NativeDestruct();
 
-	WindowModeLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleWindowModeLeftButtonClicked);
-	WindowModeRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleWindowModeRightButtonClicked);
+	WindowModeLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleWindowModeButtonClicked);
+	WindowModeRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleWindowModeButtonClicked);
 
 	VSyncLeftButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleVSyncButtonClicked);
 	VSyncRightButton->OnClicked.RemoveDynamic(this, &USettingsWidget::HandleVSyncButtonClicked);
@@ -141,30 +141,15 @@ void USettingsWidget::UpdateWindowMode(const int NewWindowMode)
 }
 
 // ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
-void USettingsWidget::HandleWindowModeLeftButtonClicked()
+void USettingsWidget::HandleWindowModeButtonClicked()
 {
 	// Pre-conditions.
 	const auto GameUserSettings = GEngine->GetGameUserSettings();
 	check(GameUserSettings);
 
-	auto FullscreenMode = static_cast<int>(PendingWindowMode);
-	FullscreenMode -= 1;
-	FullscreenMode %= EWindowMode::NumWindowModes;
-
-	UpdateWindowMode(FullscreenMode);
-}
-
-// ReSharper disable once CppUE4BlueprintCallableFunctionMayBeConst
-void USettingsWidget::HandleWindowModeRightButtonClicked()
-{
-	// Pre-conditions.
-	const auto GameUserSettings = GEngine->GetGameUserSettings();
-	check(GameUserSettings);
-
-	auto FullscreenMode = static_cast<int>(PendingWindowMode);
-	FullscreenMode += 1;
-	FullscreenMode %= EWindowMode::NumWindowModes;
-
+	const auto FullscreenMode = PendingWindowMode == EWindowMode::Fullscreen
+		                            ? EWindowMode::Windowed
+		                            : EWindowMode::Fullscreen;
 	UpdateWindowMode(FullscreenMode);
 }
 

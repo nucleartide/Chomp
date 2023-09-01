@@ -85,11 +85,8 @@ protected:
 	void UpdateWindowMode(const int NewWindowMode);
 
 	UFUNCTION(BlueprintCallable)
-	void HandleWindowModeLeftButtonClicked();
+	void HandleWindowModeButtonClicked();
 
-	UFUNCTION(BlueprintCallable)
-	void HandleWindowModeRightButtonClicked();
-	
 	UFUNCTION(BlueprintCallable)
 	void HandleVSyncButtonClicked();
 
