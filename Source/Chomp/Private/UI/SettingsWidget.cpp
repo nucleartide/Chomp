@@ -136,6 +136,10 @@ void USettingsWidget::Render()
 
 void USettingsWidget::UpdateWindowMode(const int NewWindowMode)
 {
+	// Pre-conditions.
+	const auto GameUserSettings = GEngine->GetGameUserSettings();
+	check(GameUserSettings);
+	
 	// Whenever we change window mode, reset the selected resolution because it may be invalid.
 	if (NewWindowMode != PendingWindowMode)
 	{
@@ -153,6 +157,23 @@ void USettingsWidget::UpdateWindowMode(const int NewWindowMode)
 	}
 
 	PendingWindowMode = EWindowMode::ConvertIntToWindowMode(NewWindowMode);
+
+	// Apply window mode settings immediately,
+	// because switching from windowed to fullscreen results in only part of the viewport being rendered at times.
+	//
+	// However, this error doesn't seem to occur for the first resolution, which we've selected.
+	GameUserSettings->SetFullscreenMode(PendingWindowMode);
+	const auto OldScreenResolution = GameUserSettings->GetScreenResolution();
+	GameUserSettings->SetScreenResolution(PendingGraphicsResolution);
+	GameUserSettings->SetResolutionScaleNormalized(1.0);
+	GameUserSettings->ApplySettings(false);
+
+	if (const auto NewScreenResolution = GameUserSettings->GetScreenResolution();
+		OldScreenResolution != NewScreenResolution)
+	{
+		OnScreenResolutionChanged.Broadcast(OldScreenResolution, NewScreenResolution);
+	}
+	
 	Render();
 }
 
