@@ -25,17 +25,7 @@ void AUIManager::BeginPlay()
 
 	const auto World = FSafeGet::World(this);
 
-	ScoreWidgetInstance = CreateWidget(World, ScoreWidget);
-	check(ScoreWidgetInstance);
-	ScoreWidgetInstance->AddToViewport();
-
-	LivesWidgetInstance = CreateWidget(World, LivesWidget);
-	check(LivesWidgetInstance);
-	LivesWidgetInstance->AddToViewport();
-
-	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
-	check(LevelIndicatorWidgetInstance);
-	LevelIndicatorWidgetInstance->AddToViewport();
+	// TODO: keep refactoring this class and move into blueprints for iteration speed
 	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
 
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
