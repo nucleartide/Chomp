@@ -12,9 +12,9 @@ class ULivesWidget;
 class UScoreWidget;
 
 /**
- * AUIManager manages the lifetime of the user interface of the game.
+ * AUIManager manages the lifetime of the user interface when in-game.
  */
-UCLASS()
+UCLASS(BlueprintType, Blueprintable)
 class AUIManager : public AActor
 {
 	GENERATED_BODY()
@@ -55,13 +55,9 @@ class AUIManager : public AActor
 	UPROPERTY(VisibleInstanceOnly)
 	ULevelIndicatorWidget* LevelIndicatorWidgetInstance;
 
-public:
-	AUIManager();
-
 protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
-	virtual void Tick(float DeltaTime) override;
 
 private:
 	UPROPERTY()

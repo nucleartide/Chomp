@@ -10,10 +10,13 @@
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
-AUIManager::AUIManager(): AActor()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
+// [x] M - use SetPaused
+// [x] V - this is done
+// [o] C - starting
+//   [ ] refactor UIManager to write less code in C++
+//   [ ] on p, show pause screen
+//   [ ] see user stories in github
+// [ ] bonus: options button
 
 void AUIManager::BeginPlay()
 {
@@ -56,11 +59,6 @@ void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	ScoreWidgetInstance = nullptr;
 	LivesWidgetInstance = nullptr;
 	LevelIndicatorWidgetInstance = nullptr;
-}
-
-void AUIManager::Tick(const float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AUIManager::HandleDotsCleared()
