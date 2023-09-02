@@ -12,7 +12,7 @@
 
 // [x] M - use SetPaused
 // [x] V - this is done
-//   [ ] create a new HUDScreen
+//   [x] create a new HUDScreen
 // [o] C - starting
 //   [ ] refactor UIManager to write less code in C++
 //   [ ] on p, show pause screen
