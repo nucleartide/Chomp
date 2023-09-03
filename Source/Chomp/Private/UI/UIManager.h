@@ -71,7 +71,4 @@ private:
 
 	UFUNCTION()
 	void HandleRestartGameClicked();
-
-	UFUNCTION()
-	void HandleLivesChanged(const int NumberOfLives);
 };

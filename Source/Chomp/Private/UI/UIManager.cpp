@@ -2,7 +2,6 @@
 #include "ChompGameState.h"
 #include "CoreGlobals.h"
 #include "LevelIndicatorWidget.h"
-#include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -27,7 +26,6 @@ void AUIManager::BeginPlay()
 	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChanged.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
-	GameState->OnLivesChanged.AddUniqueDynamic(this, &AUIManager::HandleLivesChanged);
 }
 
 void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -37,7 +35,6 @@ void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
 	GameState->OnDotsCleared.RemoveDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChanged.RemoveDynamic(this, &AUIManager::HandlePlayerDeath);
-	GameState->OnLivesChanged.RemoveDynamic(this, &AUIManager::HandleLivesChanged);
 }
 
 void AUIManager::HandleDotsCleared()
@@ -93,9 +90,4 @@ void AUIManager::HandleRestartGameClicked()
 	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
 	Controller->SetInputMode(FInputModeGameOnly());
-}
-
-// ReSharper disable once CppMemberFunctionMayBeConst
-void AUIManager::HandleLivesChanged(const int NumberOfLives)
-{
 }
