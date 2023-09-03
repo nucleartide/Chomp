@@ -7,15 +7,15 @@
 class ULevelSymbolWidget;
 class ABonusSymbol;
 
-UCLASS(BlueprintType)
+UCLASS(BlueprintType, Blueprintable)
 class CHOMP_API ULevelDataAsset : public UDataAsset
 {
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 	TSubclassOf<ABonusSymbol> BonusSymbol;
 
-	UPROPERTY(EditInstanceOnly)
+	UPROPERTY(EditInstanceOnly, BlueprintReadOnly)
 	TSubclassOf<ULevelSymbolWidget> BonusSymbolWidget;
 };

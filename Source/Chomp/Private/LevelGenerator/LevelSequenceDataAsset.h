@@ -15,5 +15,6 @@ class CHOMP_API ULevelSequenceDataAsset : public UDataAsset
 	TArray<ULevelDataAsset*> LevelSequence;
 
 public:
+	UFUNCTION(BlueprintCallable)
 	TArray<ULevelDataAsset*> LastThree();
 };

@@ -15,6 +15,7 @@
 //   [x] create a new HUDScreen
 // [o] C - starting
 //   [ ] refactor UIManager to write less code in C++
+// ---
 //   [ ] on p, show pause screen
 //   [ ] see user stories in github
 // [ ] bonus: options button
@@ -23,12 +24,7 @@ void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const auto World = FSafeGet::World(this);
-
-	// TODO: keep refactoring this class and move into blueprints for iteration speed
-	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
-
-	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
+	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChanged.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
 	GameState->OnLivesChanged.AddUniqueDynamic(this, &AUIManager::HandleLivesChanged);
@@ -42,14 +38,6 @@ void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	GameState->OnDotsCleared.RemoveDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChanged.RemoveDynamic(this, &AUIManager::HandlePlayerDeath);
 	GameState->OnLivesChanged.RemoveDynamic(this, &AUIManager::HandleLivesChanged);
-
-	ScoreWidgetInstance->RemoveFromParent();
-	LivesWidgetInstance->RemoveFromParent();
-	LevelIndicatorWidgetInstance->RemoveFromParent();
-
-	ScoreWidgetInstance = nullptr;
-	LivesWidgetInstance = nullptr;
-	LevelIndicatorWidgetInstance = nullptr;
 }
 
 void AUIManager::HandleDotsCleared()
@@ -110,17 +98,4 @@ void AUIManager::HandleRestartGameClicked()
 // ReSharper disable once CppMemberFunctionMayBeConst
 void AUIManager::HandleLivesChanged(const int NumberOfLives)
 {
-	const auto LivesWidgetRef = Cast<ULivesWidget>(LivesWidgetInstance);
-	check(LivesWidgetRef);
-
-	const auto World = FSafeGet::World(this);
-
-	LivesWidgetRef->LivesContainer->ClearChildren();
-
-	for (auto i = 0; i < NumberOfLives; i++)
-	{
-		const auto LifeWidgetInstance = CreateWidget(World, LivesWidgetRef->LifeWidget);
-		LifeWidgetInstance->SetPadding(FMargin(LivesWidgetRef->HorizontalPadding, 0.0));
-		LivesWidgetRef->LivesContainer->AddChild(LifeWidgetInstance);
-	}
 }

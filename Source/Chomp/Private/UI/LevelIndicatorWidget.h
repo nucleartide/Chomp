@@ -13,11 +13,12 @@ class CHOMP_API ULevelIndicatorWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-	UPROPERTY(meta = (BindWidget))
-	class UHorizontalBox* LevelIndicatorContainer;
-
-	UPROPERTY(EditDefaultsOnly)
+protected:
+	UPROPERTY(EditAnywhere, Category = "LevelIndicatorWidget | Props", BlueprintReadOnly)
 	ULevelSequenceDataAsset* LevelSequence;
+	
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
+	class UHorizontalBox* LevelIndicatorContainer;
 
 public:
 	void RenderLastThreeLevelSymbols(UWorld* WorldInstance) const;
