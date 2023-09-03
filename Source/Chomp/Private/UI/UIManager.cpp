@@ -13,7 +13,7 @@
 // [x] V - this is done
 //   [x] create a new HUDScreen
 // [o] C - starting
-//   [ ] refactor UIManager to write less code in C++
+//   [ ] TODO: get rid of UIManager
 // ---
 //   [ ] on p, show pause screen
 //   [ ] see user stories in github
