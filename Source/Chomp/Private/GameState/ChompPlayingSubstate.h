@@ -211,10 +211,16 @@ public:
 		check(!IsWaveProgressionRunning);
 		
 		// Async post-conditions.
+		// Note: these conditions are not true when transitioning from the Game map to the MainMenu map.
+		// Keeping these lines for future reference, though.
+#if false
 		co_await Frightened;
 		co_await WaveProgression;
 		check(Frightened.IsDone());
 		check(WaveProgression.IsDone());
+#endif
+
+		co_return;
 	}
 
 	bool IsRunning() const
