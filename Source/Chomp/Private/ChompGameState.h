@@ -81,6 +81,9 @@ class AChompGameState : public AGameStateBase
 	UPROPERTY(VisibleInstanceOnly)
 	EChompPlayingSubstateEnum LastSubstateEnum = EChompPlayingSubstateEnum::None;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Hardcoded Current Level")
+	ULevelDataAsset* CurrentLevel;
+
 	void UpdateNumberOfDotsRemaining(int NewNumberOfDotsRemaining);
 
 	void TransitionTo(EChompGameStateEnum NewState);

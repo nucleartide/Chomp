@@ -33,9 +33,6 @@ public:
 	UPROPERTY(EditDefaultsOnly, Category = "Instantiated Tile Customization")
 	TSubclassOf<AStaticMeshActor> GateTile;
 	
-	UPROPERTY(EditDefaultsOnly, Category = "Hardcoded Current Level")
-	ULevelDataAsset* CurrentLevel;
-
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnLevelClearedSignature OnLevelClearedDelegate;
 

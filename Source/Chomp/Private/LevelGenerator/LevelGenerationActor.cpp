@@ -10,8 +10,6 @@
 #include "Actors/ConsumableEnergizerActor.h"
 #include "Controllers/ChompPlayerController.h"
 #include "Controllers/GhostAiController.h"
-#include "GameState/ChompSaveGame.h"
-#include "GameState/LocalStorageSubsystem.h"
 #include "Kismet/GameplayStatics.h"
 #include "Pawns/ChompPawnManager.h"
 #include "Utils/Debug.h"
@@ -168,10 +166,6 @@ void ALevelGenerationActor::ResetStateOfEverything(const EChompGameStateEnum Old
 	// Pre-conditions.
 	const auto ChompGameState = FSafeGet::GameState<AChompGameState>(this);
 	const auto OldNumberOfDotsConsumed = ChompGameState->GetNumberOfDotsConsumed();
-	check(CurrentLevel);
-
-	// We've reached this level, at least!
-	GetGameInstance()->GetSubsystem<ULocalStorageSubsystem>()->GetSaveGame()->SetHighScoreLevel(CurrentLevel);
 
 	if (OldState != EChompGameStateEnum::LostLife && NewState == EChompGameStateEnum::Playing)
 	{

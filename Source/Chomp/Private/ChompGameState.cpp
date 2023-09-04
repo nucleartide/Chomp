@@ -72,7 +72,7 @@ void AChompGameState::UpdateScore(const int NewScore)
 	// Update Score.
 	Score = NewScore;
 	const auto SaveGame = GetGameInstance()->GetSubsystem<ULocalStorageSubsystem>()->GetSaveGame();
-	SaveGame->SetHighScore(Score);
+	SaveGame->SetHighScore(Score, CurrentLevel);
 	OnScoreUpdated.Broadcast(NewScore);
 }
 
@@ -192,6 +192,7 @@ void AChompGameState::BeginPlay()
 {
 	Super::BeginPlay();
 	StartGame();
+	check(CurrentLevel);
 }
 
 void AChompGameState::Tick(const float DeltaTime)
