@@ -41,11 +41,12 @@ int UChompSaveGame::GetHighScore() const
 	return HighScore;
 }
 
-void UChompSaveGame::SetHighScore(const int NewHighScore)
+void UChompSaveGame::SetHighScore(const int NewHighScore, ULevelDataAsset* NewHighScoreLevel)
 {
 	if (NewHighScore > HighScore)
 	{
 		HighScore = NewHighScore;
+		HighScoreLevel = NewHighScoreLevel;
 		IsDirty = true;
 	}
 }
@@ -63,10 +64,4 @@ TSubclassOf<UUserWidget> UChompSaveGame::GetHighScoreLevelWidget() const
 	}
 
 	return HighScoreLevel->BonusSymbolWidget;
-}
-
-void UChompSaveGame::SetHighScoreLevel(ULevelDataAsset* NewHighScoreLevel)
-{
-	HighScoreLevel = NewHighScoreLevel;
-	IsDirty = true;
 }

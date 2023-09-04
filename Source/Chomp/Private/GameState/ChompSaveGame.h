@@ -35,14 +35,11 @@ public:
 	int GetHighScore() const;
 
 	UFUNCTION(BlueprintCallable)
-	void SetHighScore(int NewHighScore);
+	void SetHighScore(const int NewHighScore, ULevelDataAsset* NewHighScoreLevel);
 
 	UFUNCTION(BlueprintCallable)
 	bool IsHighScoreNew() const;
 
 	UFUNCTION(BlueprintCallable)
 	TSubclassOf<UUserWidget> GetHighScoreLevelWidget() const;
-
-	UFUNCTION(BlueprintCallable)
-	void SetHighScoreLevel(ULevelDataAsset* NewHighScoreLevel);
 };
