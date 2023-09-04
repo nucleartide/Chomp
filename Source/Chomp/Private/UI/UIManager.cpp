@@ -2,7 +2,6 @@
 #include "ChompGameState.h"
 #include "CoreGlobals.h"
 #include "LevelIndicatorWidget.h"
-#include "LivesWidget.h"
 #include "Components/HorizontalBox.h"
 #include "GameFramework/PlayerController.h"
 #include "Kismet/GameplayStatics.h"
@@ -10,34 +9,13 @@
 #include "Utils/Debug.h"
 #include "Utils/SafeGet.h"
 
-AUIManager::AUIManager(): AActor()
-{
-	PrimaryActorTick.bCanEverTick = true;
-}
-
 void AUIManager::BeginPlay()
 {
 	Super::BeginPlay();
 
-	const auto World = FSafeGet::World(this);
-
-	ScoreWidgetInstance = CreateWidget(World, ScoreWidget);
-	check(ScoreWidgetInstance);
-	ScoreWidgetInstance->AddToViewport();
-
-	LivesWidgetInstance = CreateWidget(World, LivesWidget);
-	check(LivesWidgetInstance);
-	LivesWidgetInstance->AddToViewport();
-
-	LevelIndicatorWidgetInstance = CreateWidget<ULevelIndicatorWidget>(World, LevelIndicatorWidget);
-	check(LevelIndicatorWidgetInstance);
-	LevelIndicatorWidgetInstance->AddToViewport();
-	LevelIndicatorWidgetInstance->RenderLastThreeLevelSymbols(World);
-
-	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
+	const auto GameState = FSafeGet::GameState<AChompGameState>(this);
 	GameState->OnDotsCleared.AddUniqueDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChanged.AddUniqueDynamic(this, &AUIManager::HandlePlayerDeath);
-	GameState->OnLivesChanged.AddUniqueDynamic(this, &AUIManager::HandleLivesChanged);
 }
 
 void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -47,20 +25,6 @@ void AUIManager::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	const auto GameState = GetWorld()->GetGameState<AChompGameState>();
 	GameState->OnDotsCleared.RemoveDynamic(this, &AUIManager::HandleDotsCleared);
 	GameState->OnGameStateChanged.RemoveDynamic(this, &AUIManager::HandlePlayerDeath);
-	GameState->OnLivesChanged.RemoveDynamic(this, &AUIManager::HandleLivesChanged);
-
-	ScoreWidgetInstance->RemoveFromParent();
-	LivesWidgetInstance->RemoveFromParent();
-	LevelIndicatorWidgetInstance->RemoveFromParent();
-
-	ScoreWidgetInstance = nullptr;
-	LivesWidgetInstance = nullptr;
-	LevelIndicatorWidgetInstance = nullptr;
-}
-
-void AUIManager::Tick(const float DeltaTime)
-{
-	Super::Tick(DeltaTime);
 }
 
 void AUIManager::HandleDotsCleared()
@@ -116,22 +80,4 @@ void AUIManager::HandleRestartGameClicked()
 	const auto Controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
 	Controller->SetShowMouseCursor(false);
 	Controller->SetInputMode(FInputModeGameOnly());
-}
-
-// ReSharper disable once CppMemberFunctionMayBeConst
-void AUIManager::HandleLivesChanged(const int NumberOfLives)
-{
-	const auto LivesWidgetRef = Cast<ULivesWidget>(LivesWidgetInstance);
-	check(LivesWidgetRef);
-
-	const auto World = FSafeGet::World(this);
-
-	LivesWidgetRef->LivesContainer->ClearChildren();
-
-	for (auto i = 0; i < NumberOfLives; i++)
-	{
-		const auto LifeWidgetInstance = CreateWidget(World, LivesWidgetRef->LifeWidget);
-		LifeWidgetInstance->SetPadding(FMargin(LivesWidgetRef->HorizontalPadding, 0.0));
-		LivesWidgetRef->LivesContainer->AddChild(LifeWidgetInstance);
-	}
 }
