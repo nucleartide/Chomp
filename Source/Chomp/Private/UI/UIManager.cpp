@@ -12,10 +12,13 @@
 // [x] M - use SetPaused
 // [x] V - this is done
 //   [x] create a new HUDScreen
-// [o] C - starting
-//   [ ] TODO: get rid of UIManager
+// [x] C - starting
+//   [x] TODO: get rid of UIManager
 // ---
-//   [ ] on p, show pause screen
+//   [x] on p, show pause screen
+//        // remove all childern from viewport
+//        // create pause screen
+//        // add pause screen to viewport
 //   [ ] see user stories in github
 // [ ] bonus: options button
 
