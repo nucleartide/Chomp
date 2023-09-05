@@ -133,6 +133,7 @@ public:
 
 	bool IsFrightened() const;
 
+	UFUNCTION(BlueprintCallable)
 	int GetScore() const;
 
 	void UpdateScore(int NewScore);

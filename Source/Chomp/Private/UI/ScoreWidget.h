@@ -12,11 +12,10 @@ class UScoreWidget : public UUserWidget
 
 protected:
 	virtual void NativeConstruct() override;
-
-private:
-	UPROPERTY(meta = (BindWidget))
+	
+	UPROPERTY(meta = (BindWidget), BlueprintReadOnly)
 	class UTextBlock *ScoreTextBlock;
-
-	UFUNCTION()
-	void HandleScoreUpdated(int Score);
+	
+	UFUNCTION(BlueprintCallable)
+	void UpdateScoreText(int Score);
 };

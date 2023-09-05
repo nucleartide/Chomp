@@ -11,16 +11,8 @@ class UGameOverWidget : public UUserWidget
 {
 	GENERATED_BODY()
 
-protected:
-	UPROPERTY(meta = (BindWidget))
-	class UButton *RestartGameButton;
-
-	virtual void NativeConstruct() override;
-
-	UFUNCTION()
-	void HandleRestartGame();
-
 public:
+	// TODO: You should call this in a Blueprint subclass.
 	UPROPERTY(BlueprintCallable, BlueprintAssignable)
 	FOnRestartGameClickedSignature OnRestartGameClickedDelegate;
 };
