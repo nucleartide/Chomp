@@ -16,6 +16,7 @@ A post-mortem technical write-up will be published when the project is done. Unt
 
 | Gameplay System | Pull Request |
 | --- | --- |
+| https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/30 Rehaul game over screens with additional info
 | https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/29 Implement a pause menu; refactor UI into componentized Widget Blueprints
 | https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/28 Implement an options/settings menu
 | https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/27 Finalize start menu UI/UX design
