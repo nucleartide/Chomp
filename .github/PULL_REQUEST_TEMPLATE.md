@@ -26,5 +26,6 @@
 * [ ] **Tag**. Once built, tag the latest commit on `master` with the latest version string.
 * [ ] **Upload**. Upload build to Google Drive.
 * [ ] **Link**. Add link to this pull request.
+* [ ] **Retro**. Quick reflection on how things could have gone better.
 * [ ] **Priorities**. Prioritize items on work board.
 * [ ] **Next task**. Tee up a pull request for the next feature.
