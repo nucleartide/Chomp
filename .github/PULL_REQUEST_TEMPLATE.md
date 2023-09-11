@@ -29,3 +29,4 @@
 * [ ] **Retro**. Quick reflection on how things could have gone better.
 * [ ] **Priorities**. Prioritize items on work board.
 * [ ] **Next task**. Tee up a pull request for the next feature.
+* [ ] **Get portfolio feedback**
