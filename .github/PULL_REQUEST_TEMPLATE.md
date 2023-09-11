@@ -19,6 +19,7 @@
 * [ ] **Remember the GIFs**. Include a recording of what's going on!
 * [ ] **Update readme**. Maintain a list of pull requests for easy access later.
 * [ ] **Merge**. Merge into `master`.
+* [ ] **Deliverable**. Push update to portfolio
 
 ## Release checklist
 
