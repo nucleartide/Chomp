@@ -56,6 +56,11 @@ FGridLocation AChompPlayerController::GetCurrentMovement() const
 	return CurrentMovement.GetDirection();
 }
 
+bool AChompPlayerController::IsMoving() const
+{
+	return CurrentMovement.HasValidTargetTile();
+}
+
 void AChompPlayerController::OnMoveHorizontal(const float Input)
 {
 	HorizontalAxisInput = Input;
