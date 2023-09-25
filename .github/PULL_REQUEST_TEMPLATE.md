@@ -23,6 +23,8 @@
 
 ## Release checklist
 
+_Note: you can skip this if you need the time back. Only issue is you're trading off potential build stability._
+
 * [ ] **Build**. Cut a new build in Unreal. If the game doesn't build, fix until it does.
 * [ ] **Tag**. Once built, tag the latest commit on `master` with the latest version string.
 * [ ] **Upload**. Upload build to Google Drive.
