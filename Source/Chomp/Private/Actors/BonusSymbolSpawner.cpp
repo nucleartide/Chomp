@@ -28,7 +28,7 @@ void ABonusFruitSpawner::HandleDotsConsumedChanged(int DotsConsumed)
 {
 	// Pre-conditions.
 	check(FirstSymbolDotThreshold < SecondSymbolDotThreshold);
-	
+
 	if (DotsConsumed == FirstSymbolDotThreshold)
 	{
 		SpawnBonusSymbol();
@@ -41,24 +41,38 @@ void ABonusFruitSpawner::HandleDotsConsumedChanged(int DotsConsumed)
 
 UE5Coro::TCoroutine<> ABonusFruitSpawner::SpawnBonusSymbol()
 {
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-
+	// Grab some variables.
 	const auto World = FSafeGet::World(this);
 	const auto LevelInstance = ULevelLoader::GetInstance(LevelLoader);
 	const auto SpawnLocation = LevelInstance->GetBonusSymbolTile();
 	const auto SpawnLocationWorld = LevelInstance->GridToWorld3D(SpawnLocation);
 
+	// Bogus location.
+	auto BogusSpawn = ULevelLoader::GetInstance(LevelLoader)->GridToWorld(FGridLocation{-100, -100});
+	FVector BogusLocation(BogusSpawn.X, BogusSpawn.Y, 0.0f);
+
+	// Spawn in a spot away from the player to avoid spawn failures.
+	FActorSpawnParameters Params;
+	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+
+
+	// Spawn in bogus location.
 	SpawnedBonusSymbol = World->SpawnActor<ABonusSymbol>(
 		BonusSymbolToSpawn,
-		SpawnLocationWorld,
+		BogusLocation,
 		FRotator::ZeroRotator,
 		Params
 	);
 	check(SpawnedBonusSymbol);
 
+	// Need this in order to change the location.
+	SpawnedBonusSymbol->SetMobility(EComponentMobility::Movable);
+	SpawnedBonusSymbol->SetActorLocation(SpawnLocationWorld);
+
+	// Wait.
 	co_await UE5Coro::Latent::Seconds(NumSecondsUntilSymbolRemoval);
 
+	// Time limit reached without consumption, destroy automatically.
 	if (IsValid(SpawnedBonusSymbol))
 	{
 		SpawnedBonusSymbol->Destroy();

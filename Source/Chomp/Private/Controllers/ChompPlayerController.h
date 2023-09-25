@@ -56,6 +56,9 @@ public:
 
 	FGridLocation GetCurrentMovement() const;
 
+	UFUNCTION(BlueprintCallable)
+	bool IsMoving() const;
+
 protected:
 	// Needed to attach some handlers.
 	virtual void BeginPlay() override;
