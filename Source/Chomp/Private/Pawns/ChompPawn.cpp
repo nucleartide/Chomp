@@ -7,6 +7,11 @@
 #include "Pawns/GhostPawn.h"
 #include "Utils/SafeGet.h"
 
+AChompPawn::AChompPawn() : AMovablePawn()
+{
+	bFindCameraComponentWhenViewTarget = true;
+}
+
 void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 {
 	Super::NotifyActorBeginOverlap(Other);

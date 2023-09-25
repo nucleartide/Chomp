@@ -12,6 +12,9 @@ class AChompPawn : public AMovablePawn
 {
 	GENERATED_BODY()
 
+public:
+	AChompPawn();
+
 protected:
 	virtual void NotifyActorBeginOverlap(AActor *Other) override;
 };
