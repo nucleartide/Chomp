@@ -7,6 +7,11 @@
 #include "Pawns/GhostPawn.h"
 #include "Utils/SafeGet.h"
 
+AChompPawn::AChompPawn() : AMovablePawn()
+{
+	bFindCameraComponentWhenViewTarget = true;
+}
+
 void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 {
 	Super::NotifyActorBeginOverlap(Other);
@@ -24,8 +29,8 @@ void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 		if (const auto GhostController = GhostPawn->GetController<AGhostAiController>();
 			GhostController->IsNormal())
 		{
-			ChompGameState->LoseLife();
 			Destroy();
+			ChompGameState->LoseLife(); // This must be after Destroy(), so that the ViewTarget can be set in "lose life" handlers.
 		}
 	}
 	else if (const auto EnergizerDot = Cast<AConsumableEnergizerActor>(Other))

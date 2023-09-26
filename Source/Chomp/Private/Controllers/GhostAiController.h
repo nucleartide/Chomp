@@ -125,8 +125,10 @@ public:
 
 	int GetLeaveGhostHousePriority() const;
 
+	UFUNCTION(BlueprintCallable)
 	bool IsEaten() const;
 
+	UFUNCTION(BlueprintCallable)
 	bool IsNormal() const;
 
 	void Consume();

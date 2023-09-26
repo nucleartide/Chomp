@@ -16,6 +16,7 @@ A post-mortem technical write-up will be published when the project is done. Unt
 
 | Gameplay System | Pull Request |
 | --- | --- |
+| https://github.com/nucleartide/Chomp/labels/game%20feel | https://github.com/nucleartide/Chomp/pull/33 Add camera animations + camera shakes
 | https://github.com/nucleartide/Chomp/labels/game%20feel | https://github.com/nucleartide/Chomp/pull/32 Add Pacman's chomping animation
 | https://github.com/nucleartide/Chomp/labels/game%20feel | https://github.com/nucleartide/Chomp/pull/31 Add first pass at final game's look and feel
 | https://github.com/nucleartide/Chomp/labels/UI | https://github.com/nucleartide/Chomp/pull/30 Rehaul game over screens with additional info
