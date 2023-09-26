@@ -29,8 +29,8 @@ void AChompPawn::NotifyActorBeginOverlap(AActor* Other)
 		if (const auto GhostController = GhostPawn->GetController<AGhostAiController>();
 			GhostController->IsNormal())
 		{
-			ChompGameState->LoseLife();
 			Destroy();
+			ChompGameState->LoseLife(); // this must be after destroy, so that the view target can be set in "lose life" handlers
 		}
 	}
 	else if (const auto EnergizerDot = Cast<AConsumableEnergizerActor>(Other))
